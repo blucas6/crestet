@@ -1,5 +1,29 @@
 import algo
 
+class Health:
+    '''
+    Health component, if an entity needs a health bar
+    '''
+    def __init__(self, health):
+        self.maxhealth = health
+        '''Maximum for the health bar'''
+        self.currenthealth = health
+        '''Counter for current health'''
+        self.alive = True
+        '''True if health bar is above 0'''
+
+    def change_health(self, amount):
+        '''
+        Changes the health bar by an amount
+
+        Returns true if health change causes death
+        '''
+        self.currenthealth += amount
+        if self.alive and self.currenthealth <= 0:
+            self.alive = False
+            return True
+        return False
+
 class Brain:
     '''
     Brain component, if an entity needs to make decisions
@@ -10,7 +34,7 @@ class Brain:
         self.blockinglayer = blockinglayer
         '''Highest level (exclusive) FOV will see through'''
 
-    def get_action(self, level, mypos, myz, player):
+    def get_action(self, level, mypos, myz, player, energy):
         '''Returns an action'''
         if player.z == myz:
             # only follow if player is on the same level

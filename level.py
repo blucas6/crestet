@@ -3,6 +3,7 @@ import player
 import utility
 import tower
 import entity as e
+import monster
 
 class Level:
     def __init__(self, rows, cols, z, rng):
@@ -59,7 +60,10 @@ class LevelManager:
         '''Load a default map on all levels'''
         downstairPos = []
         for z,level in enumerate(self.Levels):
+            # add wall barrier
             self.generate_surrounding_walls(level)
+            # add monsters
+            self.generate_mons(level)
             if z == 0:
                 pass
             elif z == self.totallevels-1:
@@ -80,6 +84,11 @@ class LevelManager:
                     self.place_entity(level, tower.Wall(), [r,c], overwrite=True)
                 else:
                     self.place_entity(level, tower.Floor(), [r,c], overwrite=True)
+
+    def generate_mons(self, level):
+        r = self.RNG.randint(1,self.levelrows-1)
+        c = self.RNG.randint(1,self.levelcols-1)
+        self.place_entity(level, monster.Newt(), (r,c))
     
 
     def place_entity(self, level, entity, pos, overwrite=False):
@@ -101,7 +110,7 @@ class LevelManager:
             level.EntityLayer[r][c].append(entity)
             idx = len(level.EntityLayer[r][c])-1
             entity.set_pos(r, c, level.z, idx)
-        logger.Logger.log(f'Entity {entity.name} placed at {entity.pos()}')
+        #logger.Logger.log(f'Entity {entity.name} placed at {entity.pos()}')
 
     def is_entity_pos_valid(self, level, entity, pos, overwrite=False):
         '''Checks if an entity and a new position would be valid'''
@@ -138,15 +147,27 @@ class LevelManager:
         self.Player.energy = 100
         self.Player.do_action(self, event)
         energy = 100 - self.Player.energy
+        if energy == 100:
+            energy = self.Player.speed
         logger.Logger.log(f'Player energy: {energy}')
 
-        for row in level.EntityLayer:
-            for entitylist in row:
-                for entity in entitylist:
-                    self.update_entity(level, entity, energy)
+        done_turn = False
+        while not done_turn:
+            done_turn = True
+            for row in level.EntityLayer:
+                for entitylist in row:
+                    for entity in entitylist:
+                        done_turn = self.update_entity(entity, energy)
 
-    def update_entity(self, level, entity, energy):
-        pass
+    def update_entity(self, entity, energy):
+        entity.energy += energy
+        energystart = entity.energy
+        entity.take_turn(self, energy)
+        energyend = entity.energy
+        if entity.energy == 0 or energystart == energyend:
+            entity.turn += 1
+            return True
+        return False
 
     def within_level(self, pos, z):
         '''Returns if a position is valid within the map'''
@@ -160,24 +181,28 @@ class LevelManager:
     def move_entity(self, entity, pos):
         '''Moves an entity from one place to a new position if valid'''
 
+        #logger.Logger.log(f'Moving entity: {entity.name}|{entity.id}')
         level = self.Levels[entity.z]
 
         if not self.is_entity_pos_valid(level, entity, pos):
+            logger.Logger.log(f'Moving entity failed: invalid {entity.name}|{entity.id}')
             return False
 
         # move is valid - delete old entity
-        entity = self.remove_entity(level, entity)
+        entity = self.remove_entity(entity)
 
         # add entity to new position
         self.place_entity(level, entity, pos)
 
         return True
 
-    def remove_entity(self, level, entity):
+    def remove_entity(self, entity):
         '''Deletes an entity from the current position and returns it'''
         r = entity.row
         c = entity.col
         idx = entity.idx
+        z = entity.z
+        level = self.Levels[z]
         # decrement the index for the other entities on the square
         for ix in range(idx, len(level.EntityLayer[r][c])):
             level.EntityLayer[r][c][ix].idx -= 1

@@ -70,7 +70,7 @@ class Game:
         '''Connection to the message queue instance'''
         #self.Energy = 0
         '''Keeps track of how much energy to dispense to objects'''
-        #self.playerFOV = True
+        self.playerFOV = True
         '''Use player FOV to generate map'''
         #self.Timing = Timing(Timing)
         '''Timing for measurements'''
@@ -204,7 +204,8 @@ class Game:
         # rewrite all the map buffers and menu buffers to the screen
         level = self.LevelManager.get_curr_level()
         if level:
-            screenbuffer,colorbuffer = self.Display.prepare_buffers(self.LevelManager)
+            screenbuffer,colorbuffer = self.Display.prepare_buffers(self.LevelManager,
+                                                                    self.playerFOV)
         else:
             screenbuffer = []
             colorbuffer = []
@@ -222,8 +223,8 @@ class Game:
 
     def lose(self):
         '''Returns if the game is lost'''
-        #if self.LevelManager.Player.Health.alive:
-        #    return False
+        if not self.LevelManager.Player.Health.alive:
+            return True
         return False 
 
     def end(self):

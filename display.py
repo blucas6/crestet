@@ -26,10 +26,13 @@ class Display:
         self.unknowncolor = color.Color().white
         self.levelorigin = levelorigin
 
-    def prepare_buffers(self, levelmanager):
+    def prepare_buffers(self, levelmanager, useplayerFOV):
         '''Build the buffers to send to the engine'''
 
-        entitylayer = levelmanager.Player.mentalmap
+        if useplayerFOV:
+            entitylayer = levelmanager.Player.mentalmap
+        else:
+            entitylayer = levelmanager.get_curr_level().EntityLayer
         lightlayer = levelmanager.get_curr_level().LightLayer
 
         # go through entity layer

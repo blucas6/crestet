@@ -13,11 +13,11 @@ class AttackSpeed(enum.IntEnum):
 
 class Speed(enum.IntEnum):
     '''Corresponding energy costs for movements'''
-    VERY_SLOW = 9
-    SLOW = 8
-    AVERAGE = 7
-    FAST = 6
-    VERY_FAST = 5
+    VERY_SLOW = 55
+    SLOW = 30
+    AVERAGE = 12
+    FAST = 5
+    VERY_FAST = 3
 
 class Layer(enum.IntEnum):
     '''
@@ -100,15 +100,12 @@ class Entity:
         if index != -1:
             self.idx = index
 
-    def take_turn(self):
+    def take_turn(self, *_):
         '''Starting point of an entity's turn'''
         pass
 
     def move(self, levelmanager, pos):
         '''Entity moves to a new position'''
-        # check energy cost
-        if self.energy < self.speed:
-            return
         if levelmanager.move_entity(self, pos):
             self.energy -= self.speed
 
@@ -118,6 +115,10 @@ class Entity:
 
         If charging and movement becomes invalid, end charge
         '''
+        # check energy cost
+        if self.energy < self.speed:
+            logger.Logger.log(f'[{self.name}|{self.id}]: movement not enough energy')
+            return
         # find next position
         moves = utility.ONE_LAYER_CIRCLE
         row = self.row + moves[key-1][0]
@@ -125,20 +126,32 @@ class Entity:
         # check validity
         if not levelmanager.within_level((row,col), self.z):
             return
-        self.move(levelmanager, (row,col))
-        '''
-        # check if movement triggers an attack
-        attack, entities = self.attack(entityLayer, row, col)
-        if not attack:
-            # no attack, move normally
-            return self.move(row, col, entityLayer)
-        # attack took place, return the (possibly) killed entity
-        return entities
-    '''
+        # check if there is an entity to attack
+        entitylayer = levelmanager.Levels[self.z].EntityLayer
+        maxlayer = max([x.layer for x in entitylayer[row][col]])
+        # anything on the monster layer should be able to be attacked
+        if maxlayer == Layer.MONST_LAYER:
+            for entity in entitylayer[row][col]:
+                if maxlayer == Layer.MONST_LAYER:
+                    self.attack(levelmanager, entity)
+        # otherwise just move normally
+        else:
+            self.move(levelmanager, (row,col))
+
+    def attack(self, levelmanager, entity):
+        '''Attack the entity passed in'''
+        damage = 1
+        if hasattr(entity, 'Health'):
+            self.energy -= self.speed
+            if entity.Health.change_health(-damage):
+                entity.death(levelmanager)
+    
+    def death(self, levelmanager):
+        levelmanager.remove_entity(self)
 
     def do_action(self, levelmanager, event):
         '''Pass an event for the entity to preform a certain action'''
-        logger.Logger.log(f'Do action [{self.name}|{self.id}]: {event}')
+        logger.Logger.log(f'Do action [{self.name}|{self.id}]: {event} energy:{self.energy}')
 
         # Movement Action
         if event.isdigit():
@@ -147,6 +160,9 @@ class Entity:
         elif event == '<' or event == '>':
             #self.moveZ(event, entityLayer)
             pass
+        # Rest
+        elif event == '.':
+            self.energy = 0
 
 
 

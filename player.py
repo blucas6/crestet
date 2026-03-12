@@ -18,7 +18,7 @@ class FOVMemory(enum.Enum):
 
 class Player(e.Entity):
     def __init__(self):
-        #self.Health = Health(health=6)
+        self.Health = component.Health(health=6)
         '''Health component'''
         self.mentalmap = []
         '''Entity map for output to the screen'''
