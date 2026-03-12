@@ -8,7 +8,9 @@ import random
 import secrets
 import color
 import curses
-import enum 
+import enum
+import menu
+from menu import MenuManager
 
 class Event(enum.Enum):
     '''
@@ -55,6 +57,8 @@ class Game:
         '''Decides if to set up the game for displaying'''
         self.previousevent = ''
         '''Used for key motions of multiple characters'''
+        self.turn = 0
+        '''Keeps track of game turn'''
 
         # Objects
         self.GameState = GameState.PLAYING
@@ -64,12 +68,11 @@ class Game:
         self.Engine = engine.Engine(debug=True)
         '''Connection to for displaying and events'''
         self.LevelManager = level.LevelManager()
-        #self.MenuManager: MenuManager = None
+        '''Handles the levels'''
+        self.MenuManager = MenuManager()
         '''Holds all information for displaying menus'''
         #self.Messager: Messager = None
         '''Connection to the message queue instance'''
-        #self.Energy = 0
-        '''Keeps track of how much energy to dispense to objects'''
         self.playerFOV = True
         '''Use player FOV to generate map'''
         #self.Timing = Timing(Timing)
@@ -98,8 +101,8 @@ class Game:
             self.Display.init(self.Engine.termrows, self.Engine.termcols,
                               levelorigin=config.LEVELORIGIN)
         else:
-            # need to initialize Colors without curses module
-            color.colors(display=False)
+            # need to initialize colors without curses module
+            color.Color(display=False)
 
     def game_setup(self):
         '''
@@ -108,6 +111,8 @@ class Game:
         #self.Timing.start('Game Setup')
         # start running
         self.running = True
+        # reset turn
+        self.turn = 1
         # set up objects
         if self.specificseed is None:
             self.seed = secrets.randbits(64)
@@ -115,6 +120,7 @@ class Game:
             self.seed = self.specificseed
         self.RNG = random.Random(self.seed)
         logger.Logger.log(f'SEED: {self.seed}')
+        self.MenuManager.init(self.turn)
         self.LevelManager.init(
                 totallevels=config.TOTALLEVELS,
                 currentz=0,
@@ -169,11 +175,13 @@ class Game:
         Execute one loop in the game loop
         '''
 
+        self.turn += 1
+
         # event was valid, save it
         self.previousevent = event
 
         # update the turn
-        #self.MenuManager.TurnMenu.update()
+        self.MenuManager.StatusMenu.update(self.turn)
 
         # clear current message
         #self.MenuManager.MessageMenu.clear()
@@ -205,6 +213,7 @@ class Game:
         level = self.LevelManager.get_curr_level()
         if level:
             screenbuffer,colorbuffer = self.Display.prepare_buffers(self.LevelManager,
+                                                                    self.MenuManager,
                                                                     self.playerFOV)
         else:
             screenbuffer = []

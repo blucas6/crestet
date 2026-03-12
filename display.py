@@ -1,4 +1,4 @@
-import color
+import color as c
 import logger
 
 class Display:
@@ -20,13 +20,13 @@ class Display:
         # create buffers
         self.screenbuffer = [[' ' for _ in range(termcols-1)] 
                                     for _ in range(termrows-1)]
-        self.colorbuffer = [[color.Color().white for _ in range(termcols-1)] 
+        self.colorbuffer = [[c.Color().white for _ in range(termcols-1)] 
                                     for _ in range(termrows-1)]
         # colors must be accessed after engine has been initialized
-        self.unknowncolor = color.Color().white
+        self.unknowncolor = c.Color().white
         self.levelorigin = levelorigin
 
-    def prepare_buffers(self, levelmanager, useplayerFOV):
+    def prepare_buffers(self, levelmanager, menumanager, useplayerFOV):
         '''Build the buffers to send to the engine'''
 
         if useplayerFOV:
@@ -64,8 +64,18 @@ class Display:
             for c,_ in enumerate(row):
                 rw, cl = self.level_to_screen_pos(r,c)
                 if lightlayer[r][c]:
-                    color = color.Color().yellow
+                    color = c.Color().yellow
                     self.colorbuffer[rw][cl] = color
+        
+        # add menus
+        for menu in menumanager.get_menus():
+            for r,row in enumerate(menu.text):
+                for c,ch in enumerate(row):
+                    rw = r+menu.origin[0]
+                    cl = c+menu.origin[1]
+                    if rw < len(self.screenbuffer) and cl < len(self.screenbuffer[rw]):
+                        self.screenbuffer[rw][cl] = ch
+
         return self.screenbuffer, self.colorbuffer
 
     def bounds_check(self, buffer, r, c):
