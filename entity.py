@@ -107,7 +107,19 @@ class Entity:
             self.idx = index
 
     def take_turn(self, *_):
-        '''Starting point of an entity's turn'''
+        '''
+        Starting point of an entity's turn
+        Default behavior is to dump all energy and do nothing
+        '''
+        self.energy = 0
+        pass
+
+    def on_placed(self, *_):
+        '''Hook gets called when an entity is placed on the level'''
+        pass
+
+    def on_top(self, *_):
+        '''Hook gets called when another entity is placed in the same square'''
         pass
 
     def move(self, levelmanager, pos):

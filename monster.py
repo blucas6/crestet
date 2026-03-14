@@ -52,7 +52,7 @@ class Jelly(e.Entity):
                          layer=e.Layer.MONST_LAYER,
                          size=e.Size.MEDIUM)
         self.Health = component.Health(health=config.JELLY_HEALTH)
-        self.splashdamage = JELLY_SPLASHDMG
+        self.splashdamage = config.JELLY_SPLASHDMG
 
     def death(self, levelmanager, animator, messager):
         '''

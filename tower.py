@@ -1,6 +1,8 @@
 import entity
+import logger
 import utility
 import color
+import component
 
 class Wall(entity.Entity):
     '''Wall entity'''
@@ -40,19 +42,26 @@ class StairDown(entity.Entity):
 
 class Light(entity.Entity):
     '''Light entity'''
-    def __init__(self):
+    def __init__(self, levelmanager):
         super().__init__(name='Light',
                          glyph='+',
                          color=color.Color().yellow,
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.SMALL)
-        #self.Activate = Activate(True)
+        self.light = True 
         '''Controls whether the light is on'''
+        self.update_state(levelmanager)
 
-    def update(self, entitylayer, playerpos, lightlayer, *args):
-        '''Turn the light on if it is active'''
-        if self.Activate.active:
-            points = utility.get_one_layer_pos(self.pos)
+    def update_state(self, levelmanager):
+        '''Update the map based on the light state'''
+        if self.light:
+            points = utility.get_one_layer_pts((self.row,self.col),
+                                               levelmanager.levelrows, levelmanager.levelcols)
             for pt in points:
-                lightlayer[pt[0]][pt[1]] = 1
+                levelmanager.Levels[self.z].LightLayer[pt[0]][pt[1]] = 1
+    
+    def on_top(self, levelmanager):
+        logger.Logger.log(f'Light activated {self}')
+        self.light = not self.light
+        self.update_state(levelmanager)
     

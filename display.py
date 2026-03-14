@@ -1,4 +1,4 @@
-import color as c
+import color as clr
 import logger
 
 class Display:
@@ -26,14 +26,14 @@ class Display:
         self.termcols = termcols
         self.clear_buffers()
         # colors must be accessed after engine has been initialized
-        self.unknowncolor = c.Color().white
+        self.unknowncolor = clr.Color().white
         self.levelorigin = levelorigin
 
     def clear_buffers(self):
         '''Creates empty buffers'''
         self.screenbuffer = [[' ' for _ in range(self.termcols-1)] 
                                     for _ in range(self.termrows-1)]
-        self.colorbuffer = [[c.Color().white for _ in range(self.termcols-1)] 
+        self.colorbuffer = [[clr.Color().white for _ in range(self.termcols-1)] 
                                     for _ in range(self.termrows-1)]
 
     def prepare_buffers(self, levelmanager, menumanager, useplayerFOV):
@@ -72,7 +72,7 @@ class Display:
             for c,_ in enumerate(row):
                 rw, cl = self.level_to_screen_pos(r,c)
                 if lightlayer[r][c]:
-                    color = c.Color().yellow
+                    color = clr.Color().yellow
                     self.colorbuffer[rw][cl] = color
 
     def render_entitylayer(self, entitylayer):
