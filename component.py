@@ -1,5 +1,36 @@
 import algo
 
+class Stackable:
+    '''
+    Stackable component, entities will combine into the passed in type
+    '''
+    def __init__(self, stack):
+        self.stack = stack
+        '''Entity stacked form'''
+
+    def get_stack(self):
+        '''Returns the stacked form of the entity'''
+        return self.stack()
+
+class Stack:
+    '''
+    Stack component, if an entity is a stack of entities
+    '''
+    def __init__(self, unstack):
+        self.unstack = unstack
+        '''Unstacked single entity form'''
+        self.amount = 0
+        '''Keep track of amount of entities stacked'''
+    
+    def add_to_stack(self, am=1):
+        '''Add to the amount of stacked entities'''
+        self.amount += am
+
+    def get_one(self):
+        '''Unstack one entity and return the unstacked single form'''
+        self.amount -= 1
+        return self.unstack()
+
 class Health:
     '''
     Health component, if an entity needs a health bar
@@ -68,7 +99,7 @@ class Brain:
     
     def getFOV(self, level, mypos):
         '''Use FOV algorithm to get which points are visible'''
-        grid = [[max([int(x.layer) for x in level.EntityLayer[r][c]])
+        grid = [[max([int(x.layer) for x in level.EntityLayer[r][c]]) if level.EntityLayer[r][c] else 0
                  for c in range(len(level.EntityLayer[r]))]
                     for r in range(len(level.EntityLayer))]
         return algo.RecursiveShadow(grid,

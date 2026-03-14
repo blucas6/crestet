@@ -1,4 +1,5 @@
 import logger
+import item
 import player
 import utility
 import tower
@@ -49,6 +50,7 @@ class LevelManager:
         self.levelcols = levelcols
         self.RNG = rng
         self.currentz = currentz
+        self.Levels = []
         for z in range(self.totallevels):
             self.Levels.append(
                     Level(rows=levelrows, cols=levelcols, z=z, rng=self.RNG)
@@ -64,6 +66,7 @@ class LevelManager:
             self.generate_surrounding_walls(level)
             # add monsters
             self.generate_mons(level)
+            self.generate_items(level)
             if z == 0:
                 pass
             elif z == self.totallevels-1:
@@ -86,10 +89,16 @@ class LevelManager:
                     self.place_entity(level, tower.Floor(), [r,c], overwrite=True)
 
     def generate_mons(self, level):
-        for _ in range(20):
-            r = self.RNG.randint(1,self.levelrows-1)
-            c = self.RNG.randint(1,self.levelcols-1)
+        for _ in range(2):
+            r = self.RNG.randint(1,self.levelrows-2)
+            c = self.RNG.randint(1,self.levelcols-2)
             self.place_entity(level, monster.Jelly(), (r,c))
+
+    def generate_items(self, level):
+        for _ in range(20):
+            r = self.RNG.randint(1,self.levelrows-2)
+            c = self.RNG.randint(1,self.levelcols-2)
+            self.place_entity(level, item.Dart(), (r,c))
 
     def place_entity(self, level, entity, pos, overwrite=False):
         '''Place an entity into the level'''
@@ -101,16 +110,61 @@ class LevelManager:
         r = pos[0]
         c = pos[1]
 
+        # if overwriting, reset the index 
         if overwrite:
-            # if overwriting, specific position will always work
             level.EntityLayer[r][c] = [entity]
             entity.set_pos(r, c, level.z, 0)
+        # if adding, append to the end
         else:
-
-            level.EntityLayer[r][c].append(entity)
-            idx = len(level.EntityLayer[r][c])-1
-            entity.set_pos(r, c, level.z, idx)
+            # deal with stacks
+            if hasattr(entity, 'Stackable') or hasattr(entity, 'Stack'):
+                self.place_stack(level, entity, pos)
+            # normal append to entity list
+            else:
+                level.EntityLayer[r][c].append(entity)
+                idx = len(level.EntityLayer[r][c])-1
+                entity.set_pos(r, c, level.z, idx)
         #logger.Logger.log(f'Entity {entity.name} placed at {entity.pos()}')
+
+    def place_stack(self, level, entity, pos):
+        r = pos[0]
+        c = pos[1]
+        '''Some entities have a stack or stackable component that needs to be checked'''
+        # Stackable, check if there are already entities present for it to stack on
+        if hasattr(entity, 'Stackable'):
+            for ent in level.EntityLayer[r][c]:
+                # if there is already a stack on the ground, make sure it has the same unstack type
+                # and stack with it
+                if hasattr(ent, 'Stack') and ent.Stack.unstack == type(entity):
+                    ent.Stack.add_to_stack()
+                    return
+                # no stack yet, but there is another stackable entity of the same type
+                elif type(entity) == type(ent):
+                    # replace the entity in the list with a stack of 2
+                    stack = ent.Stackable.get_stack()
+                    stack.Stack.add_to_stack(2)
+                    index = ent.idx
+                    level.EntityLayer[r][c][index] = stack
+                    stack.set_pos(r, c, level.z, index)
+                    return
+        # Stack, check if there are stackable entities or stacks already present
+        elif hasattr(entity, 'Stack'):
+            for ent in level.EntityLayer[r][c]:
+                # if there is a stackable entity on the ground, replace it with the stack
+                if hasattr(ent, 'Stackable') and ent.Stackable.stack == type(entity):
+                    entity.Stack.add_to_stack()
+                    index = ent.idx
+                    level.EntityLayer[r][c][index] = entity 
+                    entity.set_pos(r, c, level.z, index)
+                    return
+                # if there is a stack on the ground, combine with it
+                elif hasattr(ent, 'Stack') and type(entity) == type(ent):
+                    ent.Stack.add_to_stack(entity.Stack.amount)
+                    return
+        # if nothing trigger, just place it normally
+        level.EntityLayer[r][c].append(entity)
+        idx = len(level.EntityLayer[r][c])-1
+        entity.set_pos(r, c, level.z, idx)
 
     def is_entity_pos_valid(self, level, entity, pos, overwrite=False):
         '''Checks if an entity and a new position would be valid'''
@@ -122,10 +176,12 @@ class LevelManager:
         if overwrite:
             return True
 
-        # check if object fits in layer
-        maxlayer = max([x.layer for x in level.EntityLayer[pos[0]][pos[1]]])
-        if entity.layer <= maxlayer:
-            return False 
+        # run a check if an entity is on a higher layer than 0-1
+        if entity.layer > e.Layer.OBJECT_LAYER:
+            if level.EntityLayer[pos[0]][pos[1]]:
+                maxlayer = max([x.layer for x in level.EntityLayer[pos[0]][pos[1]]])
+                if entity.layer <= maxlayer:
+                    return False 
         return True
 
     def get_curr_level(self):

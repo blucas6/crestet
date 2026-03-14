@@ -128,16 +128,17 @@ class Entity:
             return
         # check if there is an entity to attack
         entitylayer = levelmanager.Levels[self.z].EntityLayer
-        maxlayer = max([x.layer for x in entitylayer[row][col]])
-        # anything on the monster layer should be able to be attacked
-        if maxlayer == Layer.MONST_LAYER:
-            self.energy -= self.speed
-            for entity in entitylayer[row][col]:
-                if maxlayer == Layer.MONST_LAYER:
-                    self.attack(levelmanager, animator, entity, 1)
+        if entitylayer[row][col]:
+            maxlayer = max([x.layer for x in entitylayer[row][col]])
+            # anything on the monster layer should be able to be attacked
+            if maxlayer == Layer.MONST_LAYER:
+                self.energy -= self.speed
+                for entity in entitylayer[row][col]:
+                    if maxlayer == Layer.MONST_LAYER:
+                        self.attack(levelmanager, animator, entity, 1)
+                return
         # otherwise just move normally
-        else:
-            self.move(levelmanager, (row,col))
+        self.move(levelmanager, (row,col))
 
     def attack(self, levelmanager, animator, entity, damage):
         '''Attack the entity passed in'''
