@@ -9,6 +9,8 @@ COLS = 25
 
 PLAYERFOV = 5
 '''Player FOV range'''
+PLAYERHEALTH = 20
+'''Player health amount'''
 
 EXPLOSION_ANIM_DELAY = 0.1
 '''Jelly explosion animation'''
