@@ -36,6 +36,35 @@ class Display:
         lightlayer = levelmanager.get_curr_level().LightLayer
 
         # go through entity layer
+        self.render_entitylayer(entitylayer)
+
+        # go through light layer
+        self.render_lightlayer(lightlayer)
+        
+        # add menus
+        self.render_menus(menumanager)
+
+        return self.screenbuffer, self.colorbuffer
+
+    def render_menus(self, menumanager):
+        for menu in menumanager.get_menus():
+            for r,row in enumerate(menu.text):
+                for c,ch in enumerate(row):
+                    rw = r+menu.origin[0]
+                    cl = c+menu.origin[1]
+                    if rw < len(self.screenbuffer) and cl < len(self.screenbuffer[rw]):
+                        self.screenbuffer[rw][cl] = ch
+
+    def render_lightlayer(self, lightlayer):
+        for r,row in enumerate(lightlayer):
+            for c,_ in enumerate(row):
+                rw, cl = self.level_to_screen_pos(r,c)
+                if lightlayer[r][c]:
+                    color = c.Color().yellow
+                    self.colorbuffer[rw][cl] = color
+
+    def render_entitylayer(self, entitylayer):
+        # go through entity layer
         for r,row in enumerate(entitylayer):
             for c,col in enumerate(row):
                 rw, cl = self.level_to_screen_pos(r,c)
@@ -59,24 +88,6 @@ class Display:
                     continue
                 # add color
                 self.colorbuffer[rw][cl] = color
-        # go through light layer
-        for r,row in enumerate(lightlayer):
-            for c,_ in enumerate(row):
-                rw, cl = self.level_to_screen_pos(r,c)
-                if lightlayer[r][c]:
-                    color = c.Color().yellow
-                    self.colorbuffer[rw][cl] = color
-        
-        # add menus
-        for menu in menumanager.get_menus():
-            for r,row in enumerate(menu.text):
-                for c,ch in enumerate(row):
-                    rw = r+menu.origin[0]
-                    cl = c+menu.origin[1]
-                    if rw < len(self.screenbuffer) and cl < len(self.screenbuffer[rw]):
-                        self.screenbuffer[rw][cl] = ch
-
-        return self.screenbuffer, self.colorbuffer
 
     def bounds_check(self, buffer, r, c):
         '''
@@ -88,3 +99,4 @@ class Display:
 
     def level_to_screen_pos(self, r, c):
         return r+self.levelorigin[0], c+self.levelorigin[1]
+

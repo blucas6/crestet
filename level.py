@@ -86,16 +86,16 @@ class LevelManager:
                     self.place_entity(level, tower.Floor(), [r,c], overwrite=True)
 
     def generate_mons(self, level):
-        r = self.RNG.randint(1,self.levelrows-1)
-        c = self.RNG.randint(1,self.levelcols-1)
-        self.place_entity(level, monster.Newt(), (r,c))
-    
+        for _ in range(20):
+            r = self.RNG.randint(1,self.levelrows-1)
+            c = self.RNG.randint(1,self.levelcols-1)
+            self.place_entity(level, monster.Jelly(), (r,c))
 
     def place_entity(self, level, entity, pos, overwrite=False):
         '''Place an entity into the level'''
 
         if not self.is_entity_pos_valid(level, entity, pos, overwrite=overwrite):
-            logger.Logger.log(f'Error: Entity {entity.name} cannot be placed at {pos}')
+            logger.Logger.log(f'Error: Entity {entity.name} cannot be placed at {pos} z:{level.z}')
             return
         
         r = pos[0]
@@ -134,7 +134,7 @@ class LevelManager:
             return self.Levels[self.currentz]
         return None
 
-    def update_level(self, event):
+    def update_level(self, animator, event):
         '''
         Go through all entities and update them
         '''
@@ -145,7 +145,7 @@ class LevelManager:
         logger.Logger.log('----------TURN UPDATE-----------')
 
         self.Player.energy = 100
-        self.Player.do_action(self, event)
+        self.Player.do_action(self, animator, event)
         energy = 100 - self.Player.energy
         if energy == 100:
             energy = self.Player.speed
@@ -157,12 +157,12 @@ class LevelManager:
             for row in level.EntityLayer:
                 for entitylist in row:
                     for entity in entitylist:
-                        done_turn = self.update_entity(entity, energy)
+                        done_turn = self.update_entity(animator, entity, energy)
 
-    def update_entity(self, entity, energy):
+    def update_entity(self, animator, entity, energy):
         entity.energy += energy
         energystart = entity.energy
-        entity.take_turn(self, energy)
+        entity.take_turn(self, animator, energy)
         energyend = entity.energy
         if entity.energy == 0 or energystart == energyend:
             entity.turn += 1

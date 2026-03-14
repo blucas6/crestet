@@ -109,7 +109,7 @@ class Entity:
         if levelmanager.move_entity(self, pos):
             self.energy -= self.speed
 
-    def movement(self, levelmanager, key):
+    def movement(self, levelmanager, animator, key):
         '''
         Handle the movement action
 
@@ -131,31 +131,31 @@ class Entity:
         maxlayer = max([x.layer for x in entitylayer[row][col]])
         # anything on the monster layer should be able to be attacked
         if maxlayer == Layer.MONST_LAYER:
+            self.energy -= self.speed
             for entity in entitylayer[row][col]:
                 if maxlayer == Layer.MONST_LAYER:
-                    self.attack(levelmanager, entity)
+                    self.attack(levelmanager, animator, entity, 1)
         # otherwise just move normally
         else:
             self.move(levelmanager, (row,col))
 
-    def attack(self, levelmanager, entity):
+    def attack(self, levelmanager, animator, entity, damage):
         '''Attack the entity passed in'''
-        damage = 1
         if hasattr(entity, 'Health'):
-            self.energy -= self.speed
             if entity.Health.change_health(-damage):
-                entity.death(levelmanager)
+                entity.death(levelmanager, animator)
     
-    def death(self, levelmanager):
+    def death(self, levelmanager, *_):
+        '''Entities can add to this method to trigger on death actions'''
         levelmanager.remove_entity(self)
 
-    def do_action(self, levelmanager, event):
+    def do_action(self, levelmanager, animator, event):
         '''Pass an event for the entity to preform a certain action'''
         logger.Logger.log(f'Do action [{self.name}|{self.id}]: {event} energy:{self.energy}')
 
         # Movement Action
         if event.isdigit():
-            return self.movement(levelmanager, int(event))
+            return self.movement(levelmanager, animator, int(event))
         # Z Action
         elif event == '<' or event == '>':
             #self.moveZ(event, entityLayer)

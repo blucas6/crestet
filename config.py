@@ -9,3 +9,6 @@ COLS = 25
 
 PLAYERFOV = 5
 '''Player FOV range'''
+
+EXPLOSION_ANIM_DELAY = 0.1
+'''Jelly explosion animation'''

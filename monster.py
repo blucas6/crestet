@@ -1,6 +1,9 @@
 import entity as e
+import animation
+import config
 import color
 import component
+import utility
 
 class Newt(e.Entity):
     '''
@@ -22,10 +25,11 @@ class Newt(e.Entity):
         super().setup()
         #self.Inventory.equip(Bite())
 
-    def take_turn(self, levelmanager, energy):
+    def take_turn(self, levelmanager, animator, energy):
         '''Uses brain to select an action'''
         return self.do_action(
                 levelmanager,
+                animator,
                 self.Brain.get_action(
                     levelmanager.get_curr_level(),
                     [self.row,self.col],
@@ -34,3 +38,54 @@ class Newt(e.Entity):
                     energy
                 )
             )
+
+class Jelly(e.Entity):
+    '''
+    Floating jelly creature
+    '''
+    def __init__(self):
+        super().__init__(name='Jelly',
+                         glyph='j',
+                         color=color.Color().blue,
+                         layer=e.Layer.MONST_LAYER,
+                         size=e.Size.MEDIUM)
+        self.Health = component.Health(health=3)
+        self.splashDamage = 5
+
+    def death(self, levelmanager, animator):
+        '''
+        Generate the explosion on death
+        '''
+        super().death(levelmanager)
+        #self.Messager.addMessage('It explodes!')
+        # queue animation
+        frames = {}
+        frames['0'] = [
+            ['','' ,''],
+            ['','*',''],
+            ['','' ,'']
+        ]
+        frames['1'] = [
+            ['/' ,'-', '\\'],
+            ['|',' ' ,'|'],
+            ['\\' ,'-', '/']
+        ]
+        origin = [self.row-1,self.col-1]
+        anim = animation.Animation(
+            origin=origin,
+            frames=frames, 
+            color=color.Color().blue,
+            delay=config.EXPLOSION_ANIM_DELAY)
+        animator.queueUp(anim)
+        # spread damage
+        points = utility.get_one_layer_pts((self.row,self.col),
+                                           levelmanager.levelrows,
+                                           levelmanager.levelcols)
+        for point in points:
+            ptrow = point[0]
+            ptcol = point[1]
+            # don't damage yourself
+            if (ptrow,ptcol) == (self.row,self.col):
+                continue
+            for entity in levelmanager.Levels[self.z].EntityLayer[ptrow][ptcol]:
+                self.attack(levelmanager, animator, entity, self.splashDamage)

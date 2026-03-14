@@ -1,4 +1,5 @@
 import engine
+import copy
 import config
 import level
 import display
@@ -10,6 +11,7 @@ import color
 import curses
 import enum
 import menu
+import animation
 
 class Event(enum.Enum):
     '''
@@ -70,6 +72,8 @@ class Game:
         '''Handles the levels'''
         self.MenuManager = menu.MenuManager()
         '''Holds all information for displaying menus'''
+        self.Animator = animation.Animator()
+        '''Holds the animation queue'''
         #self.Messager: Messager = None
         '''Connection to the message queue instance'''
         self.playerFOV = True
@@ -186,7 +190,7 @@ class Game:
         #self.MenuManager.MessageMenu.clear()
 
         # update all entities
-        self.LevelManager.update_level(event)
+        self.LevelManager.update_level(self.Animator, event)
 
         # update player FOV
         self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
@@ -214,6 +218,8 @@ class Game:
             screenbuffer,colorbuffer = self.Display.prepare_buffers(self.LevelManager,
                                                                     self.MenuManager,
                                                                     self.playerFOV)
+            # animations
+            self.animations(copy.deepcopy(screenbuffer), copy.deepcopy(colorbuffer))
         else:
             screenbuffer = []
             colorbuffer = []
@@ -251,6 +257,36 @@ class Game:
             self.stateMachine('msgQEmpty')
             '''
         pass
+
+    def animations(self, screenbuffer, colorbuffer):
+        '''Display animations queued'''
+        if not self.Animator.AnimationQueue:
+            return
+        # get longest animation
+        maxframes = max([len(list(x.frames.keys()))
+                         for x in self.Animator.AnimationQueue])
+        for framecounter in range(maxframes):
+            # go through each animation
+            for anim in self.Animator.AnimationQueue:
+                if framecounter >= len(list(anim.frames.keys())):
+                    continue
+                ar, ac = anim.origin[0], anim.origin[1]
+                # add frame array to the screen
+                for r,row in enumerate(anim.frames[str(framecounter)]):
+                    for c,col in enumerate(row):
+                        if not col:
+                            continue
+                        rw, cl = self.Display.level_to_screen_pos(ar+r,ac+c)
+                        screenbuffer[rw][cl] = col
+                        colorbuffer[rw][cl] = anim.color
+            # display through engine
+            if self.Engine.frame_ready():
+                # output
+                self.Engine.output(screenchars=screenbuffer,
+                                    screencolors=colorbuffer)
+            self.Engine.pause(anim.delay)
+        # done with all animations
+        self.Animator.clearQueue()
 
     def event_type(self, event):
         '''
