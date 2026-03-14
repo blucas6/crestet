@@ -10,7 +10,6 @@ import color
 import curses
 import enum
 import menu
-from menu import MenuManager
 
 class Event(enum.Enum):
     '''
@@ -69,7 +68,7 @@ class Game:
         '''Connection to for displaying and events'''
         self.LevelManager = level.LevelManager()
         '''Handles the levels'''
-        self.MenuManager = MenuManager()
+        self.MenuManager = menu.MenuManager()
         '''Holds all information for displaying menus'''
         #self.Messager: Messager = None
         '''Connection to the message queue instance'''
