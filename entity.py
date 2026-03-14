@@ -115,7 +115,7 @@ class Entity:
         if levelmanager.move_entity(self, pos):
             self.energy -= self.speed
 
-    def movement(self, levelmanager, animator, key):
+    def movement(self, levelmanager, animator, messager, key):
         '''
         Handle the movement action
 
@@ -141,24 +141,24 @@ class Entity:
                 self.energy -= self.speed
                 for entity in entitylayer[row][col]:
                     if maxlayer == Layer.MONST_LAYER:
-                        self.attack(levelmanager, animator, entity, 1)
+                        self.attack(levelmanager, animator, messager, entity, 1)
                 return
         # otherwise just move normally
         self.move(levelmanager, (row,col))
 
-    def attack(self, levelmanager, animator, entity, damage):
+    def attack(self, levelmanager, animator, messager, entity, damage):
         '''Attack the entity passed in'''
         if hasattr(entity, 'Health'):
             logger.Logger.log(f'Dealing damage to {entity}')
             if entity.Health.change_health(-damage):
-                entity.death(levelmanager, animator)
+                entity.death(levelmanager, animator, messager)
     
     def death(self, levelmanager, *_):
         '''Entities can add to this method to trigger on death actions'''
         logger.Logger.log(f'Death trigger: {self}')
         levelmanager.remove_entity(self)
 
-    def throw(self, levelmanager, animator, entity, direction: tuple=(), target: tuple=()):
+    def throw(self, levelmanager, animator, messager, entity, direction: tuple=(), target: tuple=()):
         '''
         Child classes should use their own methods to call this base method 
 
@@ -221,16 +221,20 @@ class Entity:
             # deal damage
             dmg = entity.size * 2
             for ent in entitylayer[objr][objc]:
-                self.attack(levelmanager, animator, ent, dmg)
+                self.attack(levelmanager, animator, messager, ent, dmg)
 
-    def do_action(self, levelmanager, animator, event):
+    def do_action(self, levelmanager, animator, messager, event):
         '''Pass an event for the entity to preform a certain action'''
         logger.Logger.log(f'Do action [{self.name}|{self.id}]: {event} energy:{self.energy}')
 
-        # Movement Action
-        if event.isdigit():
-            return self.movement(levelmanager, animator, int(event))
-        # Z Action
+        # Running
+        if event[0] == '5':
+            self.energy = 0
+            pass
+        # Walking 
+        elif event.isdigit():
+            return self.movement(levelmanager, animator, messager, int(event))
+        # Z
         elif event == '<' or event == '>':
             #self.moveZ(event, entityLayer)
             pass
@@ -239,7 +243,7 @@ class Entity:
             self.energy = 0
         # Throwing
         elif event[0] == 't':
-            return self.fire(levelmanager, animator, event)
+            return self.fire(levelmanager, animator, messager, event)
 
 
 

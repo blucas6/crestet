@@ -10,8 +10,9 @@ class Newt(e.Entity):
     Newt creature
     '''
     def __init__(self):
-        self.Health = component.Health(health=3)
-        self.Brain = component.Brain(sightrange=5, blockinglayer=e.Layer.MONST_LAYER)
+        self.Health = component.Health(health=config.NEWT_HEALTH)
+        self.Brain = component.Brain(sightrange=config.NEWT_SIGHTRANGE,
+                                     blockinglayer=e.Layer.MONST_LAYER)
         #self.Inventory = Inventory()
         self.speed = e.Speed.SLOW
         self.attackspeed = e.AttackSpeed.SLOW
@@ -25,11 +26,12 @@ class Newt(e.Entity):
         super().setup()
         #self.Inventory.equip(Bite())
 
-    def take_turn(self, levelmanager, animator, energy):
+    def take_turn(self, levelmanager, animator, messager, energy):
         '''Uses brain to select an action'''
         return self.do_action(
                 levelmanager,
                 animator,
+                messager,
                 self.Brain.get_action(
                     levelmanager.get_curr_level(),
                     [self.row,self.col],
@@ -49,15 +51,15 @@ class Jelly(e.Entity):
                          color=color.Color().blue,
                          layer=e.Layer.MONST_LAYER,
                          size=e.Size.MEDIUM)
-        self.Health = component.Health(health=3)
-        self.splashDamage = 5
+        self.Health = component.Health(health=config.JELLY_HEALTH)
+        self.splashdamage = JELLY_SPLASHDMG
 
-    def death(self, levelmanager, animator):
+    def death(self, levelmanager, animator, messager):
         '''
         Generate the explosion on death
         '''
         super().death(levelmanager)
-        #self.Messager.addMessage('It explodes!')
+        messager.add_message('It explodes!')
         # queue animation
         frames = {}
         frames['0'] = [
@@ -88,4 +90,4 @@ class Jelly(e.Entity):
             if (ptrow,ptcol) == (self.row,self.col):
                 continue
             for entity in levelmanager.Levels[self.z].EntityLayer[ptrow][ptcol]:
-                self.attack(levelmanager, animator, entity, self.splashDamage)
+                self.attack(levelmanager, animator, messager, entity, self.splashdamage)

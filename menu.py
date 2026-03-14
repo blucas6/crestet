@@ -1,3 +1,4 @@
+import logger
 
 class Menu:
     '''
@@ -28,17 +29,43 @@ class StatusMenu(Menu):
         self.text[0] = f'Player Turn:{self.turn}'
 
     def update(self, turn):
+        '''Add the new turn'''
         self.turn = turn
         self.text[0] = f'Player Turn:{self.turn}'
 
+class MessageMenu(Menu):
+    '''
+    Display message queue
+    '''
+    def __init__(self, messager, blocking, origin, rows, cols):
+        super().__init__(origin, rows, cols)
+        self.Messager = messager
+        self.msg = ''
+        self.blocking = blocking
+
+    def update(self):
+        '''Get the latest message'''
+        if not self.msg:
+            self.msg = self.Messager.pop_message(self.blocking)
+            self.text[0] = self.msg
+            if self.Messager.MsgQueue:
+                self.text[0] += '--more--'
+
+    def clear(self):
+        self.msg = ''
+        self.text[0] = ' something '
 
 class MenuManager:
+    '''
+    Holds all menus
+    '''
 
     def __init__(self):
         pass
 
-    def init(self, turn):
+    def init(self, messager, blocking, turn):
         self.StatusMenu = StatusMenu((25,1), 1, 20, turn)
+        self.MessageMenu = MessageMenu(messager, blocking, (0,0), 1, 30)
 
     def get_menus(self):
-        return [self.StatusMenu]
+        return [self.StatusMenu, self.MessageMenu]

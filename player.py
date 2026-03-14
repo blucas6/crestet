@@ -89,11 +89,11 @@ class Player(e.Entity):
                 if col:
                     self.mentalmap[r][c] = level.EntityLayer[r][c]
 
-    def fire(self, levelmanager, animator, event):
+    def fire(self, levelmanager, animator, messager, event):
         # throw in a direction
         if event[1].isdigit():
             direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
-            return self.throw(levelmanager, animator, item.Dart(), direction)
+            return self.throw(levelmanager, animator, messager, item.Dart(), direction)
 
 
 

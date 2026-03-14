@@ -190,7 +190,7 @@ class LevelManager:
             return self.Levels[self.currentz]
         return None
 
-    def update_level(self, animator, event):
+    def update_level(self, animator, messager, event):
         '''
         Go through all entities and update them
         '''
@@ -201,7 +201,7 @@ class LevelManager:
         logger.Logger.log('----------TURN UPDATE-----------')
 
         self.Player.energy = 100
-        self.Player.do_action(self, animator, event)
+        self.Player.do_action(self, animator, messager, event)
         energy = 100 - self.Player.energy
         if energy == 100:
             energy = self.Player.speed
@@ -213,12 +213,12 @@ class LevelManager:
             for row in level.EntityLayer:
                 for entitylist in row:
                     for entity in entitylist:
-                        done_turn = self.update_entity(animator, entity, energy)
+                        done_turn = self.update_entity(animator, messager, entity, energy)
 
-    def update_entity(self, animator, entity, energy):
+    def update_entity(self, animator, messager, entity, energy):
         entity.energy += energy
         energystart = entity.energy
-        entity.take_turn(self, animator, energy)
+        entity.take_turn(self, animator, messager, energy)
         energyend = entity.energy
         if entity.energy == 0 or energystart == energyend:
             entity.turn += 1

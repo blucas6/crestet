@@ -14,20 +14,32 @@ class Display:
         '''Color of unknown area'''
         self.levelorigin = (-1,-1)
         '''Where the levels are placed on the screen'''
+        self.termrows = 0
+        '''Total terminal rows'''
+        self.termcols = 0
+        '''Total terminal columns'''
 
     def init(self, termrows, termcols, levelorigin):
         '''Setup the buffers'''
         # create buffers
-        self.screenbuffer = [[' ' for _ in range(termcols-1)] 
-                                    for _ in range(termrows-1)]
-        self.colorbuffer = [[c.Color().white for _ in range(termcols-1)] 
-                                    for _ in range(termrows-1)]
+        self.termrows = termrows
+        self.termcols = termcols
+        self.clear_buffers()
         # colors must be accessed after engine has been initialized
         self.unknowncolor = c.Color().white
         self.levelorigin = levelorigin
 
+    def clear_buffers(self):
+        '''Creates empty buffers'''
+        self.screenbuffer = [[' ' for _ in range(self.termcols-1)] 
+                                    for _ in range(self.termrows-1)]
+        self.colorbuffer = [[c.Color().white for _ in range(self.termcols-1)] 
+                                    for _ in range(self.termrows-1)]
+
     def prepare_buffers(self, levelmanager, menumanager, useplayerFOV):
         '''Build the buffers to send to the engine'''
+
+        self.clear_buffers()
 
         if useplayerFOV:
             entitylayer = levelmanager.Player.mentalmap

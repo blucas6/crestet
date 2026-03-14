@@ -10,6 +10,7 @@ ROWS = 12
 COLS = 25
 '''Amount of cols per level'''
 
+## PLAYER
 PLAYERFOV = 5
 '''Player FOV range'''
 PLAYERHEALTH = 20
@@ -17,3 +18,12 @@ PLAYERHEALTH = 20
 
 EXPLOSION_ANIM_DELAY = 0.05
 '''Jelly explosion animation'''
+
+
+## NEWT
+NEWT_HEALTH = 3
+NEWT_SIGHTRANGE = 8
+
+## JELLY
+JELLY_HEALTH = 1
+JELLY_SPLASHDMG = 5

@@ -1,4 +1,5 @@
 import engine
+import message
 import copy
 import config
 import level
@@ -74,7 +75,7 @@ class Game:
         '''Holds all information for displaying menus'''
         self.Animator = animation.Animator()
         '''Holds the animation queue'''
-        #self.Messager: Messager = None
+        self.Messager = message.Messager()
         '''Connection to the message queue instance'''
         self.playerFOV = True
         '''Use player FOV to generate map'''
@@ -123,7 +124,7 @@ class Game:
             self.seed = self.specificseed
         self.RNG = random.Random(self.seed)
         logger.Logger.log(f'SEED: {self.seed}')
-        self.MenuManager.init(self.turn)
+        self.MenuManager.init(self.Messager, self.messageblocking, self.turn)
         self.LevelManager.init(
                 totallevels=config.TOTALLEVELS,
                 currentz=0,
@@ -167,7 +168,7 @@ class Game:
     def clear_state(self):
         '''Clears the current message'''
         # clear the message queue
-        #self.MenuManager.MessageMenu.clear()
+        self.MenuManager.MessageMenu.clear()
         # grab new message
         self.messages()
         # update inventory menu
@@ -187,10 +188,10 @@ class Game:
         self.MenuManager.StatusMenu.update(self.turn)
 
         # clear current message
-        #self.MenuManager.MessageMenu.clear()
+        self.MenuManager.MessageMenu.clear()
 
         # update all entities
-        self.LevelManager.update_level(self.Animator, event)
+        self.LevelManager.update_level(self.Animator, self.Messager, event)
 
         # update player FOV
         self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
@@ -202,10 +203,10 @@ class Game:
         if not self.GameState == GameState.END:
             if self.win():
                 self.state_machine('endgame')
-                #self.Messager.addMessage('You won!')
+                self.Messager.add_message('You won!')
             elif self.lose():
                 self.state_machine('endgame')
-                #self.Messager.addMessage('You died!')
+                self.Messager.add_message('You died!')
 
         # update and grab any messages in the queue
         self.messages()
@@ -248,16 +249,13 @@ class Game:
 
     def messages(self):
         '''Deal with messages in the queue'''
-        '''
-        self.MenuManager.MessageMenu.update(blocking=self.MessageBlocking)
+        self.MenuManager.MessageMenu.update()
         if self.Messager.MsgQueue:
             # still more messages to process, msg queue should never be full if
             # non blocking mode is on
-            self.stateMachine('msgQFull')
+            self.state_machine('msgQFull')
         else:
-            self.stateMachine('msgQEmpty')
-            '''
-        pass
+            self.state_machine('msgQEmpty')
 
     def animations(self, screenbuffer, colorbuffer):
         '''Display animations queued'''
@@ -302,12 +300,13 @@ class Game:
                 # Throwing/Charge Action
                 # expects a direction
                 if not event.isdigit() or event == '5':
-                    #self.Messager.addMessage('Invalid direction!')
+                    self.Messager.add_message('Invalid direction!')
                     return Event.CLEAR,event
                 # valid direction increment turn
                 # return the combined event
                 if self.previousevent == '5':
-                    self.state_machine('startrun')
+                    pass
+                    #self.state_machine('startrun')
                 return Event.EVENT,self.previousevent+event
             elif self.previousevent == 'e' or self.previousevent == 'u':
                 # Inventory Action
@@ -328,7 +327,7 @@ class Game:
         elif ((event == 't' or event == '5') and
               self.GameState == GameState.PLAYING):
             # Multi key action
-            #self.Messager.addMessage('Direction?')
+            self.Messager.add_message('Direction?')
             self.state_machine('motion')
             self.previousevent = event
             return Event.CLEAR,event
