@@ -89,13 +89,13 @@ class LevelManager:
                     self.place_entity(level, tower.Floor(), [r,c], overwrite=True)
 
     def generate_mons(self, level):
-        for _ in range(2):
+        for _ in range(20):
             r = self.RNG.randint(1,self.levelrows-2)
             c = self.RNG.randint(1,self.levelcols-2)
             self.place_entity(level, monster.Jelly(), (r,c))
 
     def generate_items(self, level):
-        for _ in range(20):
+        for _ in range(2):
             r = self.RNG.randint(1,self.levelrows-2)
             c = self.RNG.randint(1,self.levelcols-2)
             self.place_entity(level, item.Dart(), (r,c))

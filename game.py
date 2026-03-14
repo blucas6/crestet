@@ -215,11 +215,12 @@ class Game:
         # rewrite all the map buffers and menu buffers to the screen
         level = self.LevelManager.get_curr_level()
         if level:
+            # do animations before the screen changes 
+            self.animations(copy.deepcopy(self.Display.screenbuffer),
+                            copy.deepcopy(self.Display.colorbuffer))
             screenbuffer,colorbuffer = self.Display.prepare_buffers(self.LevelManager,
                                                                     self.MenuManager,
                                                                     self.playerFOV)
-            # animations
-            self.animations(copy.deepcopy(screenbuffer), copy.deepcopy(colorbuffer))
         else:
             screenbuffer = []
             colorbuffer = []
@@ -262,29 +263,25 @@ class Game:
         '''Display animations queued'''
         if not self.Animator.AnimationQueue:
             return
-        # get longest animation
-        maxframes = max([len(list(x.frames.keys()))
-                         for x in self.Animator.AnimationQueue])
-        for framecounter in range(maxframes):
-            # go through each animation
-            for anim in self.Animator.AnimationQueue:
-                if framecounter >= len(list(anim.frames.keys())):
-                    continue
-                ar, ac = anim.origin[0], anim.origin[1]
-                # add frame array to the screen
-                for r,row in enumerate(anim.frames[str(framecounter)]):
-                    for c,col in enumerate(row):
-                        if not col:
-                            continue
-                        rw, cl = self.Display.level_to_screen_pos(ar+r,ac+c)
-                        screenbuffer[rw][cl] = col
-                        colorbuffer[rw][cl] = anim.color
-            # display through engine
-            if self.Engine.frame_ready():
-                # output
-                self.Engine.output(screenchars=screenbuffer,
-                                    screencolors=colorbuffer)
-            self.Engine.pause(anim.delay)
+        # get copy buffers to reset to after each frame
+        oldscreenbuffer = copy.deepcopy(screenbuffer)
+        oldcolorbuffer = copy.deepcopy(colorbuffer)
+        # go through each animation
+        for anim in self.Animator.AnimationQueue:
+            for num in anim.frames.keys():
+                # reset buffers
+                screenbuffer = copy.deepcopy(oldscreenbuffer)
+                colorbuffer = copy.deepcopy(oldcolorbuffer)
+                self.Display.add_animation_frame(screenbuffer, colorbuffer, anim, num)
+                # display through engine
+                if self.Engine.frame_ready():
+                    # output
+                    self.Engine.output(screenchars=screenbuffer,
+                                        screencolors=colorbuffer)
+                self.Engine.pause(anim.delay)
+            if anim.finalframe:
+                self.Display.add_animation_frame(oldscreenbuffer, oldcolorbuffer,
+                                                 anim, list(anim.frames.keys())[-1])
         # done with all animations
         self.Animator.clearQueue()
 
@@ -315,7 +312,7 @@ class Game:
             elif self.previousevent == 'e' or self.previousevent == 'u':
                 # Inventory Action
                 return Event.EVENT,self.previousevent+event
-        if event == chr(curses.ascii.ESC) or event == 'q':
+        if event == 'q':
             # QUIT
             self.running = False
         elif event == 'r':

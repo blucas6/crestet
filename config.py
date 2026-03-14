@@ -1,3 +1,6 @@
+THROW_ANIM_DELAY = 0.02
+'''Delay travel time in throwing animation'''
+
 LEVELORIGIN = (2,2)
 '''Where the levels are displayed on the screen'''
 TOTALLEVELS = 1
@@ -12,5 +15,5 @@ PLAYERFOV = 5
 PLAYERHEALTH = 20
 '''Player health amount'''
 
-EXPLOSION_ANIM_DELAY = 0.1
+EXPLOSION_ANIM_DELAY = 0.05
 '''Jelly explosion animation'''

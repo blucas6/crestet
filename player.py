@@ -1,4 +1,6 @@
 import color
+import item
+import utility
 import config
 import copy
 import enum
@@ -86,6 +88,12 @@ class Player(e.Entity):
             for c,col in enumerate(row):
                 if col:
                     self.mentalmap[r][c] = level.EntityLayer[r][c]
+
+    def fire(self, levelmanager, animator, event):
+        # throw in a direction
+        if event[1].isdigit():
+            direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
+            return self.throw(levelmanager, animator, item.Dart(), direction)
 
 
 

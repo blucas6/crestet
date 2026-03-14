@@ -1,5 +1,8 @@
 import itertools
+import animation
+import config
 import utility
+import algo
 import logger
 import enum
 
@@ -85,6 +88,9 @@ class Entity:
         self.energy = 0
         '''Energy bank'''
 
+    def __repr__(self):
+        return f'[{self.name}|{self.id}]'
+
     def pos(self):
         '''Used for getting the entire position'''
         return [self.row, self.col, self.z, self.idx]
@@ -143,12 +149,79 @@ class Entity:
     def attack(self, levelmanager, animator, entity, damage):
         '''Attack the entity passed in'''
         if hasattr(entity, 'Health'):
+            logger.Logger.log(f'Dealing damage to {entity}')
             if entity.Health.change_health(-damage):
                 entity.death(levelmanager, animator)
     
     def death(self, levelmanager, *_):
         '''Entities can add to this method to trigger on death actions'''
+        logger.Logger.log(f'Death trigger: {self}')
         levelmanager.remove_entity(self)
+
+    def throw(self, levelmanager, animator, entity, direction: tuple=(), target: tuple=()):
+        '''
+        Child classes should use their own methods to call this base method 
+
+        If direction is included, the entity will be thrown in that direction
+        until it hits a wall layer
+
+        If target is included, the entity will be sent directly to that target's
+        position
+        '''
+        # make sure there is enough energy to throw
+        if hasattr(self, 'throwspeed') and self.energy >= self.throwspeed:
+            objr = self.row
+            objc = self.col
+            entitylayer = levelmanager.Levels[self.z].EntityLayer
+            if direction: 
+                # find the final position for the thrown object
+                # start object from entity position
+                while True:
+                    r,c = objr + direction[0], objc + direction[1]
+                    if entitylayer:
+                        maxlayer = max([x.layer for x in entitylayer[r][c]])
+                        # set final position at the monster
+                        if maxlayer == Layer.MONST_LAYER:
+                            objr, objc = r, c
+                            break
+                        # set final position before wall
+                        elif maxlayer == Layer.WALL_LAYER:
+                            break
+                    objr, objc = r, c
+                levelmanager.place_entity(levelmanager.Levels[self.z], entity, (objr,objc))
+            elif target:
+                # set to the target position
+                levelmanager.place_entity(levelmanager.Levels[self.z],
+                                          entity, (target[0],target[1]))
+                objr = entity.row
+                objc = entity.col
+            else:
+                logger.Logger.log(f'Error: invalid throw')
+                return
+
+            # construct a grid of [0-1] (makes sure path to end point is valid)
+            grid = [[1 if max([int(x.layer) for x in elist]) > Layer.MONST_LAYER else 0
+                    for elist in row]
+                    for row in entitylayer]
+            returncode, pts = algo.astar(grid, (self.row,self.col), (objr,objc))
+            if returncode != 1:
+                logger.Logger.log(f'Error: failed to throw -> {returncode}')
+                return
+
+            # create the animation
+            frames = {}
+            for idx,pt in enumerate(pts):
+                frames[str(idx)] = [['' for _ in row] for row in grid]
+                frames[str(idx)][pt[0]][pt[1]] = entity.glyph
+            origin = [0,0]
+            delay = config.THROW_ANIM_DELAY
+            anim = animation.Animation(origin, frames, entity.color, delay=delay)
+            animator.queueUp(anim)
+
+            # deal damage
+            dmg = entity.size * 2
+            for ent in entitylayer[objr][objc]:
+                self.attack(levelmanager, animator, ent, dmg)
 
     def do_action(self, levelmanager, animator, event):
         '''Pass an event for the entity to preform a certain action'''
@@ -164,6 +237,9 @@ class Entity:
         # Rest
         elif event == '.':
             self.energy = 0
+        # Throwing
+        elif event[0] == 't':
+            return self.fire(levelmanager, animator, event)
 
 
 

@@ -100,3 +100,14 @@ class Display:
     def level_to_screen_pos(self, r, c):
         return r+self.levelorigin[0], c+self.levelorigin[1]
 
+
+    def add_animation_frame(self, screenbuffer, colorbuffer, anim, key):
+            ar, ac = anim.origin[0], anim.origin[1]
+            # add frame array to the screen
+            for r,row in enumerate(anim.frames[key]):
+                for c,col in enumerate(row):
+                    if not col:
+                        continue
+                    rw, cl = self.level_to_screen_pos(ar+r,ac+c)
+                    screenbuffer[rw][cl] = col
+                    colorbuffer[rw][cl] = anim.color

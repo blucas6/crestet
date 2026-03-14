@@ -13,6 +13,8 @@ class Animation:
         '''Color of the animation'''
         self.delay = delay
         '''Delay between frames (engine will sleep)'''
+        self.finalframe = True
+        '''Animation will stay on its final frame at the end of the sequence'''
 
 class Animator:
     '''
