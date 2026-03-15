@@ -122,6 +122,10 @@ class Entity:
         '''Hook gets called when another entity is placed in the same square'''
         pass
 
+    def update_state(self, *_):
+        '''Gets called after initialization'''
+        pass
+
     def move(self, levelmanager, pos):
         '''Entity moves to a new position'''
         if levelmanager.move_entity(self, pos):
@@ -152,7 +156,7 @@ class Entity:
             if maxlayer == Layer.MONST_LAYER:
                 self.energy -= self.speed
                 for entity in entitylayer[row][col]:
-                    if maxlayer == Layer.MONST_LAYER:
+                    if entity.layer == Layer.MONST_LAYER:
                         self.attack(levelmanager, animator, messager, entity, 1)
                 return
         # otherwise just move normally
@@ -162,8 +166,13 @@ class Entity:
         '''Attack the entity passed in'''
         if hasattr(entity, 'Health'):
             logger.Logger.log(f'Dealing damage to {entity}')
-            if entity.Health.change_health(-damage):
-                entity.death(levelmanager, animator, messager)
+            messager.add_damage_message(self, entity)
+            self.deal_damage(levelmanager, animator, messager, entity, damage)
+
+    def deal_damage(self, levelmanager, animator, messager, entity, damage):
+        '''Some types of damage are not from an attack'''
+        if hasattr(entity, 'Health') and entity.Health.change_health(-damage):
+            entity.death(levelmanager, animator, messager)
     
     def death(self, levelmanager, *_):
         '''Entities can add to this method to trigger on death actions'''

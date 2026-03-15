@@ -107,7 +107,9 @@ class LevelManager:
         for _ in range(5):
             r = self.RNG.randint(1,self.levelrows-2)
             c = self.RNG.randint(1,self.levelcols-2)
-            self.place_entity(level, tower.Light(self), (r,c))
+            light = tower.Light()
+            self.place_entity(level, light, (r,c))
+            light.update_state(self)
 
     def place_entity(self, level, entity, pos, overwrite=False):
         '''Place an entity into the level'''
@@ -132,7 +134,8 @@ class LevelManager:
             entity.on_placed(self)
             # trigger the on top hook because entity was placed on top of other entities
             for ent in level.EntityLayer[r][c]:
-                ent.on_top(self)
+                if ent.id != entity.id:
+                    ent.on_top(self)
         #logger.Logger.log(f'Entity {entity.name} placed at {entity.pos()}')
 
     def is_entity_pos_valid(self, level, entity, pos, overwrite=False):
@@ -192,8 +195,9 @@ class LevelManager:
         for row in level.EntityLayer:
             for entitylist in row:
                 for entity in entitylist:
-                    if type(entity) == type(tower.Light(self)):
+                    if type(entity) == type(tower.Light):
                         entity.update_state(self)
+        logger.Logger.log(f'Light layer: {level.LightLayer}')
 
     def update_entity(self, animator, messager, entity, energy):
         entity.energy += energy

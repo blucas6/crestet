@@ -42,26 +42,26 @@ class StairDown(entity.Entity):
 
 class Light(entity.Entity):
     '''Light entity'''
-    def __init__(self, levelmanager):
+    def __init__(self):
         super().__init__(name='Light',
                          glyph='+',
                          color=color.Color().yellow,
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.SMALL)
-        self.light = True 
+        self.light = False
         '''Controls whether the light is on'''
-        self.update_state(levelmanager)
 
     def update_state(self, levelmanager):
         '''Update the map based on the light state'''
         if self.light:
             points = utility.get_one_layer_pts((self.row,self.col),
                                                levelmanager.levelrows, levelmanager.levelcols)
+            logger.Logger.log(f'{self} {self.pos()} pts: {points}')
             for pt in points:
                 levelmanager.Levels[self.z].LightLayer[pt[0]][pt[1]] = 1
     
     def on_top(self, levelmanager):
-        logger.Logger.log(f'Light activated {self}')
         self.light = not self.light
+        logger.Logger.log(f'Light toggled {self} {self.light}')
         self.update_state(levelmanager)
     
