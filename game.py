@@ -235,8 +235,8 @@ class Game:
 
     def win(self):
         '''Returns true if the game has been won'''
-        #if self.LevelManager.Player.z == self.LevelManager.TotalLevels-1:
-        #    return True
+        if self.LevelManager.Player.z == self.LevelManager.totallevels-1:
+            return True
         return False
 
     def lose(self):
