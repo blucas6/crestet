@@ -1,4 +1,5 @@
 import logger
+import config
 
 class Menu:
     '''
@@ -18,14 +19,24 @@ class Menu:
         '''Base class update method'''
         pass
 
+class HealthMenu(Menu):
+    '''Displays the health bar'''
+    def __init__(self, origin, rows, cols):
+        super().__init__(origin, rows, cols)
+
+    def update(self, healthcomponent):
+        currenthealth = healthcomponent.currenthealth
+        maxhealth = healthcomponent.maxhealth
+        amount = round(config.HEALTHMENU_LENGTH * currenthealth / maxhealth)
+        self.text[0] = '[' + amount*'\u2588' + (config.HEALTHMENU_LENGTH-amount)*' ' + ']'
 
 class StatusMenu(Menu):
     '''
     Display player status
     '''
     def __init__(self, origin, rows, cols, turn):
-        self.turn = turn
         super().__init__(origin, rows, cols)
+        self.turn = turn
         self.text[0] = f'Player Turn:{self.turn}'
 
     def update(self, turn):
@@ -64,8 +75,9 @@ class MenuManager:
         pass
 
     def init(self, messager, blocking, turn):
-        self.StatusMenu = StatusMenu((25,1), 1, 20, turn)
-        self.MessageMenu = MessageMenu(messager, blocking, (0,0), 1, 30)
+        self.StatusMenu = StatusMenu(config.STATUSMENU_ORIGIN, 1, 20, turn)
+        self.MessageMenu = MessageMenu(messager, blocking, config.MESSAGEMENU_ORIGIN, 1, 30)
+        self.HealthMenu = HealthMenu(config.HEALTHMENU_ORIGIN, 1, config.HEALTHMENU_LENGTH+2)
 
     def get_menus(self):
-        return [self.StatusMenu, self.MessageMenu]
+        return [self.StatusMenu, self.MessageMenu, self.HealthMenu]

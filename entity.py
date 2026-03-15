@@ -244,6 +244,28 @@ class Entity:
             for ent in entitylayer[objr][objc]:
                 self.attack(levelmanager, animator, messager, ent, dmg)
 
+    def moveZ(self, levelmanager, messager, incrementz):
+        '''Move an to another z level'''
+        if self.energy < self.speed:
+            return
+        # make sure there is a stairwell
+        for ent in levelmanager.Levels[self.z].EntityLayer[self.row][self.col]:
+            if ent.name == 'Upstair' and incrementz > 0:
+                if levelmanager.move_entity_z(self, self.z + incrementz, [self.row,self.col]):
+                    messager.add_message('You walk up the stairs')
+                    self.energy -= self.speed
+                    return
+            elif ent.name == 'Downstair' and incrementz < 0:
+                if levelmanager.move_entity_z(self, self.z + incrementz, [self.row,self.col]):
+                    messager.add_message('You walk down the stairs')
+                    self.energy -= self.speed
+                    return
+        # stairwell not on this space
+        if incrementz > 0:
+            messager.add_message("Can't go up here")
+        else:
+            messager.add_message("Can't go down here")
+
     def do_action(self, levelmanager, animator, messager, event):
         '''Pass an event for the entity to preform a certain action'''
         logger.Logger.log(f'Do action [{self.name}|{self.id}]: {event} energy:{self.energy}')
@@ -256,9 +278,10 @@ class Entity:
         elif event.isdigit():
             return self.movement(levelmanager, animator, messager, int(event))
         # Z
-        elif event == '<' or event == '>':
-            #self.moveZ(event, entityLayer)
-            pass
+        elif event == '<': 
+            self.moveZ(levelmanager, messager, 1)
+        elif event == '>':
+            self.moveZ(levelmanager, messager, -1)
         # Rest
         elif event == '.':
             self.energy = 0

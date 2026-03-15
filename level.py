@@ -60,20 +60,30 @@ class LevelManager:
 
     def level_setup_default(self):
         '''Load a default map on all levels'''
-        downstairPos = []
+        downstairpos = []
         for z,level in enumerate(self.Levels):
             self.generate_surrounding_walls(level)
             self.generate_light(level)
             self.generate_mons(level)
             self.generate_items(level)
             if z == 0:
-                pass
+                downstairpos = self.generate_upstair(level)
             elif z == self.totallevels-1:
-                pass
+                self.generate_downstair(level, downstairpos)
             else:
-                pass
+                self.generate_downstair(level, downstairpos)
+                downstairpos = self.generate_upstair(level)
         # add player
         self.place_entity(self.Levels[0], self.Player, (1,1))
+
+    def generate_downstair(self, level, downstairpos):
+        self.place_entity(level, tower.StairDown(), downstairpos, overwrite=True)
+
+    def generate_upstair(self, level):
+        r = self.RNG.randint(1,self.levelrows-2)
+        c = self.RNG.randint(1,self.levelcols-2)
+        self.place_entity(level, tower.StairUp(), [r,c], overwrite=True)
+        return [r,c]
 
     def generate_surrounding_walls(self, level):
         '''
@@ -166,6 +176,15 @@ class LevelManager:
         '''
         Go through all entities and update them
         '''
+
+        logger.Logger.log('----------TURN UPDATE-----------')
+
+        self.Player.energy = 100
+        self.Player.do_action(self, animator, messager, event)
+
+        # update the level the player is on
+        self.currentz = self.Player.z
+
         level = self.get_curr_level()
         if not level:
             return
@@ -174,10 +193,6 @@ class LevelManager:
         level.LightLayer = [[0 for _ in range(self.levelcols)]
                                 for _ in range(self.levelrows)]
 
-        logger.Logger.log('----------TURN UPDATE-----------')
-
-        self.Player.energy = 100
-        self.Player.do_action(self, animator, messager, event)
         energy = 100 - self.Player.energy
         if energy == 100:
             energy = self.Player.speed
@@ -195,9 +210,8 @@ class LevelManager:
         for row in level.EntityLayer:
             for entitylist in row:
                 for entity in entitylist:
-                    if type(entity) == type(tower.Light):
+                    if entity.name == 'Light':
                         entity.update_state(self)
-        logger.Logger.log(f'Light layer: {level.LightLayer}')
 
     def update_entity(self, animator, messager, entity, energy):
         entity.energy += energy
@@ -234,6 +248,24 @@ class LevelManager:
         # add entity to new position
         self.place_entity(level, entity, pos)
 
+        return True
+    
+    def move_entity_z(self, entity, newz, newpos):
+        '''Moves an entity to a new z level'''
+
+        if newz >= len(self.Levels) or newz < 0:
+            logger.Logger.log(f'Error: {entity} cannot go past last level!')
+            return
+
+        level = self.Levels[newz]
+
+        if not self.is_entity_pos_valid(level, entity, newpos):
+            logger.Logger.log(f'Error: {entity} moving to z:{newz} is invalid!')
+            return False
+
+        entity = self.remove_entity(entity)
+
+        self.place_entity(level, entity, newpos)
         return True
 
     def remove_entity(self, entity):

@@ -48,7 +48,7 @@ class Light(entity.Entity):
                          color=color.Color().yellow,
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.SMALL)
-        self.light = False
+        self.light = True
         '''Controls whether the light is on'''
 
     def update_state(self, levelmanager):
@@ -61,6 +61,7 @@ class Light(entity.Entity):
                 levelmanager.Levels[self.z].LightLayer[pt[0]][pt[1]] = 1
     
     def on_top(self, levelmanager):
+        '''Trigger the light on or off'''
         self.light = not self.light
         logger.Logger.log(f'Light toggled {self} {self.light}')
         self.update_state(levelmanager)

@@ -134,6 +134,7 @@ class Game:
         self.LevelManager.level_setup_default()
         # update player FOV
         self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
+        self.MenuManager.HealthMenu.update(self.LevelManager.Player.Health)
 
     def main(self):
         '''
@@ -197,6 +198,7 @@ class Game:
         self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
 
         # update health menu
+        self.MenuManager.HealthMenu.update(self.LevelManager.Player.Health)
 
         # update inventory menu
 
