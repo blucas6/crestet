@@ -66,7 +66,7 @@ class LevelManager:
         upstairpos = []
         for z,level in enumerate(self.Levels):
             self.generate_surrounding_walls(level)
-            self.generate_walls(level)
+            #self.generate_walls(level)
             if z == 0:
                 downstairpos = self.generate_upstair(level)
                 self.generate_clear_path(level, playerpos, downstairpos)
@@ -103,10 +103,8 @@ class LevelManager:
         grid = [[max([ent.layer for ent in elist]) for elist in row]
                     for row in level.EntityLayer]
         pts = algo.dijkstra(grid, tuple(a), tuple(b), diagonals=False)
-        logger.Logger.log(f'POINTS: {pts}')
         if pts:
             for pt in pts:
-                logger.Logger.log(f'POINT: {pt}')
                 maxlayer = max([x.layer for x in level.EntityLayer[pt[0]][pt[1]]])
                 if maxlayer >= e.Layer.WALL_LAYER:
                     self.place_entity(level, tower.Floor(), pt, overwrite=True)

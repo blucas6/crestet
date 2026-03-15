@@ -1,6 +1,8 @@
 THROW_ANIM_DELAY = 0.02
 '''Delay travel time in throwing animation'''
 
+CHARGE_FRAME_DELAY = 0.01
+
 ### LEVEL
 LEVELORIGIN = (2,2)
 '''Where the levels are displayed on the screen'''

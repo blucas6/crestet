@@ -41,7 +41,8 @@ class Player(e.Entity):
         self.attackspeed = e.AttackSpeed.AVERAGE
         '''Attack speed'''
         self.throwspeed = e.AttackSpeed.AVERAGE
-        #self.Charge = Charge(self.speed)
+        '''Amount of energy to throw an object'''
+        self.Charge = component.Charge(self.speed)
         '''Player can run'''
         super().__init__(name='Player',
                          glyph='@',
@@ -95,6 +96,14 @@ class Player(e.Entity):
         if event[1].isdigit():
             direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
             return self.throw(levelmanager, animator, messager, item.Dart(), direction)
+
+    def get_damage(self):
+        '''Choose damage source'''
+        # running
+        if self.Charge.charging:
+            return self.Charge.end()
+        else:
+            return self.Inventory.get_damage()
 
 
 

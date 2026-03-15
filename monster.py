@@ -26,18 +26,18 @@ class Newt(e.Entity):
 
     def take_turn(self, levelmanager, animator, messager, energy):
         '''Uses brain to select an action'''
-        return self.do_action(
-                levelmanager,
-                animator,
-                messager,
-                self.Brain.get_action(
-                    levelmanager.get_curr_level(),
-                    [self.row,self.col],
-                    self.z,
-                    levelmanager.Player,
-                    energy
-                )
+        self.do_action(
+            levelmanager,
+            animator,
+            messager,
+            self.Brain.get_action(
+                levelmanager.get_curr_level(),
+                [self.row,self.col],
+                self.z,
+                levelmanager.Player,
+                energy
             )
+        )
 
 class Jelly(e.Entity):
     '''

@@ -300,3 +300,29 @@ class Attack:
         self.damage = damage
         '''amount of damage the attack does'''
 
+class Charge:
+    '''
+    Charge component, if an entity can run and charge
+    '''
+    def __init__(self, speed):
+        self.charging = False
+        '''If entity is currently charging'''
+        self.distance = 0
+        '''Distance covered by charge, needed for damage'''
+        self.entityspeed = speed
+        '''Keeps track of entity speed'''
+        self.cost = round(speed/2)
+        '''Energy cost for charging move'''
+
+    def start(self, direction):
+        '''Start the charge, sets direction'''
+        self.charging = True
+        self.direction = direction
+    
+    def end(self):
+        '''Ends the charge, returns how much damage was dealt'''
+        self.charging = False
+        dmg = self.distance
+        self.distance = 0
+        return dmg
+

@@ -6,6 +6,12 @@ import algo
 import logger
 import enum
 
+class MoveAction(enum.Enum):
+    INVALID = 0
+    NOENERGY = 1
+    ATTACKED = 2
+    MOVED = 3
+
 class AttackSpeed(enum.IntEnum):
     '''Corresponding energy costs for attacking'''
     VERY_SLOW = 7
@@ -130,24 +136,30 @@ class Entity:
         '''Entity moves to a new position'''
         if levelmanager.move_entity(self, pos):
             self.energy -= self.speed
+            return MoveAction.MOVED
+        else:
+            return MoveAction.INVALID
 
     def movement(self, levelmanager, animator, messager, key):
         '''
         Handle the movement action
-
-        If charging and movement becomes invalid, end charge
+        Returns the result of the movement request
+            0: invalid
+            1: no energy
+            2: moved
+            3: attacked
         '''
-        # check energy cost
-        if self.energy < self.speed:
-            logger.Logger.log(f'[{self.name}|{self.id}]: movement not enough energy')
-            return
         # find next position
         moves = utility.ONE_LAYER_CIRCLE
         row = self.row + moves[key-1][0]
         col = self.col + moves[key-1][1]
+        # check energy cost
+        if self.energy < self.speed:
+            logger.Logger.log(f'[{self.name}|{self.id}]: movement not enough energy')
+            return MoveAction.NOENERGY
         # check validity
         if not levelmanager.within_level((row,col), self.z):
-            return
+            return MoveAction.INVALID
         # if the entity is able to attack
         # check if there is an entity to attack
         entitylayer = levelmanager.Levels[self.z].EntityLayer
@@ -159,11 +171,11 @@ class Entity:
                 for entity in entitylayer[row][col]:
                     if entity.layer == Layer.MONST_LAYER:
                         # calculate damage
-                        damage = self.Inventory.get_damage()
+                        damage = self.get_damage()
                         self.attack(levelmanager, animator, messager, entity, damage)
-                return
+                return MoveAction.ATTACKED
         # otherwise just move normally
-        self.move(levelmanager, (row,col))
+        return self.move(levelmanager, (row,col))
 
     def attack(self, levelmanager, animator, messager, entity, damage):
         '''Attack the entity passed in'''
@@ -276,17 +288,44 @@ class Entity:
             self.energy -= self.Inventory.cost
             self.Inventory.action(levelmanager, messager, event)
 
+    def handle_charging(self, levelmanager, animator, messager, event):
+        '''Talks to the charge component'''
+        # already charging
+        if self.Charge.charging:
+            result = self.movement(levelmanager, animator, messager, self.Charge.direction)
+            if result == MoveAction.INVALID:
+                self.Charge.end()
+            elif result == MoveAction.MOVED:
+                self.Charge.distance += 1
+        # start the charge
+        elif event[0] == '5':
+            self.Charge.start(int(event[1]))
+            result = self.movement(levelmanager, animator, messager, self.Charge.direction)
+            if result == MoveAction.INVALID:
+                self.Charge.end()
+            elif result == MoveAction.MOVED:
+                self.Charge.distance += 1
+
+    def get_damage(self):
+        '''Base method, called when attacking from movement'''
+        if hasattr(self, 'Inventory'):
+            return self.Inventory.get_damage()
+        return 0
+
     def do_action(self, levelmanager, animator, messager, event):
         '''Pass an event for the entity to preform a certain action'''
         logger.Logger.log(f'Do action [{self.name}|{self.id}]: {event} energy:{self.energy}')
 
         # Running
-        if event[0] == '5':
-            self.energy = 0
-            pass
+        # currently charging
+        if hasattr(self, 'Charge') and self.Charge.charging:
+            self.handle_charging(levelmanager, animator, messager, event)
+        # starting the charge
+        elif hasattr(self, 'Charge') and len(event) > 1 and event[0] == '5':
+            self.handle_charging(levelmanager, animator, messager, event)
         # Walking 
         elif event.isdigit():
-            return self.movement(levelmanager, animator, messager, int(event))
+            self.movement(levelmanager, animator, messager, int(event))
         # Z
         elif event == '<': 
             self.moveZ(levelmanager, messager, 1)
@@ -302,5 +341,5 @@ class Entity:
             self.energy = 0
         # Throwing
         elif event[0] == 't':
-            return self.fire(levelmanager, animator, messager, event)
+            self.fire(levelmanager, animator, messager, event)
 

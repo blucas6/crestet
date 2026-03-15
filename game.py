@@ -168,7 +168,7 @@ class Game:
             # do not check for events if running
             eventtype = Event.EVENT
             event = ' '
-            #self.Engine.pause(CHARGE_FRAME_DELAY)
+            self.Engine.pause(config.CHARGE_FRAME_DELAY)
         return event,eventtype
 
     def clear_state(self):
@@ -178,7 +178,7 @@ class Game:
         # grab new message
         self.messages()
         # update inventory menu
-        #self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
+        self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
 
     def loop(self, event):
         '''
@@ -198,6 +198,10 @@ class Game:
 
         # update all entities
         self.LevelManager.update_level(self.Animator, self.Messager, event)
+
+        # end the player charge, get back into playing mode
+        if self.GameState == GameState.RUNNING and not self.LevelManager.Player.Charge.charging:
+            self.state_machine('endrun')
 
         # update player FOV
         self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
@@ -316,8 +320,7 @@ class Game:
                 # valid direction increment turn
                 # return the combined event
                 if self.previousevent == '5':
-                    pass
-                    #self.state_machine('startrun')
+                    self.state_machine('startrun')
                 return Event.EVENT,self.previousevent+event
             # Inventory Action
             elif self.previousevent == 'e' or self.previousevent == 'u':
