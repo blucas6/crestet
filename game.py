@@ -134,7 +134,12 @@ class Game:
         self.LevelManager.level_setup_default((1,1))
         # update player FOV
         self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
+        # update menu health
         self.MenuManager.HealthMenu.update(self.LevelManager.Player.Health)
+        # update menu z level
+        self.MenuManager.DepthMenu.update(self.LevelManager.currentz)
+        # update inventory
+        self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
 
     def main(self):
         '''
@@ -200,7 +205,11 @@ class Game:
         # update health menu
         self.MenuManager.HealthMenu.update(self.LevelManager.Player.Health)
 
+        # update menu z level
+        self.MenuManager.DepthMenu.update(self.LevelManager.currentz)
+
         # update inventory menu
+        self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
 
         if not self.GameState == GameState.END:
             if self.win():
@@ -295,11 +304,11 @@ class Game:
         # Disregard empty events
         if not event:
             return Event.NA,event
-        # Motions
+        # MOTIONS 
         if self.GameState == GameState.MOTION:
             self.state_machine('donemotion')
+            # Throwing/Charge Action
             if self.previousevent == 't' or self.previousevent == '5':
-                # Throwing/Charge Action
                 # expects a direction
                 if not event.isdigit() or event == '5':
                     self.Messager.add_message('Invalid direction!')
@@ -310,8 +319,8 @@ class Game:
                     pass
                     #self.state_machine('startrun')
                 return Event.EVENT,self.previousevent+event
+            # Inventory Action
             elif self.previousevent == 'e' or self.previousevent == 'u':
-                # Inventory Action
                 return Event.EVENT,self.previousevent+event
         if event == 'q':
             # QUIT
@@ -337,11 +346,9 @@ class Game:
               self.GameState == GameState.PLAYING):
             # Multi key action
             if event == 'e':
-                #self.Messager.addMessage('Equip what?')
-                pass
+                self.Messager.add_message('Equip what?')
             elif event == 'u':
-                #self.Messager.addMessage('Unequip what?')
-                pass
+                self.Messager.add_message('Unequip what?')
             self.state_machine('motion')
             self.previousevent = event
             return Event.CLEAR,event

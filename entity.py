@@ -148,16 +148,19 @@ class Entity:
         # check validity
         if not levelmanager.within_level((row,col), self.z):
             return
+        # if the entity is able to attack
         # check if there is an entity to attack
         entitylayer = levelmanager.Levels[self.z].EntityLayer
-        if entitylayer[row][col]:
+        if hasattr(self, 'Inventory') and entitylayer[row][col]:
             maxlayer = max([x.layer for x in entitylayer[row][col]])
             # anything on the monster layer should be able to be attacked
             if maxlayer == Layer.MONST_LAYER:
                 self.energy -= self.speed
                 for entity in entitylayer[row][col]:
                     if entity.layer == Layer.MONST_LAYER:
-                        self.attack(levelmanager, animator, messager, entity, 1)
+                        # calculate damage
+                        damage = self.Inventory.get_damage()
+                        self.attack(levelmanager, animator, messager, entity, damage)
                 return
         # otherwise just move normally
         self.move(levelmanager, (row,col))
@@ -165,7 +168,7 @@ class Entity:
     def attack(self, levelmanager, animator, messager, entity, damage):
         '''Attack the entity passed in'''
         if hasattr(entity, 'Health'):
-            logger.Logger.log(f'Dealing damage to {entity}')
+            logger.Logger.log(f'{self} dealing damage to {entity}: {damage} ')
             messager.add_damage_message(self, entity)
             self.deal_damage(levelmanager, animator, messager, entity, damage)
 
@@ -266,6 +269,13 @@ class Entity:
         else:
             messager.add_message("Can't go down here")
 
+    def handle_inventory(self, levelmanager, messager, event):
+        '''Talks to the inventory component'''
+        self.Inventory.show()
+        if self.energy >= self.Inventory.cost:
+            self.energy -= self.Inventory.cost
+            self.Inventory.action(levelmanager, messager, event)
+
     def do_action(self, levelmanager, animator, messager, event):
         '''Pass an event for the entity to preform a certain action'''
         logger.Logger.log(f'Do action [{self.name}|{self.id}]: {event} energy:{self.energy}')
@@ -282,13 +292,15 @@ class Entity:
             self.moveZ(levelmanager, messager, 1)
         elif event == '>':
             self.moveZ(levelmanager, messager, -1)
+        # Inventory
+        elif (hasattr(self, 'Inventory') and
+            len(event) > 1 and
+            (event[0] == 'e' or event[0] == 'u')):
+            self.handle_inventory(levelmanager, messager, event)
         # Rest
         elif event == '.':
             self.energy = 0
         # Throwing
         elif event[0] == 't':
             return self.fire(levelmanager, animator, messager, event)
-
-
-
 

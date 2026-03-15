@@ -34,7 +34,7 @@ class Player(e.Entity):
         '''For FOV, highest level (exclusive) to see through'''
         self.Brain = component.Brain(self.sightrange, self.blockinglayer)
         '''Player brain for game interactions'''
-        #self.Inventory = Inventory()
+        self.Inventory = component.Inventory()
         '''Inventory component'''
         self.speed = e.Speed.AVERAGE
         '''Speed component'''
@@ -52,6 +52,7 @@ class Player(e.Entity):
     def init(self, levelrows, levelcols):
         '''Initialize player data'''
         self.mentalmap = [[[] for _ in range(levelcols)] for _ in range(levelrows)]
+        self.Inventory.equip(item.Sword())
 
     def update_mental_map(self, level):
         '''Updates the mental map of the player'''

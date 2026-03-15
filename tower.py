@@ -56,13 +56,11 @@ class Light(entity.Entity):
         if self.light:
             points = utility.get_one_layer_pts((self.row,self.col),
                                                levelmanager.levelrows, levelmanager.levelcols)
-            logger.Logger.log(f'{self} {self.pos()} pts: {points}')
             for pt in points:
                 levelmanager.Levels[self.z].LightLayer[pt[0]][pt[1]] = 1
     
     def on_top(self, levelmanager):
         '''Trigger the light on or off'''
         self.light = not self.light
-        logger.Logger.log(f'Light toggled {self} {self.light}')
         self.update_state(levelmanager)
     

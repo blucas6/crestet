@@ -2,6 +2,26 @@ import entity as e
 import color
 import component
 
+class Bite(e.Entity):
+    def __init__(self):
+        super().__init__(name='Bite',
+                         glyph='?',
+                         color=color.Color().magenta,
+                         layer=e.Layer.OBJECT_LAYER,
+                         size=e.Size.VERY_SMALL)
+        self.Attack = component.Attack(name='Bite', damage=1)
+        self.ItemType = component.ItemType.ABILITY
+
+class Sword(e.Entity):
+    def __init__(self):
+        super().__init__(name='Sword',
+                         glyph='/',
+                         color=color.Color().blue,
+                         layer=e.Layer.OBJECT_LAYER,
+                         size=e.Size.SMALL)
+        self.Attack = component.Attack(name='Sword', damage=2)
+        self.ItemType = component.ItemType.HAND
+
 class DartStack(e.Entity):
     def __init__(self):
         super().__init__(
@@ -11,6 +31,7 @@ class DartStack(e.Entity):
             layer=e.Layer.OBJECT_LAYER,
             size=e.Size.VERY_SMALL)
         self.Stack = component.Stack(Dart)
+        self.ItemType = component.ItemType.QUIVER
 
     def on_placed(self, levelmanager):
         level = levelmanager.Levels[self.z]
@@ -39,6 +60,7 @@ class Dart(e.Entity):
                          layer=e.Layer.OBJECT_LAYER,
                          size=e.Size.VERY_SMALL)
         self.Stackable = component.Stackable(DartStack)
+        self.ItemType = component.ItemType.QUIVER
 
     def on_placed(self, levelmanager):
         level = levelmanager.Levels[self.z]

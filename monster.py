@@ -4,6 +4,7 @@ import config
 import color
 import component
 import utility
+import item
 
 class Newt(e.Entity):
     '''
@@ -13,7 +14,7 @@ class Newt(e.Entity):
         self.Health = component.Health(health=config.NEWT_HEALTH)
         self.Brain = component.Brain(sightrange=config.NEWT_SIGHTRANGE,
                                      blockinglayer=e.Layer.MONST_LAYER)
-        #self.Inventory = Inventory()
+        self.Inventory = component.Inventory()
         self.speed = e.Speed.SLOW
         self.attackspeed = e.AttackSpeed.SLOW
         super().__init__(name='Newt',
@@ -21,10 +22,7 @@ class Newt(e.Entity):
                          color=color.Color().yellow,
                          layer=e.Layer.MONST_LAYER,
                          size=e.Size.MEDIUM)
-
-    def setup(self):
-        super().setup()
-        #self.Inventory.equip(Bite())
+        self.Inventory.equip(item.Bite())
 
     def take_turn(self, levelmanager, animator, messager, energy):
         '''Uses brain to select an action'''

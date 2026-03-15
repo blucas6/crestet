@@ -220,7 +220,7 @@ class LevelManager:
             for ent in level.EntityLayer[r][c]:
                 if ent.id != entity.id:
                     ent.on_top(self)
-        logger.Logger.log(f'Entity {entity.name} placed at {entity.pos()}')
+        #logger.Logger.log(f'Entity {entity.name} placed at {entity.pos()}')
 
     def is_entity_pos_valid(self, level, entity, pos, overwrite=False):
         '''Checks if an entity and a new position would be valid'''
