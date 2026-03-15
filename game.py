@@ -131,7 +131,7 @@ class Game:
                 levelrows=config.ROWS,
                 levelcols=config.COLS,
                 rng=self.RNG)
-        self.LevelManager.level_setup_default()
+        self.LevelManager.level_setup_default((1,1))
         # update player FOV
         self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
         self.MenuManager.HealthMenu.update(self.LevelManager.Player.Health)

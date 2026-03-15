@@ -226,7 +226,10 @@ def testAStar():
                 print(grid[r][c], end='')
         print()
 
-def dijkstra(grid: list, start: tuple, end: tuple, diagonals=True):
+def dijkstra(grid: list, start: tuple, end: tuple, diagonals=True, debug=False):
+    if debug:
+        logger.Logger.log(f'Dijkstra: {start} -> {end}')
+        #logger.Logger.log(f'Dijkstra: {grid}')
     rows, cols = len(grid), len(grid[0])
     heap = []
 
@@ -241,6 +244,8 @@ def dijkstra(grid: list, start: tuple, end: tuple, diagonals=True):
 
     while heap:
         cost, (x, y), path = heapq.heappop(heap)
+        if debug:
+            logger.Logger.log(f'Dijkstra: path {path} visiting: {(x,y)} -> {end}')
 
         if (x, y) == end:
             return path
@@ -258,7 +263,6 @@ def dijkstra(grid: list, start: tuple, end: tuple, diagonals=True):
                 if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
                     cost_so_far[neighbor] = new_cost
                     heapq.heappush(heap, (new_cost, neighbor, path + [neighbor]))
-
     return None
 
 MULT = [

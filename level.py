@@ -1,4 +1,6 @@
 import logger
+import algo
+import config
 import item
 import player
 import utility
@@ -58,37 +60,59 @@ class LevelManager:
         self.Player = player.Player()
         self.Player.init(levelrows, levelcols)
 
-    def level_setup_default(self):
+    def level_setup_default(self, playerpos):
         '''Load a default map on all levels'''
         downstairpos = []
+        upstairpos = []
         for z,level in enumerate(self.Levels):
             self.generate_surrounding_walls(level)
-            self.generate_light(level)
-            self.generate_mons(level)
-            self.generate_items(level)
+            self.generate_walls(level)
             if z == 0:
                 downstairpos = self.generate_upstair(level)
+                self.generate_clear_path(level, playerpos, downstairpos)
+                # add player
+                self.place_entity(self.Levels[0], self.Player, playerpos)
             elif z == self.totallevels-1:
                 self.generate_downstair(level, downstairpos)
             else:
-                self.generate_downstair(level, downstairpos)
+                downstairplaced = self.generate_downstair(level, downstairpos)
                 downstairpos = self.generate_upstair(level)
-        # add player
-        self.place_entity(self.Levels[0], self.Player, (1,1))
+                self.generate_clear_path(level, downstairplaced, downstairpos)
+            self.generate_light(level)
+            self.generate_mons(level)
+            self.generate_items(level)
 
     def generate_downstair(self, level, downstairpos):
+        '''Places the downstairs at the designated spot, returns the placement'''
         self.place_entity(level, tower.StairDown(), downstairpos, overwrite=True)
+        return downstairpos
 
     def generate_upstair(self, level):
+        '''Places an upstairs in a random spot, returns the placement'''
         r = self.RNG.randint(1,self.levelrows-2)
         c = self.RNG.randint(1,self.levelcols-2)
         self.place_entity(level, tower.StairUp(), [r,c], overwrite=True)
         return [r,c]
+    
+    def generate_clear_path(self, level, a, b):
+        '''Creates a floor path between points a -> b'''
+        if not a or not b:
+            logger.Logger.log(f'Error: Clearing a path between {a}->{b} cannot be None!')
+            return
+        logger.Logger.log(f'Clear Path: {a} -> {b}')
+        grid = [[max([ent.layer for ent in elist]) for elist in row]
+                    for row in level.EntityLayer]
+        pts = algo.dijkstra(grid, tuple(a), tuple(b), diagonals=False)
+        logger.Logger.log(f'POINTS: {pts}')
+        if pts:
+            for pt in pts:
+                logger.Logger.log(f'POINT: {pt}')
+                maxlayer = max([x.layer for x in level.EntityLayer[pt[0]][pt[1]]])
+                if maxlayer >= e.Layer.WALL_LAYER:
+                    self.place_entity(level, tower.Floor(), pt, overwrite=True)
 
     def generate_surrounding_walls(self, level):
-        '''
-        Adds surrounding walls and floor to a blank entity array
-        '''
+        '''Adds surrounding walls and floor to a blank entity array'''
         for r in range(self.levelrows):
             for c in range(self.levelcols):
                 # check if within the array or on the border
@@ -121,6 +145,56 @@ class LevelManager:
             self.place_entity(level, light, (r,c))
             light.update_state(self)
 
+    def generate_walls(self, level, minwalls=config.MINIMUM_WALLS):
+        '''
+        Generates walls on the level using predetermined shapes
+        Minimum walls counts how many wall spaces need to be covered in the level
+        '''
+        wallshapes = []
+        wallL = [
+            ['0','',''],
+            ['0','',''],
+            ['0','0','0']
+        ]
+        wallPlus = [
+            ['','0',''],
+            ['0','0','0'],
+            ['','0','']
+        ]
+        wallLine = [
+            ['','0',''],
+            ['','0',''],
+            ['','0','']
+        ]
+        wallCorner = [
+            ['','',''],
+            ['0','',''],
+            ['0','0','']
+        ]
+        wallshapes.append(wallL)
+        wallshapes.append(wallPlus)
+        wallshapes.append(wallLine)
+        wallshapes.append(wallCorner)
+        wallsplaced = 0
+        maxiterations = 100
+        # go through until minimum wall amount was reached or max tries
+        while wallsplaced < minwalls and maxiterations > 0:
+            maxiterations -= 1
+            for r in range(self.levelrows):
+                for c in range(self.levelcols): 
+                    if self.RNG.randint(1,100) < 10:
+                        # grab a shape and rotate it
+                        shape = wallshapes[self.RNG.randint(0,len(wallshapes)-1)]
+                        times = self.RNG.randint(0,3)
+                        for _ in range(times):
+                            shape = [list(row) for row in zip(*shape[::-1])]
+                        for sr,srows in enumerate(shape):
+                            for sc,scols in enumerate(srows):
+                                if scols:
+                                    pt = [r+sr,c+sc]
+                                    self.place_entity(level, tower.Wall(), pt)
+                                    wallsplaced += 1
+
     def place_entity(self, level, entity, pos, overwrite=False):
         '''Place an entity into the level'''
 
@@ -146,7 +220,7 @@ class LevelManager:
             for ent in level.EntityLayer[r][c]:
                 if ent.id != entity.id:
                     ent.on_top(self)
-        #logger.Logger.log(f'Entity {entity.name} placed at {entity.pos()}')
+        logger.Logger.log(f'Entity {entity.name} placed at {entity.pos()}')
 
     def is_entity_pos_valid(self, level, entity, pos, overwrite=False):
         '''Checks if an entity and a new position would be valid'''

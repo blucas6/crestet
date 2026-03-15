@@ -1,6 +1,7 @@
 THROW_ANIM_DELAY = 0.02
 '''Delay travel time in throwing animation'''
 
+### LEVEL
 LEVELORIGIN = (2,2)
 '''Where the levels are displayed on the screen'''
 TOTALLEVELS = 3
@@ -9,6 +10,8 @@ ROWS = 12
 '''Amount of rows per level'''
 COLS = 25
 '''Amount of cols per level'''
+MINIMUM_WALLS = 40
+'''Amount of walls per level'''
 
 ## PLAYER
 PLAYERFOV = 5
