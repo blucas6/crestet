@@ -1,4 +1,5 @@
 import engine
+import timing as tt
 import message
 import copy
 import config
@@ -61,6 +62,8 @@ class Game:
         '''Used for key motions of multiple characters'''
         self.turn = 0
         '''Keeps track of game turn'''
+        self.playerFOV = True
+        '''Use player FOV to generate map'''
 
         # Objects
         self.GameState = GameState.PLAYING
@@ -77,12 +80,10 @@ class Game:
         '''Holds the animation queue'''
         self.Messager = message.Messager()
         '''Connection to the message queue instance'''
-        self.playerFOV = True
-        '''Use player FOV to generate map'''
-        #self.Timing = Timing(Timing)
-        '''Timing for measurements'''
-        #self.Logger.debugOn = not timing
-        #self.Timing.allowTiming = timing
+
+        # Timing
+        logger.Logger.debug = not timing
+        tt.Timing.allowTiming = timing
 
     def start(self, stdscr: curses.window | None = None):
         '''
@@ -112,7 +113,7 @@ class Game:
         '''
         Sets up the game from a fresh start
         '''
-        #self.Timing.start('Game Setup')
+        tt.Timing().start('Game Setup')
         # start running
         self.running = True
         # reset turn
@@ -140,6 +141,7 @@ class Game:
         self.MenuManager.DepthMenu.update(self.LevelManager.currentz)
         # update inventory
         self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
+        tt.Timing().end()
 
     def main(self):
         '''
@@ -260,7 +262,7 @@ class Game:
 
     def end(self):
         '''Called when the game ends'''
-        pass
+        tt.Timing().show()
 
     def messages(self):
         '''Deal with messages in the queue'''
@@ -308,8 +310,22 @@ class Game:
         # Disregard empty events
         if not event:
             return Event.NA,event
+        # GAME ACTIONS
+        if event == 'q':
+            # QUIT
+            self.running = False
+        elif event == 'r':
+            # RESET
+            self.state_machine('reset')
+            self.game_setup()
+        elif event == 'f':
+            # TOGGLE FOV
+            self.playerFOV = not self.playerFOV
+        elif event == ' ':
+            # DO NOTHING - clears msg queue
+            return Event.CLEAR,event
         # MOTIONS 
-        if self.GameState == GameState.MOTION:
+        elif self.GameState == GameState.MOTION:
             self.state_machine('donemotion')
             # Throwing/Charge Action
             if self.previousevent == 't' or self.previousevent == '5':
@@ -325,39 +341,22 @@ class Game:
             # Inventory Action
             elif self.previousevent == 'e' or self.previousevent == 'u':
                 return Event.EVENT,self.previousevent+event
-        if event == 'q':
-            # QUIT
-            self.running = False
-        elif event == 'r':
-            # RESET
-            self.state_machine('reset')
-            self.game_setup()
-        elif event == 'f':
-            # TOGGLE FOV
-            self.playerFOV = not self.playerFOV
-        elif event == ' ':
-            # DO NOTHING - clears msg queue
-            return Event.CLEAR,event
-        elif ((event == 't' or event == '5') and
-              self.GameState == GameState.PLAYING):
-            # Multi key action
-            self.Messager.add_message('Direction?')
-            self.state_machine('motion')
-            self.previousevent = event
-            return Event.CLEAR,event
-        elif ((event == 'e' or event == 'u') and
-              self.GameState == GameState.PLAYING):
-            # Multi key action
-            if event == 'e':
-                self.Messager.add_message('Equip what?')
-            elif event == 'u':
-                self.Messager.add_message('Unequip what?')
-            self.state_machine('motion')
-            self.previousevent = event
-            return Event.CLEAR,event
+        # PLAYER ACTIONS
         elif self.GameState == GameState.PLAYING:
-            # PLAYER ACTION
-            return Event.EVENT,event
+            # Multi key action
+            if event == 't' or event == '5' or event == 'e' or event == 'u':
+                if event == 'e':
+                    self.Messager.add_message('Equip what?')
+                elif event == 'u':
+                    self.Messager.add_message('Unequip what?')
+                else:
+                    self.Messager.add_message('Direction?')
+                self.state_machine('motion')
+                self.previousevent = event
+                return Event.CLEAR,event
+            else:
+                # Player
+                return Event.EVENT,event
         # Defaults to returning NA for no action
         return Event.NA,event
 

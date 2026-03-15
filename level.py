@@ -1,4 +1,5 @@
 import logger
+import timing
 import algo
 import config
 import item
@@ -249,6 +250,8 @@ class LevelManager:
         Go through all entities and update them
         '''
 
+        timing.Timing().start('Game Loop')
+
         logger.Logger.log('----------TURN UPDATE-----------')
 
         self.Player.energy = 100
@@ -284,6 +287,8 @@ class LevelManager:
                 for entity in entitylist:
                     if entity.name == 'Light':
                         entity.update_state(self)
+
+        timing.Timing().end()
 
     def update_entity(self, animator, messager, entity, energy):
         entity.energy += energy
