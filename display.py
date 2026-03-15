@@ -1,4 +1,5 @@
 import color as clr
+import tower
 import logger
 
 class Display:
@@ -68,11 +69,11 @@ class Display:
                         self.screenbuffer[rw][cl] = ch
 
     def render_lightlayer(self, lightlayer):
+        color = tower.Light().color
         for r,row in enumerate(lightlayer):
             for c,_ in enumerate(row):
                 rw, cl = self.level_to_screen_pos(r,c)
                 if lightlayer[r][c]:
-                    color = clr.Color().yellow
                     self.colorbuffer[rw][cl] = color
 
     def render_entitylayer(self, entitylayer):

@@ -61,7 +61,7 @@ class Engine:
         color pair buffer to the terminal
         '''
         if not self.initialized:
-            self.log_error('Engine output() called before initialization!')
+            self.log_event('Engine output() called before initialization!')
             return
         try:
             self.stdscr.erase()
@@ -74,7 +74,7 @@ class Engine:
                     self.stdscr.addch(r, c, chr, color)
             self.stdscr.refresh()
         except Exception as e:
-            self.log_error(f'Display ERROR: [{c},{r}]: {e}')
+            self.log_event(f'Display ERROR: [{c},{r}]: {e}')
 
     def read_input(self):
         '''
@@ -89,7 +89,7 @@ class Engine:
                     self.log_event(f'"{chr(event)}" ({event})')
                 return chr(event)
         except Exception as e:
-            self.log_error(f'Read input ERROR: {event}')
+            self.log_event(f'Read input ERROR: {event}')
 
     def log_event(self, msg):
         '''
@@ -107,7 +107,7 @@ class Engine:
         if pos[0] < self.termrows and pos[1] < self.termcols:
             self.stdscr.move(pos[0], pos[1])
         else:
-            self.log_error(f'Invalid cursor position {pos}')
+            self.log_event(f'Invalid cursor position {pos}')
 
     def pause(self, t: float=1):
         '''

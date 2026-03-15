@@ -80,7 +80,7 @@ class LevelManager:
                 downstairpos = self.generate_upstair(level)
                 self.generate_clear_path(level, downstairplaced, downstairpos)
             self.generate_light(level)
-            self.generate_mons(level)
+            #self.generate_mons(level)
             self.generate_items(level)
 
     def generate_downstair(self, level, downstairpos):
@@ -134,7 +134,7 @@ class LevelManager:
         for _ in range(2):
             r = self.RNG.randint(1,self.levelrows-2)
             c = self.RNG.randint(1,self.levelcols-2)
-            self.place_entity(level, item.Dart(), (r,c))
+            self.place_entity(level, tower.Barrel(), (r,c))
 
     def generate_light(self, level):
         for _ in range(5):

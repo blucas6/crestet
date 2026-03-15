@@ -4,6 +4,15 @@ import utility
 import color
 import component
 
+class Barrel(entity.Entity):
+    '''Barrel entity'''
+    def __init__(self):
+        super().__init__(name='Barrel',
+                         glyph='0',
+                         color=color.Color().yellow,
+                         layer=entity.Layer.WALL_LAYER,
+                         size=entity.Size.LARGE)
+
 class Wall(entity.Entity):
     '''Wall entity'''
     def __init__(self):
@@ -45,7 +54,7 @@ class Light(entity.Entity):
     def __init__(self):
         super().__init__(name='Light',
                          glyph='+',
-                         color=color.Color().yellow,
+                         color=color.Color().bright_yellow,
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.SMALL)
         self.light = True
