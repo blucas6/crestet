@@ -348,11 +348,9 @@ class LevelManager:
 
         level = self.Levels[newz]
 
-        '''
         if not self.is_entity_pos_valid(level, entity, newpos):
             logger.Logger.log(f'Error: {entity} moving to z:{newz} is invalid!')
             return False
-        '''
 
         if not self.within_level(newpos, newz):
             logger.Logger.log(f'Error: {entity} moving to z:{newz} is invalid!')
@@ -361,6 +359,7 @@ class LevelManager:
         entity = self.remove_entity(entity)
 
         self.place_entity(level.z, entity, newpos)
+
         return True
 
     def remove_entity(self, entity):

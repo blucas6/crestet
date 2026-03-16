@@ -1,6 +1,5 @@
 import color
 import item
-from tower import Barrel
 import utility
 import config
 import copy
@@ -21,8 +20,6 @@ class FOVMemory(enum.Enum):
 
 class Player(e.Entity):
     def __init__(self):
-        self.Health = component.Health(health=config.PLAYERHEALTH)
-        '''Health component'''
         self.mentalmap = []
         '''Entity map for output to the screen'''
         self.fovpoints = []
@@ -33,18 +30,21 @@ class Player(e.Entity):
         '''How far the FOV will check'''
         self.blockinglayer = e.Layer.MONST_LAYER
         '''For FOV, highest level (exclusive) to see through'''
-        self.Brain = component.Brain(self.sightrange, self.blockinglayer)
-        '''Player brain for game interactions'''
-        self.Inventory = component.Inventory()
-        '''Inventory component'''
         self.speed = e.Speed.AVERAGE
         '''Speed component'''
         self.attackspeed = e.AttackSpeed.AVERAGE
         '''Attack speed'''
         self.throwspeed = e.AttackSpeed.AVERAGE
         '''Amount of energy to throw an object'''
+
+        self.Health = component.Health(health=config.PLAYERHEALTH)
+        '''Health component'''
+        self.Brain = component.Brain(self.sightrange, self.blockinglayer)
+        '''Player brain for game interactions'''
         self.Charge = component.Charge(self.speed)
         '''Player can run'''
+        self.Inventory = component.Inventory(autopickuplist=['Dart', 'Dart Stack'])
+        '''Inventory component'''
         super().__init__(name='Player',
                          glyph='@',
                          color=color.Color().white,
@@ -106,6 +106,14 @@ class Player(e.Entity):
             return self.Charge.end()
         else:
             return self.Inventory.get_damage()
+
+    def on_placed(self, levelmanager):
+        '''Check auto pickup component when moved'''
+        entitylist = levelmanager.Levels[self.z].EntityLayer[self.row][self.col]
+        self.Inventory.autopickup(levelmanager, entitylist)
+
+
+        
 
 
 

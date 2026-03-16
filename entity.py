@@ -225,7 +225,7 @@ class Entity:
                     if entitylayer:
                         maxlayer = max([x.layer for x in entitylayer[r][c]])
                         # set final position at the monster
-                        if maxlayer == Layer.MONST_LAYER:
+                        if maxlayer == Layer.MONST_LAYER or maxlayer == Layer.BARREL_LAYER:
                             objr, objc = r, c
                             break
                         # set final position before wall
@@ -244,7 +244,7 @@ class Entity:
                 return
 
             # construct a grid of [0-1] (makes sure path to end point is valid)
-            grid = [[1 if max([int(x.layer) for x in elist]) > Layer.MONST_LAYER else 0
+            grid = [[1 if max([int(x.layer) for x in elist]) > Layer.BARREL_LAYER else 0
                     for elist in row]
                     for row in entitylayer]
             returncode, pts = algo.astar(grid, (self.row,self.col), (objr,objc))

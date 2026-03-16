@@ -1,4 +1,5 @@
 import algo
+import level
 import logger
 import enum
 
@@ -15,7 +16,7 @@ class Inventory:
     '''
     Inventory component, for entities that can hold items
     '''
-    def __init__(self):
+    def __init__(self, autopickuplist=[]):
         self.quiver = None
         '''Item in quiver'''
         self.mainHand = None
@@ -36,6 +37,14 @@ class Inventory:
         '''Max amount of items in bag'''
         self.cost = 1
         '''Cost of using the inventory'''
+        self.autopickuplist = autopickuplist
+        '''Items that should be picked up automatically'''
+
+    def autopickup(self, levelmanager, entitylist):
+        '''Check entity list for any items to pick up'''
+        for ent in entitylist:
+            if ent.name in self.autopickuplist:
+                self.pick_up(levelmanager, ent)
 
     def show(self):
         '''Print the inventory to logger'''
@@ -155,9 +164,10 @@ class Inventory:
             damage += self.ability.Attack.damage
         return damage
     
-    def pick_up(self, entity):
+    def pick_up(self, levelmanager, entity):
         '''Pass in an entity to add it to the bag'''
-        self.contents.append(entity)
+        ent = levelmanager.remove_entity(entity)
+        self.contents.append(ent)
 
     def drop(self):
         '''Place an entity to the ground'''
@@ -325,4 +335,5 @@ class Charge:
         dmg = self.distance
         self.distance = 0
         return dmg
+
 
