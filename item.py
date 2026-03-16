@@ -2,6 +2,16 @@ import entity as e
 import color
 import component
 
+class Wood(e.Entity):
+    def __init__(self):
+        super().__init__(name='Wood',
+                         glyph='#',
+                         color=color.Color().yellow,
+                         layer=e.Layer.OBJECT_LAYER,
+                         size=e.Size.SMALL)
+        self.Attack = component.Attack(name='Wood', damage=1)
+        self.ItemType = component.ItemType.HAND
+
 class Bite(e.Entity):
     def __init__(self):
         super().__init__(name='Bite',

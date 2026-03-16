@@ -1,4 +1,5 @@
 import entity
+import item
 import logger
 import utility
 import color
@@ -7,11 +8,17 @@ import component
 class Barrel(entity.Entity):
     '''Barrel entity'''
     def __init__(self):
+        self.Health = component.Health(health=1)
         super().__init__(name='Barrel',
                          glyph='0',
                          color=color.Color().yellow,
-                         layer=entity.Layer.WALL_LAYER,
+                         layer=entity.Layer.BARREL_LAYER,
                          size=entity.Size.LARGE)
+    
+    def death(self, levelmanager, animator, messager):
+        '''Break the barrel'''
+        super().death(levelmanager)
+        levelmanager.place_entity(self.z, item.Wood(), (self.row,self.col))
 
 class Wall(entity.Entity):
     '''Wall entity'''

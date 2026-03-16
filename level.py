@@ -72,7 +72,7 @@ class LevelManager:
                 downstairpos = self.generate_upstair(level)
                 self.generate_clear_path(level, playerpos, downstairpos)
                 # add player
-                self.place_entity(self.Levels[0], self.Player, playerpos)
+                self.place_entity(self.Levels[0].z, self.Player, playerpos)
             elif z == self.totallevels-1:
                 self.generate_downstair(level, downstairpos)
             else:
@@ -80,19 +80,19 @@ class LevelManager:
                 downstairpos = self.generate_upstair(level)
                 self.generate_clear_path(level, downstairplaced, downstairpos)
             self.generate_light(level)
-            #self.generate_mons(level)
+            self.generate_mons(level)
             self.generate_items(level)
 
     def generate_downstair(self, level, downstairpos):
         '''Places the downstairs at the designated spot, returns the placement'''
-        self.place_entity(level, tower.StairDown(), downstairpos, overwrite=True)
+        self.place_entity(level.z, tower.StairDown(), downstairpos, overwrite=True)
         return downstairpos
 
     def generate_upstair(self, level):
         '''Places an upstairs in a random spot, returns the placement'''
         r = self.RNG.randint(1,self.levelrows-2)
         c = self.RNG.randint(1,self.levelcols-2)
-        self.place_entity(level, tower.StairUp(), [r,c], overwrite=True)
+        self.place_entity(level.z, tower.StairUp(), [r,c], overwrite=True)
         return [r,c]
     
     def generate_clear_path(self, level, a, b):
@@ -108,7 +108,7 @@ class LevelManager:
             for pt in pts:
                 maxlayer = max([x.layer for x in level.EntityLayer[pt[0]][pt[1]]])
                 if maxlayer >= e.Layer.WALL_LAYER:
-                    self.place_entity(level, tower.Floor(), pt, overwrite=True)
+                    self.place_entity(level.z, tower.Floor(), pt, overwrite=True)
 
     def generate_surrounding_walls(self, level):
         '''Adds surrounding walls and floor to a blank entity array'''
@@ -116,32 +116,32 @@ class LevelManager:
             for c in range(self.levelcols):
                 # check if within the array or on the border
                 if r == 0 or c == 0 or r == self.levelrows-1 or c == self.levelcols-1:
-                    self.place_entity(level, tower.Wall(), [r,c], overwrite=True)
+                    self.place_entity(level.z, tower.Wall(), [r,c], overwrite=True)
                 else:
-                    self.place_entity(level, tower.Floor(), [r,c], overwrite=True)
+                    self.place_entity(level.z, tower.Floor(), [r,c], overwrite=True)
 
     def generate_mons(self, level):
         for _ in range(5):
             r = self.RNG.randint(1,self.levelrows-2)
             c = self.RNG.randint(1,self.levelcols-2)
-            self.place_entity(level, monster.Jelly(), (r,c))
-        for _ in range(5):
+            self.place_entity(level.z, monster.Jelly(), (r,c))
+        for _ in range(1):
             r = self.RNG.randint(1,self.levelrows-2)
             c = self.RNG.randint(1,self.levelcols-2)
-            self.place_entity(level, monster.Newt(), (r,c))
+            self.place_entity(level.z, monster.Newt(), (r,c))
 
     def generate_items(self, level):
         for _ in range(2):
             r = self.RNG.randint(1,self.levelrows-2)
             c = self.RNG.randint(1,self.levelcols-2)
-            self.place_entity(level, tower.Barrel(), (r,c))
+            self.place_entity(level.z, tower.Barrel(), (r,c))
 
     def generate_light(self, level):
         for _ in range(5):
             r = self.RNG.randint(1,self.levelrows-2)
             c = self.RNG.randint(1,self.levelcols-2)
             light = tower.Light()
-            self.place_entity(level, light, (r,c))
+            self.place_entity(level.z, light, (r,c))
             light.update_state(self)
 
     def generate_walls(self, level, minwalls=config.MINIMUM_WALLS):
@@ -191,14 +191,19 @@ class LevelManager:
                             for sc,scols in enumerate(srows):
                                 if scols:
                                     pt = [r+sr,c+sc]
-                                    self.place_entity(level, tower.Wall(), pt)
+                                    self.place_entity(level.z, tower.Wall(), pt)
                                     wallsplaced += 1
 
-    def place_entity(self, level, entity, pos, overwrite=False):
+    def place_entity(self, z, entity, pos, overwrite=False):
         '''Place an entity into the level'''
 
+        if z < 0 or z >= len(self.Levels):
+            return
+
+        level = self.Levels[z]
+
         if not self.is_entity_pos_valid(level, entity, pos, overwrite=overwrite):
-            logger.Logger.log(f'Error: Entity {entity.name} cannot be placed at {pos} z:{level.z}')
+            logger.Logger.log(f'Error: Entity {entity.name} cannot be placed: {pos} z:{z}')
             return
         
         r = pos[0]
@@ -231,11 +236,14 @@ class LevelManager:
         if overwrite:
             return True
 
-        # run a check if an entity is on a higher layer than 0-1
-        if entity.layer > e.Layer.OBJECT_LAYER:
+        # if entity is on the floor or object layer it can always be placed
+        if entity.layer <= e.Layer.OBJECT_LAYER:
+            return True
+        # if entity is greater than floor or object layers than check to make sure
+        elif entity.layer > e.Layer.OBJECT_LAYER:
             if level.EntityLayer[pos[0]][pos[1]]:
                 maxlayer = max([x.layer for x in level.EntityLayer[pos[0]][pos[1]]])
-                if entity.layer <= maxlayer:
+                if maxlayer > e.Layer.OBJECT_LAYER:
                     return False 
         return True
 
@@ -319,11 +327,15 @@ class LevelManager:
             logger.Logger.log(f'Moving entity failed: invalid {entity.name}|{entity.id}')
             return False
 
+        if not self.within_level(pos, entity.z):
+            logger.Logger.log(f'Moving entity failed: invalid {entity.name}|{entity.id}')
+            return False
+
         # move is valid - delete old entity
         entity = self.remove_entity(entity)
 
         # add entity to new position
-        self.place_entity(level, entity, pos)
+        self.place_entity(level.z, entity, pos)
 
         return True
     
@@ -336,13 +348,19 @@ class LevelManager:
 
         level = self.Levels[newz]
 
+        '''
         if not self.is_entity_pos_valid(level, entity, newpos):
+            logger.Logger.log(f'Error: {entity} moving to z:{newz} is invalid!')
+            return False
+        '''
+
+        if not self.within_level(newpos, newz):
             logger.Logger.log(f'Error: {entity} moving to z:{newz} is invalid!')
             return False
 
         entity = self.remove_entity(entity)
 
-        self.place_entity(level, entity, newpos)
+        self.place_entity(level.z, entity, newpos)
         return True
 
     def remove_entity(self, entity):

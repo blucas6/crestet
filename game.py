@@ -321,14 +321,16 @@ class Game:
         elif event == 'f':
             # TOGGLE FOV
             self.playerFOV = not self.playerFOV
-        elif event == ' ':
-            # DO NOTHING - clears msg queue
+        elif event == ' ' or event == chr(curses.ascii.ESC):
+            self.previousevent = ''
+            self.state_machine('donemotion')
+            # DO NOTHING - clears msg queue and previous event
             return Event.CLEAR,event
         # MOTIONS 
         elif self.GameState == GameState.MOTION:
             self.state_machine('donemotion')
             # Throwing/Charge Action
-            if self.previousevent == 't' or self.previousevent == '5':
+            if self.previousevent == 't' or self.previousevent == '5' or self.previousevent == 'F':
                 # expects a direction
                 if not event.isdigit() or event == '5':
                     self.Messager.add_message('Invalid direction!')
@@ -344,7 +346,7 @@ class Game:
         # PLAYER ACTIONS
         elif self.GameState == GameState.PLAYING:
             # Multi key action
-            if event == 't' or event == '5' or event == 'e' or event == 'u':
+            if event == 't' or event == '5' or event == 'e' or event == 'u' or event == 'F':
                 if event == 'e':
                     self.Messager.add_message('Equip what?')
                 elif event == 'u':

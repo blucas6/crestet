@@ -1,5 +1,6 @@
 import color
 import item
+from tower import Barrel
 import utility
 import config
 import copy
@@ -82,6 +83,7 @@ class Player(e.Entity):
                         self.mentalmap[r][c] = []
                         for entity in level.EntityLayer[r][c]:
                             if (entity.layer == e.Layer.OBJECT_LAYER or
+                                entity.layer == e.Layer.BARREL_LAYER or
                                 entity.layer == e.Layer.WALL_LAYER):
                                 self.mentalmap[r][c].append(entity)
 

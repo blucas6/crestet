@@ -11,6 +11,7 @@ class MoveAction(enum.Enum):
     NOENERGY = 1
     ATTACKED = 2
     MOVED = 3
+    PUSHED = 4
 
 class AttackSpeed(enum.IntEnum):
     '''Corresponding energy costs for attacking'''
@@ -34,12 +35,14 @@ class Layer(enum.IntEnum):
         0-1: stackable, anything with these layers will be placed on top of
             each other
         2: not stackable, entities that move around, FOV can see through them
+        3: not stackable, can be pushed
         3: not stackable, FOV cannot see through them
     '''
     FLOOR_LAYER = 0
     OBJECT_LAYER = 1
     MONST_LAYER = 2
-    WALL_LAYER = 3
+    BARREL_LAYER = 3
+    WALL_LAYER = 4
 
 class Size(enum.IntEnum):
     '''
@@ -118,7 +121,6 @@ class Entity:
         Default behavior is to dump all energy and do nothing
         '''
         self.energy = 0
-        pass
 
     def on_placed(self, *_):
         '''Hook gets called when an entity is placed on the level'''
@@ -148,11 +150,10 @@ class Entity:
             1: no energy
             2: moved
             3: attacked
+            4: pushed
         '''
         # find next position
-        moves = utility.ONE_LAYER_CIRCLE
-        row = self.row + moves[key-1][0]
-        col = self.col + moves[key-1][1]
+        row,col = utility.get_new_pos((self.row,self.col), key)
         # check energy cost
         if self.energy < self.speed:
             logger.Logger.log(f'[{self.name}|{self.id}]: movement not enough energy')
@@ -163,17 +164,24 @@ class Entity:
         # if the entity is able to attack
         # check if there is an entity to attack
         entitylayer = levelmanager.Levels[self.z].EntityLayer
-        if hasattr(self, 'Inventory') and entitylayer[row][col]:
-            maxlayer = max([x.layer for x in entitylayer[row][col]])
-            # anything on the monster layer should be able to be attacked
-            if maxlayer == Layer.MONST_LAYER:
-                self.energy -= self.speed
-                for entity in entitylayer[row][col]:
-                    if entity.layer == Layer.MONST_LAYER:
-                        # calculate damage
-                        damage = self.get_damage()
-                        self.attack(levelmanager, animator, messager, entity, damage)
-                return MoveAction.ATTACKED
+        eidx,entity = utility.get_max_layer(entitylayer[row][col])
+        # anything on the monster layer should be able to be attacked
+        if entity.layer == Layer.MONST_LAYER:
+            self.energy -= self.speed
+            # calculate damage
+            damage = self.get_damage()
+            self.attack(levelmanager, animator, messager, entity, damage)
+            return MoveAction.ATTACKED
+        # anything on the barrel layer should be pushed
+        elif entity.layer == Layer.BARREL_LAYER:
+            # check if entity can be pushed
+            nrow,ncol = utility.get_new_pos((row,col), key)
+            if levelmanager.move_entity(entity, (nrow,ncol)):
+                # if pushed, then move
+                self.move(levelmanager, (row,col))
+                return MoveAction.PUSHED
+            else:
+                return MoveAction.INVALID
         # otherwise just move normally
         return self.move(levelmanager, (row,col))
 
@@ -224,10 +232,10 @@ class Entity:
                         elif maxlayer == Layer.WALL_LAYER:
                             break
                     objr, objc = r, c
-                levelmanager.place_entity(levelmanager.Levels[self.z], entity, (objr,objc))
+                levelmanager.place_entity(self.z, entity, (objr,objc))
             elif target:
                 # set to the target position
-                levelmanager.place_entity(levelmanager.Levels[self.z],
+                levelmanager.place_entity(self.z,
                                           entity, (target[0],target[1]))
                 objr = entity.row
                 objc = entity.col
@@ -312,18 +320,35 @@ class Entity:
             return self.Inventory.get_damage()
         return 0
 
+    def fight(self, levelmanager, animator, messager, event):
+        '''Purposely attack in a direction'''
+        if not event[1].isdigit():
+            return
+        # find next position
+        row,col = utility.get_new_pos((self.row,self.col), int(event[1]))
+        entitylayer = levelmanager.Levels[self.z].EntityLayer
+        eidx,entity = utility.get_max_layer(entitylayer[row][col])
+        # monsters or barrels can be damaged
+        if entity.layer == Layer.MONST_LAYER or entity.layer == Layer.BARREL_LAYER:
+            self.energy -= self.speed
+            # calculate damage
+            damage = self.get_damage()
+            self.attack(levelmanager, animator, messager, entity, damage)
+            return MoveAction.ATTACKED
+        return MoveAction.INVALID
+
     def do_action(self, levelmanager, animator, messager, event):
         '''Pass an event for the entity to preform a certain action'''
         logger.Logger.log(f'Do action [{self.name}|{self.id}]: {event} energy:{self.energy}')
 
-        # Running
+        # Run
         # currently charging
         if hasattr(self, 'Charge') and self.Charge.charging:
             self.handle_charging(levelmanager, animator, messager, event)
         # starting the charge
         elif hasattr(self, 'Charge') and len(event) > 1 and event[0] == '5':
             self.handle_charging(levelmanager, animator, messager, event)
-        # Walking 
+        # Walk
         elif event.isdigit():
             self.movement(levelmanager, animator, messager, int(event))
         # Z
@@ -336,10 +361,13 @@ class Entity:
             len(event) > 1 and
             (event[0] == 'e' or event[0] == 'u')):
             self.handle_inventory(levelmanager, messager, event)
+        # Throw
+        elif event[0] == 't' and len(event) > 1:
+            self.fire(levelmanager, animator, messager, event)
+        # Fight
+        elif event[0] == 'F' and len(event) > 1:
+            self.fight(levelmanager, animator, messager, event)
         # Rest
         elif event == '.':
             self.energy = 0
-        # Throwing
-        elif event[0] == 't':
-            self.fire(levelmanager, animator, messager, event)
 

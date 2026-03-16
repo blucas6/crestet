@@ -1,4 +1,5 @@
 import curses
+import sys
 import color
 import time
 
@@ -46,6 +47,10 @@ class Engine:
         stdscr.timeout(self.inputtimeout)
         if timedelay > 0:
             self.framedelay = timedelay
+        if sys.platform == 'win32':
+            os.environ['ESCDELAY'] = '25'
+        else:
+            curses.set_escdelay(25)
         # clear log
         with open(self.eventlog, 'w+') as el:
             el.write('')
