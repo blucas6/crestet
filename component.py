@@ -1,4 +1,5 @@
 import algo
+import entity
 import level
 import logger
 import enum
@@ -58,6 +59,7 @@ class Inventory:
         logger.Logger.log(f' Bag:')
         for ent in self.contents:
             logger.Logger.log(f'  {ent.name}')
+        logger.Logger.log(f'Inventory end')
     
     def get_entity_from_key(self, char):
         '''
@@ -108,31 +110,42 @@ class Inventory:
         if entity.ItemType == ItemType.QUIVER:
             if self.quiver:
                 if self.quiver.name != entity.name:
-                    self.contents.append(self.quiver)
+                    self.add_to_bag(self.quiver)
                 self.quiver = entity
         # WEARABLE
         elif entity.ItemType == ItemType.HEAD:
             if self.head:
-                self.contents.append(self.head)
+                self.add_to_bag(self.head)
             self.head = entity
         elif entity.ItemType == ItemType.BODY:
             if self.body:
-                self.contents.append(self.body)
+                self.add_to_bag(self.body)
             self.body = entity
         elif entity.ItemType == ItemType.FEET:
             if self.feet:
-                self.contents.append(self.feet)
+                self.add_to_bag(self.feet)
             self.feet = entity
         # MAIN / OFF HAND
         elif entity.ItemType == ItemType.HAND:
             if self.offHand:
-                self.contents.append(self.offHand)
+                self.add_to_bag(self.offHand)
             if self.mainHand:
                 self.offHand = self.mainHand
             self.mainHand = entity
         # ABILITY
         elif entity.ItemType == ItemType.ABILITY:
             self.ability = entity
+
+    def add_to_bag(self, entity):
+        '''Handles adding objects to the bag'''
+        logger.Logger.log(f'Adding to bag: {entity}')
+        self.contents.append(entity)
+        entity.idx = len(self.contents)-1
+        # Stack / Stackable items
+        if hasattr(entity, 'Stack'):
+            entity.Stack.check_entitylist(entity, self.contents)
+        elif hasattr(entity, 'Stackable'):
+            entity.Stackable.check_entitylist(entity, self.contents)
     
     def unequip(self, entity):
         '''
@@ -151,7 +164,7 @@ class Inventory:
             self.mainHand = None
         elif self.offHand and self.offHand.id == entity.id:
             self.offHand = None
-        self.contents.append(entity)
+        self.add_to_bag(entity)
 
     def get_damage(self):
         '''Based on the slot information calculate the damage'''
@@ -167,7 +180,7 @@ class Inventory:
     def pick_up(self, levelmanager, entity):
         '''Pass in an entity to add it to the bag'''
         ent = levelmanager.remove_entity(entity)
-        self.contents.append(ent)
+        self.add_to_bag(entity)
 
     def drop(self):
         '''Place an entity to the ground'''
@@ -205,6 +218,24 @@ class Stackable:
         '''Returns the stacked form of the entity'''
         return self.stack()
 
+    def check_entitylist(self, myself, entitylist):
+        for ent in entitylist:
+            if ent.id == myself.id:
+                continue
+            if hasattr(ent, 'Stack') and ent.Stack.unstack == type(myself):
+                ent.Stack.add_to_stack()
+                entitylist.pop(myself.idx)
+                return
+            elif type(myself) == type(ent):
+                logger.Logger.log(f'Stackable component: ent{ent} myself{myself} {entitylist}')
+                stack = ent.Stackable.get_stack()
+                stack.Stack.add_to_stack(2)
+                entitylist[ent.idx] = stack
+                stack.set_pos(myself.row, myself.col, myself.z, ent.idx)
+                entitylist.pop(myself.idx)
+                logger.Logger.log(f'Stackable component: after {entitylist}')
+                return
+
 class Stack:
     '''
     Stack component, if an entity is a stack of entities
@@ -223,6 +254,21 @@ class Stack:
         '''Unstack one entity and return the unstacked single form'''
         self.amount -= 1
         return self.unstack()
+
+    def check_entitylist(self, myself, entitylist):
+        for ent in entitylist:
+            if ent.id == myself.id:
+                continue
+            if hasattr(ent, 'Stackable') and ent.Stackable.stack == type(myself):
+                self.add_to_stack()
+                entitylist.pop(myself.idx)
+                entitylist[ent.idx] = myself
+                myself.set_pos(myself.row, myself.col, myself.z, ent.idx)
+                return
+            elif hasattr(ent, 'Stack') and type(myself) == type(ent):
+                entitylist.pop(myself.idx)
+                ent.Stack.add_to_stack(self.amount)
+                return
 
 class Health:
     '''

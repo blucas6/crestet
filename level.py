@@ -79,9 +79,10 @@ class LevelManager:
                 downstairplaced = self.generate_downstair(level, downstairpos)
                 downstairpos = self.generate_upstair(level)
                 self.generate_clear_path(level, downstairplaced, downstairpos)
-            self.generate_light(level)
+            #self.generate_light(level)
             self.generate_mons(level)
             self.generate_items(level)
+        logger.Logger.log(f'----- FINISHED LEVEL GENERATION -----')
 
     def generate_downstair(self, level, downstairpos):
         '''Places the downstairs at the designated spot, returns the placement'''

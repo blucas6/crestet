@@ -69,7 +69,7 @@ class Display:
                         self.screenbuffer[rw][cl] = ch
 
     def render_lightlayer(self, lightlayer):
-        color = tower.Light().color
+        color = clr.Color().bright_yellow
         for r,row in enumerate(lightlayer):
             for c,_ in enumerate(row):
                 rw, cl = self.level_to_screen_pos(r,c)

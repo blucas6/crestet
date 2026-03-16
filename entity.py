@@ -96,6 +96,7 @@ class Entity:
         '''Size enum for the entity'''
         self.energy = 0
         '''Energy bank'''
+        logger.Logger.log(f'Creating new entity: {self} {self.pos()}')
 
     def __repr__(self):
         return f'[{self.name}|{self.id}]'
@@ -295,6 +296,7 @@ class Entity:
         if self.energy >= self.Inventory.cost:
             self.energy -= self.Inventory.cost
             self.Inventory.action(levelmanager, messager, event)
+            self.Inventory.show()
 
     def handle_charging(self, levelmanager, animator, messager, event):
         '''Talks to the charge component'''
