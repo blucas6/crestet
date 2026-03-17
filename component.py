@@ -187,6 +187,7 @@ class Inventory:
         pass
 
     def action(self, levelmanager, messager, event):
+        '''Handle an inventory action'''
         action = event[0]
         key = event[1]
         # Equip
@@ -219,6 +220,11 @@ class Stackable:
         return self.stack()
 
     def check_entitylist(self, myself, entitylist):
+        '''
+        Modify entity list if there is a stackable object that works with this object
+        Works with any entity list
+        Entity (myself) must be placed in the list first
+        '''
         for ent in entitylist:
             if ent.id == myself.id:
                 continue
@@ -256,6 +262,11 @@ class Stack:
         return self.unstack()
 
     def check_entitylist(self, myself, entitylist):
+        '''
+        Modify entity list if there is a stackable object that works with this object
+        Works with any entity list
+        Entity (myself) must be placed in the list first
+        '''
         for ent in entitylist:
             if ent.id == myself.id:
                 continue

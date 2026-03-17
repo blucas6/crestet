@@ -96,7 +96,7 @@ class Entity:
         '''Size enum for the entity'''
         self.energy = 0
         '''Energy bank'''
-        logger.Logger.log(f'Creating new entity: {self} {self.pos()}')
+        #logger.Logger.log(f'Creating new entity: {self} {self.pos()}')
 
     def __repr__(self):
         return f'[{self.name}|{self.id}]'
@@ -341,7 +341,7 @@ class Entity:
 
     def do_action(self, levelmanager, animator, messager, event):
         '''Pass an event for the entity to preform a certain action'''
-        logger.Logger.log(f'Do action [{self.name}|{self.id}]: {event} energy:{self.energy}')
+        logger.Logger.log(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
 
         # Run
         # currently charging

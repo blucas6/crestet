@@ -44,6 +44,7 @@ class DartStack(e.Entity):
         self.ItemType = component.ItemType.QUIVER
 
     def on_placed(self, levelmanager):
+        '''Check new square for other darts or dart stacks'''
         level = levelmanager.Levels[self.z]
         entitylist = level.EntityLayer[self.row][self.col]
         self.Stack.check_entitylist(self, entitylist)

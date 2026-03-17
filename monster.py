@@ -24,7 +24,7 @@ class Newt(e.Entity):
                          size=e.Size.MEDIUM)
         self.Inventory.equip(item.Bite())
 
-    def take_turn(self, levelmanager, animator, messager, energy):
+    def take_turn(self, levelmanager, animator, messager):
         '''Uses brain to select an action'''
         self.do_action(
             levelmanager,
@@ -35,7 +35,7 @@ class Newt(e.Entity):
                 [self.row,self.col],
                 self.z,
                 levelmanager.Player,
-                energy
+                self.energy
             )
         )
 
