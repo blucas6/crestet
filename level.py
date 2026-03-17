@@ -295,13 +295,23 @@ class LevelManager:
             done_turn = True
             for row in level.EntityLayer:
                 for entitylist in row:
-                    for entity in entitylist:
+                    index = 0
+                    listsize = len(entitylist)
+                    while index < listsize:
+                        entity = entitylist[index]
+                        currlistsize = len(entitylist)
                         done = self.update_entity(animator,
                                                     messager,
                                                     entity,
                                                     self.Player.turn)
                         # some entities need more turns
                         if not done: done_turn = False
+                        # entities were removed from the list
+                        # restart the index
+                        if currlistsize < len(entitylist):
+                            index = 0
+                        else:
+                            index += 1
 
         # update light layer
         for row in level.EntityLayer:
