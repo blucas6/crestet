@@ -1,4 +1,5 @@
 import time
+import datetime
 
 class Timing:
     '''Timing object'''
@@ -57,6 +58,7 @@ class Timing:
         '''Prints out all measurements taken'''
         if self.allowTiming:
             with open(self.logfile, 'w+') as l:
+                l.write(f'Timing Analysis {datetime.datetime.now()}\n\n')
                 for measurement, times in self.measurements.items():
                     if len(times) > 1:
                         avg = sum([x for x in times]) / len(times)

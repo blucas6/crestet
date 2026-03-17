@@ -131,6 +131,10 @@ class Entity:
         '''Hook gets called when another entity is placed in the same square'''
         pass
 
+    def on_zchange(self, *_):
+        '''Hook gets called when the entity changes z levels'''
+        pass
+
     def update_state(self, *_):
         '''Gets called after initialization'''
         pass

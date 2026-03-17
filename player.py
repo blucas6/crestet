@@ -22,6 +22,10 @@ class Player(e.Entity):
     def __init__(self):
         self.mentalmap = []
         '''Entity map for output to the screen'''
+        self.levelrows = 0
+        '''Rows for mental map'''
+        self.levelcols = 0
+        '''Columns for mental map'''
         self.fovpoints = []
         '''Used for simple FOV'''
         self.fovmemory = FOVMemory.OBJECTS
@@ -53,8 +57,14 @@ class Player(e.Entity):
 
     def init(self, levelrows, levelcols):
         '''Initialize player data'''
-        self.mentalmap = [[[] for _ in range(levelcols)] for _ in range(levelrows)]
+        self.levelrows = levelrows
+        self.levelcols = levelcols
+        self.clear_memory()
         self.Inventory.equip(item.Sword())
+
+    def clear_memory(self):
+        '''Resets the mental map of the player'''
+        self.mentalmap = [[[] for _ in range(self.levelcols)] for _ in range(self.levelrows)]
 
     def update_mental_map(self, level):
         '''Updates the mental map of the player'''
@@ -113,8 +123,8 @@ class Player(e.Entity):
         self.Inventory.autopickup(levelmanager, entitylist)
 
 
-        
-
+    def on_zchange(self):
+        self.clear_memory()
 
 
 

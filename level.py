@@ -64,10 +64,9 @@ class LevelManager:
     def level_setup_default(self, playerpos):
         '''Load a default map on all levels'''
         downstairpos = []
-        upstairpos = []
         for z,level in enumerate(self.Levels):
             self.generate_surrounding_walls(level)
-            #self.generate_walls(level)
+            self.generate_walls(level)
             if z == 0:
                 downstairpos = self.generate_upstair(level)
                 self.generate_clear_path(level, playerpos, downstairpos)
@@ -79,7 +78,7 @@ class LevelManager:
                 downstairplaced = self.generate_downstair(level, downstairpos)
                 downstairpos = self.generate_upstair(level)
                 self.generate_clear_path(level, downstairplaced, downstairpos)
-            #self.generate_light(level)
+            self.generate_light(level)
             self.generate_mons(level)
             self.generate_items(level)
         logger.Logger.log(f'----- FINISHED LEVEL GENERATION -----')
@@ -126,7 +125,7 @@ class LevelManager:
             r = self.RNG.randint(1,self.levelrows-2)
             c = self.RNG.randint(1,self.levelcols-2)
             self.place_entity(level.z, monster.Jelly(), (r,c))
-        for _ in range(1):
+        for _ in range(5):
             r = self.RNG.randint(1,self.levelrows-2)
             c = self.RNG.randint(1,self.levelcols-2)
             self.place_entity(level.z, monster.Newt(), (r,c))
@@ -384,6 +383,8 @@ class LevelManager:
         entity = self.remove_entity(entity)
 
         self.place_entity(level.z, entity, newpos)
+
+        entity.on_zchange()
 
         return True
 
