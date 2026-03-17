@@ -2,6 +2,17 @@ import entity as e
 import color
 import component
 
+
+class Fruit(e.Entity):
+    def __init__(self):
+        super().__init__(name='Fruit',
+                         glyph='&',
+                         color=color.Color().green,
+                         layer=e.Layer.OBJECT_LAYER,
+                         size=e.Size.VERY_SMALL)
+        self.Edible = component.Edible(name='Fruit',
+                                       nutrition=5)
+
 class Wood(e.Entity):
     def __init__(self):
         super().__init__(name='Wood',

@@ -120,6 +120,10 @@ class Player(e.Entity):
     def on_placed(self, levelmanager):
         '''Check auto pickup component when moved'''
         entitylist = levelmanager.Levels[self.z].EntityLayer[self.row][self.col]
+        for ent in entitylist:
+            if hasattr(ent, 'Edible') and hasattr(self, 'Health'):
+                ent.Edible.eat(self)
+                levelmanager.remove_entity(ent)
         self.Inventory.autopickup(levelmanager, entitylist)
 
 

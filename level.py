@@ -135,6 +135,10 @@ class LevelManager:
             r = self.RNG.randint(1,self.levelrows-2)
             c = self.RNG.randint(1,self.levelcols-2)
             self.place_entity(level.z, tower.Barrel(), (r,c))
+        for _ in range(2):
+            r = self.RNG.randint(1,self.levelrows-2)
+            c = self.RNG.randint(1,self.levelcols-2)
+            self.place_entity(level.z, item.Fruit(), (r,c))
 
     def generate_light(self, level):
         for _ in range(5):
@@ -399,5 +403,4 @@ class LevelManager:
         for ix in range(idx, len(level.EntityLayer[r][c])):
             level.EntityLayer[r][c][ix].idx -= 1
         return level.EntityLayer[r][c].pop(idx)
-
 

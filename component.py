@@ -5,6 +5,15 @@ import logger
 import enum
 
 
+class Edible:
+    def __init__(self, name, nutrition):
+        self.name = name
+        self.nutrition = nutrition
+    
+    def eat(self, entity):
+        if hasattr(entity, 'Health'):
+            entity.Health.change_health(self.nutrition)
+
 class ItemType(enum.Enum):
     QUIVER = 0
     HEAD = 1
