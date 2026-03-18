@@ -117,15 +117,13 @@ class Player(e.Entity):
         else:
             return self.Inventory.get_damage()
 
-    def on_placed(self, levelmanager):
+    def on_placed(self, levelmanager, messager):
         '''Check auto pickup component when moved'''
         entitylist = levelmanager.Levels[self.z].EntityLayer[self.row][self.col]
         for ent in entitylist:
             if hasattr(ent, 'Edible') and hasattr(self, 'Health'):
-                ent.Edible.eat(self)
-                levelmanager.remove_entity(ent)
+                ent.Edible.eat(levelmanager, messager, self)
         self.Inventory.autopickup(levelmanager, entitylist)
-
 
     def on_zchange(self):
         self.clear_memory()

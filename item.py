@@ -10,8 +10,7 @@ class Fruit(e.Entity):
                          color=color.Color().green,
                          layer=e.Layer.OBJECT_LAYER,
                          size=e.Size.VERY_SMALL)
-        self.Edible = component.Edible(name='Fruit',
-                                       nutrition=5)
+        self.Edible = component.Edible(self, nutrition=5)
 
 class Wood(e.Entity):
     def __init__(self):
@@ -54,7 +53,7 @@ class DartStack(e.Entity):
         self.Stack = component.Stack(Dart)
         self.ItemType = component.ItemType.QUIVER
 
-    def on_placed(self, levelmanager):
+    def on_placed(self, levelmanager, messager):
         '''Check new square for other darts or dart stacks'''
         level = levelmanager.Levels[self.z]
         entitylist = level.EntityLayer[self.row][self.col]
@@ -70,7 +69,7 @@ class Dart(e.Entity):
         self.Stackable = component.Stackable(DartStack)
         self.ItemType = component.ItemType.QUIVER
 
-    def on_placed(self, levelmanager):
+    def on_placed(self, levelmanager, messager):
         '''Check new square for other darts or dart stacks'''
         level = levelmanager.Levels[self.z]
         entitylist = level.EntityLayer[self.row][self.col]

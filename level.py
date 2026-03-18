@@ -1,4 +1,5 @@
 import logger
+import message
 import timing
 import algo
 import config
@@ -46,8 +47,11 @@ class LevelManager:
         '''Holds all level objects'''
         self.Player: player.Player = None
         '''Player object'''
+        self.Messager: message.Messager = None
+        '''Connection to message queue from game'''
     
-    def init(self, totallevels, currentz, levelrows, levelcols, rng):
+    def init(self, messager, totallevels, currentz, levelrows, levelcols, rng):
+        self.Messager = messager
         self.totallevels = totallevels
         self.levelrows = levelrows
         self.levelcols = levelcols
@@ -66,7 +70,7 @@ class LevelManager:
         downstairpos = []
         for z,level in enumerate(self.Levels):
             self.generate_surrounding_walls(level)
-            self.generate_walls(level)
+            #self.generate_walls(level)
             if z == 0:
                 downstairpos = self.generate_upstair(level)
                 self.generate_clear_path(level, playerpos, downstairpos)
@@ -79,8 +83,8 @@ class LevelManager:
                 downstairpos = self.generate_upstair(level)
                 self.generate_clear_path(level, downstairplaced, downstairpos)
             self.generate_light(level)
-            self.generate_mons(level)
-            self.generate_items(level)
+            #self.generate_mons(level)
+            #self.generate_items(level)
         logger.Logger.log(f'----- FINISHED LEVEL GENERATION -----')
 
     def generate_downstair(self, level, downstairpos):
@@ -223,12 +227,12 @@ class LevelManager:
             idx = len(level.EntityLayer[r][c])-1
             entity.set_pos(r, c, level.z, idx)
             # trigger the on placed hook because entity was placed
-            entity.on_placed(self)
+            entity.on_placed(self, self.Messager)
             # trigger the on top hook because entity was placed on top of other entities
             for ent in level.EntityLayer[r][c]:
                 if ent.id != entity.id:
                     ent.on_top(self)
-        #logger.Logger.log(f'Entity {entity.name} placed at {entity.pos()}')
+        logger.Logger.log(f'Entity {entity.name} placed at {entity.pos()}')
 
     def is_entity_pos_valid(self, level, entity, pos, overwrite=False):
         '''Checks if an entity and a new position would be valid'''
@@ -299,9 +303,14 @@ class LevelManager:
             for row in level.EntityLayer:
                 for entitylist in row:
                     index = 0
-                    listsize = len(entitylist)
-                    while index < listsize:
-                        entity = entitylist[index]
+                    currlistsize = len(entitylist)
+                    while index < currlistsize:
+                        try:
+                            entity = entitylist[index]
+                        except:
+                            logger.Logger.log(f'ERROR: {entitylist}')
+                            logger.Logger.log(f'ERROR: idx:{index}')
+                            break
                         currlistsize = len(entitylist)
                         done = self.update_entity(animator,
                                                     messager,

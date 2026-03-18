@@ -127,6 +127,7 @@ class Game:
         logger.Logger.log(f'SEED: {self.seed}')
         self.MenuManager.init(self.Messager, self.messageblocking, self.turn)
         self.LevelManager.init(
+                self.Messager,
                 totallevels=config.TOTALLEVELS,
                 currentz=0,
                 levelrows=config.ROWS,

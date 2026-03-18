@@ -6,13 +6,15 @@ import enum
 
 
 class Edible:
-    def __init__(self, name, nutrition):
-        self.name = name
+    def __init__(self, parent, nutrition):
+        self.parent = parent
         self.nutrition = nutrition
     
-    def eat(self, entity):
+    def eat(self, levelmanager, messager, entity):
         if hasattr(entity, 'Health'):
             entity.Health.change_health(self.nutrition)
+            messager.add_eat_message(entity, self.parent)
+            levelmanager.remove_entity(self.parent)
 
 class ItemType(enum.Enum):
     QUIVER = 0

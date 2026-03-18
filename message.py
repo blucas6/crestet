@@ -13,7 +13,7 @@ class Messager:
         '''
         self.MsgQueue = []
 
-    def add_message(self, msg: str):
+    def add_message(self, msg):
         '''
         Adds a msg to the msg queue
         '''
@@ -42,6 +42,14 @@ class Messager:
             self.MsgQueue.append(f'The {attackentity.name} charges you!')
         else:
             self.MsgQueue.append(f'The {attackentity.name} charges the {defendentity.name}')
+
+    def add_eat_message(self, entitya, entityb):
+        if entitya.name == 'Player':
+            self.MsgQueue.append(f'You eat the {entityb.name}')
+        elif entityb.name == 'Player':
+            self.MsgQueue.append(f'The {entitya.name} eats you')
+        else:
+            self.MsgQueue.append(f'The {entitya.name} eats the {entityb.name}')
 
     def pop_message(self, blocking=True):
         '''
