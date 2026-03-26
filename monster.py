@@ -6,6 +6,18 @@ import component
 import utility
 import item
 
+class Human(e.Entity):
+    '''
+    Human
+    '''
+    def __init__(self):
+        super().__init__(name='Human',
+                         glyph='@',
+                         color=color.Color().white,
+                         layer=e.Layer.MONST_LAYER,
+                         size=e.Size.MEDIUM)
+        self.Interact = component.Interact()
+
 class Newt(e.Entity):
     '''
     Newt creature
@@ -24,12 +36,14 @@ class Newt(e.Entity):
                          size=e.Size.MEDIUM)
         self.Inventory.equip(item.Bite())
 
-    def take_turn(self, levelmanager, animator, messager):
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine):
         '''Uses brain to select an action'''
         self.do_action(
             levelmanager,
             animator,
             messager,
+            menumanager,
+            statemachine,
             self.Brain.get_action(
                 levelmanager.get_curr_level(),
                 [self.row,self.col],

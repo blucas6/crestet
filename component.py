@@ -4,6 +4,19 @@ import level
 import logger
 import enum
 
+class Interact:
+    def __init__(self):
+        pass
+
+    def talk(self, statemachine, menumanager):
+        statemachine.new_state('interact')
+        menumanager.load_interact('Hello, how are you doing?')
+        statemachine.callback = self.on_choice
+
+    def on_choice(self, statemachine, menumanager, event):
+        logger.Logger.log(f'GOT MY ANSWER: {event}')
+        menumanager.showinteract = False
+        statemachine.new_state('doneinteract')
 
 class Edible:
     def __init__(self, parent, nutrition):

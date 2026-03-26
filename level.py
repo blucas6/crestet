@@ -125,14 +125,18 @@ class LevelManager:
                     self.place_entity(level.z, tower.Floor(), [r,c], overwrite=True)
 
     def generate_mons(self, level):
-        for _ in range(5):
+        for _ in range(0):
             r = self.RNG.randint(1,self.levelrows-2)
             c = self.RNG.randint(1,self.levelcols-2)
             self.place_entity(level.z, monster.Jelly(), (r,c))
-        for _ in range(5):
+        for _ in range(0):
             r = self.RNG.randint(1,self.levelrows-2)
             c = self.RNG.randint(1,self.levelcols-2)
             self.place_entity(level.z, monster.Newt(), (r,c))
+        for _ in range(1):
+            r = self.RNG.randint(1,self.levelrows-2)
+            c = self.RNG.randint(1,self.levelcols-2)
+            self.place_entity(level.z, monster.Human(), (r,c))
 
     def generate_items(self, level):
         for _ in range(2):
@@ -263,7 +267,7 @@ class LevelManager:
             return self.Levels[self.currentz]
         return None
 
-    def update_level(self, animator, messager, event):
+    def update_level(self, animator, messager, menumanager, statemachine, event):
         '''
         Go through all entities and update them
         '''
@@ -273,7 +277,7 @@ class LevelManager:
         logger.Logger.log('----------TURN UPDATE-----------')
 
         self.Player.energy = 100
-        self.Player.do_action(self, animator, messager, event)
+        self.Player.do_action(self, animator, messager, menumanager, statemachine, event)
         self.Player.turn += 1
 
         # update the level the player is on
@@ -315,9 +319,11 @@ class LevelManager:
                             break
                         currlistsize = len(entitylist)
                         done = self.update_entity(animator,
-                                                    messager,
-                                                    entity,
-                                                    self.Player.turn)
+                                                  messager,
+                                                  menumanager,
+                                                  statemachine,
+                                                  entity,
+                                                  self.Player.turn)
                         # some entities need more turns
                         if not done: done_turn = False
                         # entities were removed from the list
@@ -336,11 +342,11 @@ class LevelManager:
 
         timing.Timing().end()
 
-    def update_entity(self, animator, messager, entity, currentturn):
+    def update_entity(self, animator, messager, menumanager, statemachine, entity, currentturn):
         if entity.turn >= currentturn:
             return True
         energystart = entity.energy
-        entity.take_turn(self, animator, messager) 
+        entity.take_turn(self, animator, messager, menumanager, statemachine) 
         energyend = entity.energy
         if entity.energy == 0 or energystart == energyend:
             entity.turn += 1

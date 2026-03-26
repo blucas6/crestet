@@ -67,6 +67,7 @@ class Display:
                     cl = c+menu.origin[1]
                     if rw < len(self.screenbuffer) and cl < len(self.screenbuffer[rw]):
                         self.screenbuffer[rw][cl] = ch
+                        self.colorbuffer[rw][cl] = clr.Color().white
 
     def render_lightlayer(self, lightlayer):
         color = clr.Color().bright_yellow

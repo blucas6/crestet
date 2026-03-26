@@ -129,13 +129,23 @@ class InventoryMenu(Menu):
         self.count += 1
         return chr(self.count)
 
+class InteractMenu(Menu):
+    def __init__(self, origin, rows, cols):
+        super().__init__(origin, rows, cols)
+
+    def update(self, message):
+        super().update()
+        self.text[0] = '-'*(len(message)+2)
+        self.text[1] = '|' + message + '|'
+        self.text[2] = '-'*(len(message)+2)
+
 class MenuManager:
     '''
     Holds all menus
     '''
 
     def __init__(self):
-        pass
+        self.showinteract = False
 
     def init(self, messager, blocking, turn):
         self.StatusMenu = StatusMenu(config.STATUSMENU_ORIGIN, 1, 20, turn)
@@ -143,6 +153,14 @@ class MenuManager:
         self.HealthMenu = HealthMenu(config.HEALTHMENU_ORIGIN, 1, config.HEALTHMENU_LENGTH+2)
         self.DepthMenu = DepthMenu(config.DEPTHMENU_ORIGIN, 1, 20)
         self.InventoryMenu = InventoryMenu(config.INVENTORYMENU_ORIGIN, 20, 30)
+        self.InteractMenu = InteractMenu((5,5), 3, 20)
 
     def get_menus(self):
-        return [self.StatusMenu, self.MessageMenu, self.HealthMenu, self.DepthMenu, self.InventoryMenu]
+        menulist = [self.StatusMenu, self.MessageMenu, self.HealthMenu, self.DepthMenu, self.InventoryMenu]
+        if self.showinteract:
+            menulist.append(self.InteractMenu)
+        return menulist
+    
+    def load_interact(self, message):
+        self.InteractMenu.update(message)
+        self.showinteract = True

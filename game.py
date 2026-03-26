@@ -1,3 +1,4 @@
+import state
 import engine
 import timing as tt
 import message
@@ -27,21 +28,6 @@ class Event(enum.Enum):
     CLEAR = 0
     EVENT = 1
 
-class GameState(enum.Enum):
-    '''
-    Game States:
-        1: User inputting actions to the player
-        2: Game is over (winning/losing)
-        3: Pausing will block player actions
-        4: Motion will block player actions until the second event arrives
-        5: Running will update the game without user interactions
-    '''
-    PLAYING = 1
-    END = 2
-    PAUSEONMSG = 3
-    MOTION = 4
-    RUNNING = 5
-
 class Game:
     '''
     Game class controls the entire game execution from start to finish
@@ -66,7 +52,7 @@ class Game:
         '''Use player FOV to generate map'''
 
         # Objects
-        self.GameState = GameState.PLAYING
+        self.StateMachine = state.StateMachine()
         '''Controls the state of the game'''
         self.Display = display.Display()
         '''Utility class to organize displaying to the engine'''
@@ -164,7 +150,7 @@ class Game:
         '''
         Gets an event and it's respective energy (continuously polling)
         '''
-        if self.GameState != GameState.RUNNING:
+        if self.StateMachine.GameState != state.GameState.RUNNING:
             event = self.Engine.read_input()
             eventtype,event = self.event_type(event)
         else:
@@ -199,12 +185,18 @@ class Game:
         # clear current message
         self.MenuManager.MessageMenu.clear()
 
-        # update all entities
-        self.LevelManager.update_level(self.Animator, self.Messager, event)
+        logger.Logger.log(f'GAMESTATE: {self.StateMachine.GameState}')
 
-        # end the player charge, get back into playing mode
-        if self.GameState == GameState.RUNNING and not self.LevelManager.Player.Charge.charging:
-            self.state_machine('endrun')
+        if self.StateMachine.GameState == state.GameState.INTERACTING:
+            self.StateMachine.callback(self.StateMachine, self.MenuManager, event)
+        else:
+            # update all entities
+            self.LevelManager.update_level(self.Animator, self.Messager, self.MenuManager, self.StateMachine, event)
+
+            # end the player charge, get back into playing mode
+            if (self.StateMachine.GameState == state.GameState.RUNNING and
+                not self.LevelManager.Player.Charge.charging):
+                self.StateMachine.new_state('endrun')
 
         # update player FOV
         self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
@@ -218,12 +210,12 @@ class Game:
         # update inventory menu
         self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
 
-        if not self.GameState == GameState.END:
+        if not self.StateMachine.GameState == state.GameState.END:
             if self.win():
-                self.state_machine('endgame')
+                self.StateMachine.new_state('endgame')
                 self.Messager.add_message('You won!')
             elif self.lose():
-                self.state_machine('endgame')
+                self.StateMachine.new_state('endgame')
                 self.Messager.add_message('You died!')
 
         # update and grab any messages in the queue
@@ -272,9 +264,9 @@ class Game:
         if self.Messager.MsgQueue:
             # still more messages to process, msg queue should never be full if
             # non blocking mode is on
-            self.state_machine('msgQFull')
+            self.StateMachine.new_state('msgQFull')
         else:
-            self.state_machine('msgQEmpty')
+            self.StateMachine.new_state('msgQEmpty')
 
     def animations(self, screenbuffer, colorbuffer):
         '''Display animations queued'''
@@ -318,19 +310,20 @@ class Game:
             self.running = False
         elif event == 'r':
             # RESET
-            self.state_machine('reset')
+            self.StateMachine.new_state('reset')
+            self.MenuManager.showinteract = False
             self.game_setup()
         elif event == 'f':
             # TOGGLE FOV
             self.playerFOV = not self.playerFOV
         elif event == ' ' or event == chr(curses.ascii.ESC):
             self.previousevent = ''
-            self.state_machine('donemotion')
+            self.StateMachine.new_state('donemotion')
             # DO NOTHING - clears msg queue and previous event
             return Event.CLEAR,event
         # MOTIONS 
-        elif self.GameState == GameState.MOTION:
-            self.state_machine('donemotion')
+        elif self.StateMachine.GameState == state.GameState.MOTION:
+            self.StateMachine.new_state('donemotion')
             # Throwing/Charge Action
             if self.previousevent == 't' or self.previousevent == '5' or self.previousevent == 'F':
                 # expects a direction
@@ -340,13 +333,13 @@ class Game:
                 # valid direction increment turn
                 # return the combined event
                 if self.previousevent == '5':
-                    self.state_machine('startrun')
+                    self.StateMachine.new_state('startrun')
                 return Event.EVENT,self.previousevent+event
             # Inventory Action
             elif self.previousevent == 'e' or self.previousevent == 'u':
                 return Event.EVENT,self.previousevent+event
         # PLAYER ACTIONS
-        elif self.GameState == GameState.PLAYING:
+        elif self.StateMachine.GameState == state.GameState.PLAYING:
             # Multi key action
             if event == 't' or event == '5' or event == 'e' or event == 'u' or event == 'F':
                 if event == 'e':
@@ -355,38 +348,15 @@ class Game:
                     self.Messager.add_message('Unequip what?')
                 else:
                     self.Messager.add_message('Direction?')
-                self.state_machine('motion')
+                self.StateMachine.new_state('motion')
                 self.previousevent = event
                 return Event.CLEAR,event
             else:
                 # Player
                 return Event.EVENT,event
+        elif self.StateMachine.GameState == state.GameState.INTERACTING:
+            return Event.EVENT,event
+
         # Defaults to returning NA for no action
         return Event.NA,event
 
-    def state_machine(self, event):
-        '''
-        Change the game state
-        '''
-        if event == 'msgQFull' and self.GameState == GameState.PLAYING:
-            # too many messages to display, block user input until resolved
-            self.GameState = GameState.PAUSEONMSG
-        elif event == 'msgQEmpty' and self.GameState == GameState.PAUSEONMSG:
-            # if paused and msg queue is cleared, go back to normal
-            self.GameState = GameState.PLAYING
-        elif event == 'endgame':
-            self.GameState = GameState.END
-        elif event == 'reset':
-            self.GameState = GameState.PLAYING
-        elif event == 'motion' and self.GameState == GameState.PLAYING:
-            # start the key motion
-            self.GameState = GameState.MOTION
-        elif event == 'donemotion' and self.GameState == GameState.MOTION:
-            # end the key motion
-            self.GameState = GameState.PLAYING
-        elif event == 'startrun' and self.GameState == GameState.PLAYING:
-            # start the charge
-            self.GameState = GameState.RUNNING
-        elif event == 'endrun' and self.GameState == GameState.RUNNING:
-            # end the charge
-            self.GameState = GameState.PLAYING

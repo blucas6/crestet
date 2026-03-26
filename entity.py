@@ -12,6 +12,7 @@ class MoveAction(enum.Enum):
     ATTACKED = 2
     MOVED = 3
     PUSHED = 4
+    INTERACT = 5
 
 class AttackSpeed(enum.IntEnum):
     '''Corresponding energy costs for attacking'''
@@ -147,7 +148,7 @@ class Entity:
         else:
             return MoveAction.INVALID
 
-    def movement(self, levelmanager, animator, messager, key):
+    def movement(self, levelmanager, animator, messager, menumanager, statemachine, key):
         '''
         Handle the movement action
         Returns the result of the movement request
@@ -169,14 +170,21 @@ class Entity:
         # if the entity is able to attack
         # check if there is an entity to attack
         entitylayer = levelmanager.Levels[self.z].EntityLayer
-        eidx,entity = utility.get_max_layer(entitylayer[row][col])
+        _,entity = utility.get_max_layer(entitylayer[row][col])
         # anything on the monster layer should be able to be attacked
         if entity.layer == Layer.MONST_LAYER:
-            self.energy -= self.speed
-            # calculate damage
-            damage = self.get_damage()
-            self.attack(levelmanager, animator, messager, entity, damage)
-            return MoveAction.ATTACKED
+            # check for interactions
+            if self.name == 'Player' and hasattr(entity, 'Interact'):
+                self.energy -= 1
+                entity.Interact.talk(statemachine, menumanager)
+                return MoveAction.INTERACT
+            # must attack
+            else:
+                self.energy -= self.speed
+                # calculate damage
+                damage = self.get_damage()
+                self.attack(levelmanager, animator, messager, entity, damage)
+                return MoveAction.ATTACKED
         # anything on the barrel layer should be pushed
         elif entity.layer == Layer.BARREL_LAYER:
             # check if entity can be pushed
@@ -302,23 +310,18 @@ class Entity:
             self.Inventory.action(levelmanager, messager, event)
             self.Inventory.show()
 
-    def handle_charging(self, levelmanager, animator, messager, event):
+    def handle_charging(self, levelmanager, animator, messager, menumanager, statemachine, event):
         '''Talks to the charge component'''
-        # already charging
-        if self.Charge.charging:
-            result = self.movement(levelmanager, animator, messager, self.Charge.direction)
-            if result == MoveAction.INVALID:
-                self.Charge.end()
-            elif result == MoveAction.MOVED:
-                self.Charge.distance += 1
         # start the charge
-        elif event[0] == '5':
+        if event[0] == '5':
             self.Charge.start(int(event[1]))
-            result = self.movement(levelmanager, animator, messager, self.Charge.direction)
-            if result == MoveAction.INVALID:
-                self.Charge.end()
-            elif result == MoveAction.MOVED:
-                self.Charge.distance += 1
+        result = self.movement(levelmanager, animator, messager, menumanager, statemachine, self.Charge.direction)
+        if result == MoveAction.INVALID:
+            self.Charge.end()
+        elif result == MoveAction.INTERACT:
+            self.Charge.end()
+        elif result == MoveAction.MOVED:
+            self.Charge.distance += 1
 
     def get_damage(self):
         '''Base method, called when attacking from movement'''
@@ -343,20 +346,20 @@ class Entity:
             return MoveAction.ATTACKED
         return MoveAction.INVALID
 
-    def do_action(self, levelmanager, animator, messager, event):
+    def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event):
         '''Pass an event for the entity to preform a certain action'''
         logger.Logger.log(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
 
         # Run
         # currently charging
         if hasattr(self, 'Charge') and self.Charge.charging:
-            self.handle_charging(levelmanager, animator, messager, event)
+            self.handle_charging(levelmanager, animator, messager, menumanager, statemachine, event)
         # starting the charge
         elif hasattr(self, 'Charge') and len(event) > 1 and event[0] == '5':
-            self.handle_charging(levelmanager, animator, messager, event)
+            self.handle_charging(levelmanager, animator, messager, menumanager, statemachine, event)
         # Walk
         elif event.isdigit():
-            self.movement(levelmanager, animator, messager, int(event))
+            self.movement(levelmanager, animator, messager, menumanager, statemachine, int(event))
         # Z
         elif event == '<': 
             self.moveZ(levelmanager, messager, 1)
