@@ -70,7 +70,7 @@ class LevelManager:
         downstairpos = []
         for z,level in enumerate(self.Levels):
             self.generate_surrounding_walls(level)
-            #self.generate_walls(level)
+            self.generate_walls(level)
             if z == 0:
                 downstairpos = self.generate_upstair(level)
                 self.generate_clear_path(level, playerpos, downstairpos)
@@ -82,9 +82,9 @@ class LevelManager:
                 downstairplaced = self.generate_downstair(level, downstairpos)
                 downstairpos = self.generate_upstair(level)
                 self.generate_clear_path(level, downstairplaced, downstairpos)
-            self.generate_light(level)
-            #self.generate_mons(level)
-            #self.generate_items(level)
+            self.generate_light(level) 
+            self.generate_mons(level)
+            self.generate_items(level)
         logger.Logger.log(f'----- FINISHED LEVEL GENERATION -----')
 
     def generate_downstair(self, level, downstairpos):
@@ -148,9 +148,11 @@ class LevelManager:
         for _ in range(5):
             r = self.RNG.randint(1,self.levelrows-2)
             c = self.RNG.randint(1,self.levelcols-2)
-            light = tower.Light()
-            self.place_entity(level.z, light, (r,c))
-            light.update_state(self)
+            _,entity  = utility.get_max_layer(level.EntityLayer[r][c])
+            if entity.layer < e.Layer.WALL_LAYER:
+                light = tower.Light()
+                self.place_entity(level.z, light, (r,c))
+                light.update_state(self)
 
     def generate_walls(self, level, minwalls=config.MINIMUM_WALLS):
         '''

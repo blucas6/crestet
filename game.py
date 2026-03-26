@@ -229,6 +229,7 @@ class Game:
         # update and grab any messages in the queue
         self.messages()
 
+
     def render(self):
         '''Render the current game state to the screen'''
         # rewrite all the map buffers and menu buffers to the screen
