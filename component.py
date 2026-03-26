@@ -323,7 +323,8 @@ class Health:
 
         Returns true if health change causes death
         '''
-        self.currenthealth += amount
+        if self.currenthealth + amount < self.maxhealth:
+            self.currenthealth += amount
         if self.alive and self.currenthealth <= 0:
             self.alive = False
             return True
