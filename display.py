@@ -114,7 +114,6 @@ class Display:
     def level_to_screen_pos(self, r, c):
         return r+self.levelorigin[0], c+self.levelorigin[1]
 
-
     def add_animation_frame(self, screenbuffer, colorbuffer, anim, key):
             ar, ac = anim.origin[0], anim.origin[1]
             # add frame array to the screen

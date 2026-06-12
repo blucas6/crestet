@@ -32,14 +32,12 @@ class Game:
     '''
     Game class controls the entire game execution from start to finish
     '''
-    def __init__(self, specificseed=None, msgblocking=True, usedisplay=True, timing=False):
+    def __init__(self, seed=None, msgblocking=True, usedisplay=True, timing=False):
         # Properties
         self.running = False
         '''If the game is running'''
-        self.seed = None
+        self.seed = seed 
         '''Random seed for random calls'''
-        self.specificseed = specificseed
-        '''Set when recreating a seed'''
         self.messageblocking = msgblocking
         '''Set to true to pause on multiple messages being displayed'''
         self.usedisplay = usedisplay
@@ -68,26 +66,26 @@ class Game:
         '''Connection to the message queue instance'''
 
         # Timing
-        logger.Logger.debug = not timing
         tt.Timing.allowTiming = timing
 
-    def start(self, stdscr: curses.window | None = None):
+
+    def start(self):
         '''
         Entry point for the game to start, will call the main loop after
         full initialization
         '''
         logger.Logger.init()
-        self.display_setup(stdscr)
-        self.game_setup()
-        self.main()
 
-    def display_setup(self, stdscr: curses.window | None, timedelay: int=0):
+        self.display_setup()
+        self.game_setup()
+
+    def display_setup(self, timedelay: int=0):
         '''
         Sets up the display for outputting to the screen
         '''
-        if stdscr and self.usedisplay:
+        if self.usedisplay:
             # initialize engine
-            self.Engine.init(stdscr, timedelay)
+            self.Engine.init(timedelay)
             # setup display
             self.Display.init(self.Engine.termrows, self.Engine.termcols,
                               levelorigin=config.LEVELORIGIN)
@@ -99,18 +97,16 @@ class Game:
         '''
         Sets up the game from a fresh start
         '''
-        tt.Timing().start('Game Setup')
+        tt.Timing.reset()
+        tt.Timing.start('Game Setup')
         # start running
         self.running = True
         # reset turn
         self.turn = 1
         # set up objects
-        if self.specificseed is None:
+        if self.seed is None:
             self.seed = secrets.randbits(64)
-        else:
-            self.seed = self.specificseed
         self.RNG = random.Random(self.seed)
-        logger.Logger.log(f'SEED: {self.seed}')
         self.MenuManager.init(self.Messager, self.messageblocking, self.turn)
         self.LevelManager.init(
                 self.Messager,
@@ -128,30 +124,42 @@ class Game:
         self.MenuManager.DepthMenu.update(self.LevelManager.currentz)
         # update inventory
         self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
-        tt.Timing().end()
+        tt.Timing.end()
+
+        logger.Logger.log(f'Game Settings:')
+        logger.Logger.log(f'Running: {self.running}')
+        logger.Logger.log(f'Seed: {self.seed}')
+        logger.Logger.log(f'Message Blocking: {self.messageblocking}')
+        logger.Logger.log(f'Display: {self.usedisplay}')
+        logger.Logger.log(f'Turn: {self.turn}')
+        logger.Logger.log(f'Player FOV: {self.playerFOV}')
+        logger.Logger.log(f'Timing: {tt.Timing.allowTiming}')
 
     def main(self):
-        '''
-        Main process
-        '''
+        '''Main loop'''
         while self.running:
-            # check for events
-            event,eventtype = self.process_events()
-            # update the game
-            if eventtype == Event.CLEAR:
-                self.clear_state()
-            elif eventtype == Event.EVENT :
-                self.loop(event)
+            event = self.Engine.read_input()
+            self.game_loop(event)
             # output screen buffer to terminal
             self.render()
         self.end()
 
-    def process_events(self):
+    def game_loop(self, event):
+        '''
+        Single game loop based on an event
+        '''
+        event,eventtype = self.process_events(event)
+        if eventtype == Event.CLEAR:
+            self.clear_state()
+        elif eventtype == Event.EVENT:
+            # update the game
+            self.loop(event)
+
+    def process_events(self, event):
         '''
         Gets an event and it's respective energy (continuously polling)
         '''
         if self.StateMachine.GameState != state.GameState.RUNNING:
-            event = self.Engine.read_input()
             eventtype,event = self.event_type(event)
         else:
             # do not check for events if running
@@ -187,7 +195,7 @@ class Game:
 
         logger.Logger.log(f'GAMESTATE: {self.StateMachine.GameState}')
 
-        if self.StateMachine.GameState == state.GameState.INTERACTING:
+        if self.StateMachine.GameState == state.GameState.INTERACTING and self.StateMachine.callback:
             self.StateMachine.callback(self.StateMachine, self.MenuManager, event)
         else:
             # update all entities
@@ -237,7 +245,7 @@ class Game:
             screenbuffer = []
             colorbuffer = []
         # display through engine
-        if self.Engine.frame_ready():
+        if self.usedisplay and self.Engine.frame_ready():
             # output
             self.Engine.output(screenchars=screenbuffer,
                                 screencolors=colorbuffer)
@@ -256,7 +264,9 @@ class Game:
 
     def end(self):
         '''Called when the game ends'''
-        tt.Timing().show()
+        if self.usedisplay:
+            self.Engine.end()
+        tt.Timing.show()
 
     def messages(self):
         '''Deal with messages in the queue'''

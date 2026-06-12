@@ -97,6 +97,7 @@ class LevelManager:
         r = self.RNG.randint(1,self.levelrows-2)
         c = self.RNG.randint(1,self.levelcols-2)
         self.place_entity(level.z, tower.StairUp(), [r,c], overwrite=True)
+        logger.Logger.log(f'Placed UPSTAIR: {[r,c]}')
         return [r,c]
     
     def generate_clear_path(self, level, a, b):
@@ -272,7 +273,7 @@ class LevelManager:
         Go through all entities and update them
         '''
 
-        timing.Timing().start('Game Loop')
+        timing.Timing.start('Game Loop')
 
         logger.Logger.log('----------TURN UPDATE-----------')
 
@@ -340,7 +341,7 @@ class LevelManager:
                     if entity.name == 'Light':
                         entity.update_state(self)
 
-        timing.Timing().end()
+        timing.Timing.end()
 
     def update_entity(self, animator, messager, menumanager, statemachine, entity, currentturn):
         if entity.turn >= currentturn:

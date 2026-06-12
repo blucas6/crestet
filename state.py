@@ -55,3 +55,6 @@ class StateMachine:
             self.GameState = GameState.INTERACTING
         elif newstate == 'doneinteract' and self.GameState == GameState.INTERACTING:
             self.GameState = GameState.PLAYING
+
+
+
