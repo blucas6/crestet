@@ -1,4 +1,5 @@
 import state
+import traceback
 import engine
 import timing as tt
 import message
@@ -115,7 +116,7 @@ class Game:
                 levelrows=config.ROWS,
                 levelcols=config.COLS,
                 rng=self.RNG)
-        self.LevelManager.level_setup_default((1,1))
+        #self.LevelManager.level_setup_default((1,1))
         # update player FOV
         self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
         # update menu health
@@ -137,12 +138,17 @@ class Game:
 
     def main(self):
         '''Main loop'''
-        while self.running:
-            event = self.Engine.read_input()
-            self.game_loop(event)
-            # output screen buffer to terminal
-            self.render()
-        self.end()
+        try:
+            while self.running:
+                event = self.Engine.read_input()
+                self.game_loop(event)
+                # output screen buffer to terminal
+                self.render()
+            self.end()
+        except Exception as ex:
+            self.end()
+            print(f'**Critical Failure**: {ex}')
+            traceback.print_exc()
 
     def game_loop(self, event):
         '''
@@ -232,18 +238,13 @@ class Game:
 
     def render(self):
         '''Render the current game state to the screen'''
-        # rewrite all the map buffers and menu buffers to the screen
-        level = self.LevelManager.get_curr_level()
-        if level:
-            # do animations before the screen changes 
-            self.animations(copy.deepcopy(self.Display.screenbuffer),
-                            copy.deepcopy(self.Display.colorbuffer))
-            screenbuffer,colorbuffer = self.Display.prepare_buffers(self.LevelManager,
-                                                                    self.MenuManager,
-                                                                    self.playerFOV)
-        else:
-            screenbuffer = []
-            colorbuffer = []
+
+        # do animations before the screen changes 
+        self.animations(copy.deepcopy(self.Display.screenbuffer),
+                        copy.deepcopy(self.Display.colorbuffer))
+        screenbuffer,colorbuffer = self.Display.prepare_buffers(self.LevelManager,
+                                                                self.MenuManager,
+                                                                self.playerFOV)
         # display through engine
         if self.usedisplay and self.Engine.frame_ready():
             # output

@@ -374,6 +374,8 @@ class Brain:
     
     def getFOV(self, level, mypos):
         '''Use FOV algorithm to get which points are visible'''
+        if not level:
+            return []
         grid = [[max([int(x.layer) for x in level.EntityLayer[r][c]]) if level.EntityLayer[r][c] else 0
                  for c in range(len(level.EntityLayer[r]))]
                     for r in range(len(level.EntityLayer))]

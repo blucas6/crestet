@@ -1,4 +1,5 @@
 import color
+import logger
 import item
 import utility
 import config
@@ -68,6 +69,10 @@ class Player(e.Entity):
 
     def update_mental_map(self, level):
         '''Updates the mental map of the player'''
+
+        if not level:
+            return
+
         # get FOV points for player
         pts = self.Brain.getFOV(level, [self.row,self.col])
 

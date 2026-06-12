@@ -42,11 +42,19 @@ class Display:
 
         self.clear_buffers()
 
+        level = levelmanager.get_curr_level()
+
         if useplayerFOV:
             entitylayer = levelmanager.Player.mentalmap
+        elif level:
+            entitylayer = level.EntityLayer
         else:
-            entitylayer = levelmanager.get_curr_level().EntityLayer
-        lightlayer = levelmanager.get_curr_level().LightLayer
+            entitylayer = []
+
+        if level:
+            lightlayer = level.LightLayer
+        else:
+            lightlayer = []
 
         # go through entity layer
         self.render_entitylayer(entitylayer)
