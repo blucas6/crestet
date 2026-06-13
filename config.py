@@ -5,18 +5,11 @@ THROW_ANIM_DELAY = 0.02
 '''Delay travel time in throwing animation'''
 
 CHARGE_FRAME_DELAY = 0.01
+'''Delay between frames when running'''
 
 ### LEVEL
 LEVELORIGIN = (2,2)
 '''Where the levels are displayed on the screen'''
-TOTALLEVELS = 3
-'''Total amount of levels in the game'''
-ROWS = 12
-'''Amount of rows per level'''
-COLS = 25
-'''Amount of cols per level'''
-MINIMUM_WALLS = 40
-'''Amount of walls per level'''
 
 ## PLAYER
 PLAYERFOV = 5
@@ -26,7 +19,6 @@ PLAYERHEALTH = 20
 
 EXPLOSION_ANIM_DELAY = 0.05
 '''Jelly explosion animation'''
-
 
 ## NEWT
 NEWT_HEALTH = 3

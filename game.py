@@ -98,43 +98,43 @@ class Game:
         '''
         Sets up the game from a fresh start
         '''
-        tt.Timing.reset()
-        tt.Timing.start('Game Setup')
-        # start running
-        self.running = True
-        # reset turn
-        self.turn = 1
-        # set up objects
-        if self.seed is None:
-            self.seed = secrets.randbits(64)
-        self.RNG = random.Random(self.seed)
-        self.MenuManager.init(self.Messager, self.messageblocking, self.turn)
-        self.LevelManager.init(
-                self.Messager,
-                totallevels=config.TOTALLEVELS,
-                currentz=0,
-                levelrows=config.ROWS,
-                levelcols=config.COLS,
-                rng=self.RNG)
-        #self.LevelManager.level_setup_default((1,1))
-        # update player FOV
-        self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
-        # update menu health
-        self.MenuManager.HealthMenu.update(self.LevelManager.Player.Health)
-        # update menu z level
-        self.MenuManager.DepthMenu.update(self.LevelManager.currentz)
-        # update inventory
-        self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
-        tt.Timing.end()
+        try:
+            # timing measurement if using timing
+            tt.Timing.reset()
+            tt.Timing.start('Game Setup')
 
-        logger.Logger.log(f'Game Settings:')
-        logger.Logger.log(f'Running: {self.running}')
-        logger.Logger.log(f'Seed: {self.seed}')
-        logger.Logger.log(f'Message Blocking: {self.messageblocking}')
-        logger.Logger.log(f'Display: {self.usedisplay}')
-        logger.Logger.log(f'Turn: {self.turn}')
-        logger.Logger.log(f'Player FOV: {self.playerFOV}')
-        logger.Logger.log(f'Timing: {tt.Timing.allowTiming}')
+            # start running
+            self.running = True
+            # reset turn
+            self.turn = 1
+            # set up objects
+            if self.seed is None:
+                self.seed = secrets.randbits(64)
+            self.RNG = random.Random(self.seed)
+            self.MenuManager.init(self.Messager, self.messageblocking, self.turn)
+            self.LevelManager.init(self.Messager, rng=self.RNG)
+            self.LevelManager.generate_levels()
+            #self.LevelManager.level_setup_default((1,1))
+            # update player FOV
+            self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
+            # update menu health
+            self.MenuManager.HealthMenu.update(self.LevelManager.Player.Health)
+            # update menu z level
+            self.MenuManager.DepthMenu.update(self.LevelManager.currentz)
+            # update inventory
+            self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
+            tt.Timing.end()
+
+            logger.Logger.log(f'Game Settings:')
+            logger.Logger.log(f'Running: {self.running}')
+            logger.Logger.log(f'Seed: {self.seed}')
+            logger.Logger.log(f'Message Blocking: {self.messageblocking}')
+            logger.Logger.log(f'Display: {self.usedisplay}')
+            logger.Logger.log(f'Turn: {self.turn}')
+            logger.Logger.log(f'Player FOV: {self.playerFOV}')
+            logger.Logger.log(f'Timing: {tt.Timing.allowTiming}')
+        except Exception as ex:
+            self.end(error_ex=ex, stack=traceback.format_exc())
 
     def main(self):
         '''Main loop'''
@@ -146,9 +146,7 @@ class Game:
                 self.render()
             self.end()
         except Exception as ex:
-            self.end()
-            print(f'**Critical Failure**: {ex}')
-            traceback.print_exc()
+            self.end(error_ex=ex, stack=traceback.format_exc())
 
     def game_loop(self, event):
         '''
@@ -263,11 +261,16 @@ class Game:
             return True
         return False 
 
-    def end(self):
+    def end(self, error_ex=None, stack=''):
         '''Called when the game ends'''
+        self.running = False
         if self.usedisplay:
             self.Engine.end()
         tt.Timing.show()
+        if error_ex:
+            error_str = f'\n**Critical Failure**\n{error_ex}\n\n{stack}' 
+            logger.Logger.log(error_str)
+            print(error_str)
 
     def messages(self):
         '''Deal with messages in the queue'''

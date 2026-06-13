@@ -15,6 +15,7 @@ if __name__ == '__main__':
 
     if args.agent:
         training = training.Training(seed=args.seed, display=args.display) 
+        training.start()
         training.run()
     else:
         g = game.Game(seed=args.seed, timing=args.timing)

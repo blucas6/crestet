@@ -20,7 +20,13 @@ class Environment:
                               msgblocking=False,
                               usedisplay=display,
                               timing=False)
-        self.Game.start()
+
+    def start(self):
+        try:
+            self.Game.start()
+        except Exception as ex:
+            print(f'Failed to start the game environment!! {ex}')
+            raise
 
     def get_observation(self):
         '''Returns a 1d numpy array of size "obs_size"'''

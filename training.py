@@ -14,7 +14,13 @@ class Training:
         self.agent = agent.Agent(self.environment.obs_size, self.environment.action_size)
         self.turn_delay_secs = 0.1
 
+    def start(self):
+        self.environment.start()
+
     def run(self):
+        if not self.environment.Game.running:
+            return 
+
         episode_range = range(self.num_episodes)
         iteratable = episode_range if self.display else tqdm.tqdm(episode_range)
 

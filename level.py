@@ -1,4 +1,5 @@
 import logger
+import generator
 import message
 import timing
 import algo
@@ -49,21 +50,25 @@ class LevelManager:
         '''Player object'''
         self.Messager: message.Messager = None
         '''Connection to message queue from game'''
+        self.Generator = generator.Generator()
     
-    def init(self, messager, totallevels, currentz, levelrows, levelcols, rng):
+    def init(self, messager, currentz, levelrows, levelcols, rng):
         self.Messager = messager
-        self.totallevels = totallevels
         self.levelrows = levelrows
         self.levelcols = levelcols
         self.RNG = rng
         self.currentz = currentz
         self.Levels = []
+        self.Player = player.Player()
+        self.Player.init(levelrows, levelcols)
+        self.Generator.load_config()
+
+    def generate_levels(self):
+        self.totallevels = self.Generator.total_levels
         for z in range(self.totallevels):
             self.Levels.append(
                     Level(rows=levelrows, cols=levelcols, z=z, rng=self.RNG)
                     )
-        self.Player = player.Player()
-        self.Player.init(levelrows, levelcols)
 
     def level_setup_default(self, playerpos):
         '''Load a default map on all levels'''
@@ -159,7 +164,7 @@ class LevelManager:
                 self.place_entity(level.z, light, (r,c))
                 light.update_state(self)
 
-    def generate_walls(self, level, minwalls=config.MINIMUM_WALLS):
+    def generate_walls(self, level, minwalls=0):
         '''
         Generates walls on the level using predetermined shapes
         Minimum walls counts how many wall spaces need to be covered in the level
