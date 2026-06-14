@@ -10,8 +10,15 @@ CHARGE_FRAME_DELAY = 0.01
 ### LEVEL
 LEVELORIGIN = (2,2)
 '''Where the levels are displayed on the screen'''
+LEVELROWS = 10
+'''Amount of rows in the level grid'''
+LEVELCOLS = 20
+'''Amount of columns in the level grid'''
+MAX_RETRIES = 100
 
 ## PLAYER
+PLAYERPOS = [1,1]
+PLAYERZ = 0
 PLAYERFOV = 5
 '''Player FOV range'''
 PLAYERHEALTH = 20

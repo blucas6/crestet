@@ -132,3 +132,4 @@ class Display:
                     rw, cl = self.level_to_screen_pos(ar+r,ac+c)
                     screenbuffer[rw][cl] = col
                     colorbuffer[rw][cl] = anim.color
+

@@ -1,4 +1,5 @@
 import state
+import generator
 import traceback
 import engine
 import timing as tt
@@ -65,6 +66,8 @@ class Game:
         '''Holds the animation queue'''
         self.Messager = message.Messager()
         '''Connection to the message queue instance'''
+        self.Generator = generator.Generator()
+        '''Sets up all levels from the config'''
 
         # Timing
         tt.Timing.allowTiming = timing
@@ -107,14 +110,22 @@ class Game:
             self.running = True
             # reset turn
             self.turn = 1
-            # set up objects
+            # set up seed
             if self.seed is None:
                 self.seed = secrets.randbits(64)
             self.RNG = random.Random(self.seed)
+            # menus
             self.MenuManager.init(self.Messager, self.messageblocking, self.turn)
-            self.LevelManager.init(self.Messager, rng=self.RNG)
-            self.LevelManager.generate_levels()
-            #self.LevelManager.level_setup_default((1,1))
+            # level manager
+            self.LevelManager.init(self.Messager,
+                                   rng=self.RNG,
+                                   levelrows=config.LEVELROWS,
+                                   levelcols=config.LEVELCOLS)
+            # load generator and run the generation
+            self.Generator.load_config(config.LEVELROWS, config.LEVELCOLS, self.RNG)
+            self.Generator.generate_levels(self.LevelManager)
+            # add player to the map
+            self.LevelManager.place_player(config.PLAYERPOS, config.PLAYERZ)
             # update player FOV
             self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
             # update menu health
@@ -126,13 +137,13 @@ class Game:
             tt.Timing.end()
 
             logger.Logger.log(f'Game Settings:')
-            logger.Logger.log(f'Running: {self.running}')
-            logger.Logger.log(f'Seed: {self.seed}')
-            logger.Logger.log(f'Message Blocking: {self.messageblocking}')
-            logger.Logger.log(f'Display: {self.usedisplay}')
-            logger.Logger.log(f'Turn: {self.turn}')
-            logger.Logger.log(f'Player FOV: {self.playerFOV}')
-            logger.Logger.log(f'Timing: {tt.Timing.allowTiming}')
+            logger.Logger.log(f'  Running: {self.running}')
+            logger.Logger.log(f'  Seed: {self.seed}')
+            logger.Logger.log(f'  Message Blocking: {self.messageblocking}')
+            logger.Logger.log(f'  Display: {self.usedisplay}')
+            logger.Logger.log(f'  Turn: {self.turn}')
+            logger.Logger.log(f'  Player FOV: {self.playerFOV}')
+            logger.Logger.log(f'  Timing: {tt.Timing.allowTiming}')
         except Exception as ex:
             self.end(error_ex=ex, stack=traceback.format_exc())
 
@@ -268,7 +279,7 @@ class Game:
             self.Engine.end()
         tt.Timing.show()
         if error_ex:
-            error_str = f'\n**Critical Failure**\n{error_ex}\n\n{stack}' 
+            error_str = f'\n**Critical Failure**\n{type(error_ex).__name__}: {error_ex}\n\n{stack}' 
             logger.Logger.log(error_str)
             print(error_str)
 

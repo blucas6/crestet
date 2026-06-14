@@ -1,8 +1,58 @@
 {
-   "total_levels": 3,
-   "rows": 12,
-   "cols": 25,
+   "total_levels": 4,
+   "playerz": 0,
+   "player_pos": [1,1],
+   "light_amount": 5,
+   "wall_shapes": [
+      [
+            ["0","",""],
+            ["0","",""],
+            ["0","0","0"]
+      ],
+      [
+            ["","0",""],
+            ["0","0","0"],
+            ["","0",""]
+      ],
+      [
+            ["","0",""],
+            ["","0",""],
+            ["","0",""]
+      ],
+      [
+            ["","",""],
+            ["0","",""],
+            ["0","0",""]
+      ]
+   ],
+   "0": {
+      "floor": true,
+      "outer_walls": true,
+      "upstair": true,
+      "downstair": false,
+      "min_walls": 0,
+      "lights": true,
+      "mons": 4,
+      "items": 5
+   },
    "1": {
-      "outer_walls": true
+      "floor": true,
+      "outer_walls": true,
+      "upstair": true,
+      "downstair": true,
+      "min_walls": 30,
+      "lights": true,
+      "mons": 0,
+      "items": 0
+   },
+   "3": {
+      "floor": true,
+      "outer_walls": true,
+      "upstair": false,
+      "downstair": true,
+      "min_walls": 0,
+      "lights": false,
+      "mons": 0,
+      "items": 0
    }
 }
