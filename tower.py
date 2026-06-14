@@ -9,7 +9,8 @@ class Barrel(entity.Entity):
     '''Barrel entity'''
     def __init__(self):
         self.Health = component.Health(health=1)
-        super().__init__(name='Barrel',
+        super().__init__(typeid=1,
+                         name='Barrel',
                          glyph='0',
                          color=color.Color().yellow,
                          layer=entity.Layer.BARREL_LAYER,
@@ -23,7 +24,8 @@ class Barrel(entity.Entity):
 class Wall(entity.Entity):
     '''Wall entity'''
     def __init__(self):
-        super().__init__(name='Wall',
+        super().__init__(typeid=2,
+                         name='Wall',
                          glyph='░',
                          color=color.Color().white,
                          layer=entity.Layer.WALL_LAYER,
@@ -32,7 +34,8 @@ class Wall(entity.Entity):
 class Floor(entity.Entity):
     '''Floor entity'''
     def __init__(self):
-        super().__init__(name='Floor',
+        super().__init__(typeid=3,
+                         name='Floor',
                          glyph='.',
                          color=color.Color().white,
                          layer=entity.Layer.FLOOR_LAYER,
@@ -41,7 +44,8 @@ class Floor(entity.Entity):
 class StairUp(entity.Entity):
     '''Up stair entity'''
     def __init__(self):
-        super().__init__(name='Upstair',
+        super().__init__(typeid=4,
+                         name='Upstair',
                          glyph='<',
                          color=color.Color().white,
                          layer=entity.Layer.FLOOR_LAYER,
@@ -50,7 +54,8 @@ class StairUp(entity.Entity):
 class StairDown(entity.Entity):
     '''Down stair entity'''
     def __init__(self):
-        super().__init__(name='Downstair',
+        super().__init__(typeid=5,
+                         name='Downstair',
                          glyph='>',
                          color=color.Color().white,
                          layer=entity.Layer.FLOOR_LAYER,
@@ -59,7 +64,8 @@ class StairDown(entity.Entity):
 class Light(entity.Entity):
     '''Light entity'''
     def __init__(self):
-        super().__init__(name='Light',
+        super().__init__(typeid=6,
+                         name='Light',
                          glyph='+',
                          color=color.Color().bright_yellow,
                          layer=entity.Layer.OBJECT_LAYER,

@@ -50,7 +50,8 @@ class Player(e.Entity):
         '''Player can run'''
         self.Inventory = component.Inventory(autopickuplist=['Dart', 'Dart Stack'])
         '''Inventory component'''
-        super().__init__(name='Player',
+        super().__init__(typeid=0,
+                         name='Player',
                          glyph='@',
                          color=color.Color().white,
                          layer=e.Layer.MONST_LAYER,

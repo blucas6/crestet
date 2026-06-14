@@ -6,7 +6,7 @@ import time
 
 class Training:
     def __init__(self, seed=None, display=False):
-        self.num_episodes = 10
+        self.num_episodes = 1
         self.training_mode = False 
         self.rewards = []
         self.display = display

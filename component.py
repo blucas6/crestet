@@ -65,6 +65,10 @@ class Inventory:
         self.autopickuplist = autopickuplist
         '''Items that should be picked up automatically'''
 
+    def get_all_items(self):
+        return [self.quiver, self.mainHand, self.offHand, self.head, self.body,
+                self.feet, self.ability] + self.contents
+
     def autopickup(self, levelmanager, entitylist):
         '''Check entity list for any items to pick up'''
         for ent in entitylist:

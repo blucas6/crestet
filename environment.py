@@ -1,4 +1,5 @@
-import numpy
+import numpy as np
+import logger
 import game
 
 class Environment:
@@ -15,7 +16,7 @@ class Environment:
         self.action_size = 9
         self.maxsteps = 10
         self.current_step = 0
-        self.np_random = numpy.random.default_rng()
+        self.np_random = np.random.default_rng()
         self.Game = game.Game(seed=seed,
                               msgblocking=False,
                               usedisplay=display,
@@ -25,14 +26,18 @@ class Environment:
         try:
             self.Game.start()
         except Exception as ex:
-            print(f'Failed to start the game environment!! {ex}')
+            print(f'Failed to start the game environment!!\n {ex}')
             raise
 
     def get_observation(self):
-        '''Returns a 1d numpy array of size "obs_size"'''
-        obs = numpy.zeros(self.obs_size)
+        '''Returns a 1d np array of size "obs_size"'''
+        obs = np.zeros(self.obs_size)
 
-        self.fill_observation(obs)
+        myobs = self.get_player_fov()
+        #myobs = self.get_level_observation()
+        #myobs = self.get_curr_inventory()
+        logger.Logger.log(f'AGENT:\n {myobs}')
+
         return obs
 
     def reset(self, seed=None):
@@ -42,7 +47,7 @@ class Environment:
         Returns the initial observation and an optional info dict
         '''
         if seed is not None:
-            self.np_random = numpy.random.default_rng(seed)
+            self.np_random = np.random.default_rng(seed)
 
         self.Game.game_setup()
 
@@ -74,11 +79,39 @@ class Environment:
         '''Close the game environment'''
         self.Game.end()
 
-    def fill_observation(self, obs):
-        curr_level = self.Game.LevelManager.get_curr_level()
-        if not curr_level:
-            return
-        for row in curr_level.EntityLayer:
-            for col in row:
-                for entity in col:
-                    pass
+    def get_player_fov(self):
+        '''Flattens the player view of the level into a 1D array'''
+        entity_layer = self.Game.LevelManager.Player.mentalmap
+        obs = [[entity.typeid for entity in col] for row in entity_layer for col in row if col]
+        return np.concatenate(obs)
+
+    def get_level_observation(self):
+        '''Flattens the level entities into a 1D array'''
+        currlevel = self.Game.LevelManager.get_curr_level()
+        if not currlevel:
+            return np.empty(0)
+        obs = [[entity.typeid for entity in col] for row in currlevel.EntityLayer
+               for col in row if col]
+        return np.concatenate(obs)
+
+    def get_curr_z(self):
+        '''Returns the current level z index as a 1D array'''
+        return np.array([self.Game.LevelManager.currentz])
+
+    def get_curr_health(self):
+        '''Returns the current player health as a 1D array'''
+        return np.array([self.Game.LevelManager.Player.Health.currenthealth])
+
+    def get_curr_inventory(self):
+        '''Returns the current player inventory as a 1D array'''
+        inventory = self.Game.LevelManager.Player.Inventory.get_all_items()
+        obs = [item.typeid for item in inventory if item]
+        return np.array(obs)
+
+    def get_curr_turn(self):
+        '''Returns the current turn as a 1D array'''
+        return np.array(self.Game.turn)
+
+
+
+

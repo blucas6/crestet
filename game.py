@@ -139,7 +139,7 @@ class Game:
             logger.Logger.log(f'Game Settings:')
             logger.Logger.log(f'  Running: {self.running}')
             logger.Logger.log(f'  Seed: {self.seed}')
-            logger.Logger.log(f'  Message Blocking: {self.messageblocking}')
+            logger.Logger.log(f'  Message Will Block: {self.messageblocking}')
             logger.Logger.log(f'  Display: {self.usedisplay}')
             logger.Logger.log(f'  Turn: {self.turn}')
             logger.Logger.log(f'  Player FOV: {self.playerFOV}')
@@ -180,7 +180,9 @@ class Game:
             # do not check for events if running
             eventtype = Event.EVENT
             event = ' '
-            self.Engine.pause(config.CHARGE_FRAME_DELAY)
+            # do not call engine pause if the display is off
+            if self.usedisplay:
+                self.Engine.pause(config.CHARGE_FRAME_DELAY)
         return event,eventtype
 
     def clear_state(self):

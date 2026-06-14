@@ -72,9 +72,11 @@ class Entity:
     _id_gen = itertools.count(1)
     '''ID counter for all entities'''
 
-    def __init__(self, name, glyph, color, layer, size):
+    def __init__(self, typeid, name, glyph, color, layer, size):
         self.id = next(Entity._id_gen)
-        '''Unique id'''
+        '''Unique ID'''
+        self.typeid = typeid
+        '''ID corresponding to the specific type of entity'''
         self.name = name
         '''Name of entity'''
         self.glyph = glyph
