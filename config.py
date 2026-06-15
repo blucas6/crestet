@@ -1,11 +1,17 @@
+### CONFIGURATION FILES
 LEVEL_CONFIG_FILE = 'levels.json'
 '''Contains the json for setting up the levels'''
 
+### ANIMATIONS
 THROW_ANIM_DELAY = 0.02
 '''Delay travel time in throwing animation'''
 
 CHARGE_FRAME_DELAY = 0.01
 '''Delay between frames when running'''
+
+EXPLOSION_ANIM_DELAY = 0.05
+'''Jelly explosion animation'''
+
 
 ### LEVEL
 LEVELORIGIN = (2,2)
@@ -18,14 +24,13 @@ MAX_RETRIES = 100
 
 ## PLAYER
 PLAYERPOS = [1,1]
+'''Starting player position'''
 PLAYERZ = 0
+'''Starting player z index'''
 PLAYERFOV = 5
 '''Player FOV range'''
 PLAYERHEALTH = 20
 '''Player health amount'''
-
-EXPLOSION_ANIM_DELAY = 0.05
-'''Jelly explosion animation'''
 
 ## NEWT
 NEWT_HEALTH = 3

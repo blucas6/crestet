@@ -15,16 +15,26 @@ from dataclasses import dataclass
 class LevelLayout:
     '''Configuration data for each level'''
     floor: bool
+    '''Generate the floor'''
     outer_walls: bool
+    '''Generate the outer walls'''
     upstair: bool
+    '''Generate an upstairs'''
     downstair: bool
+    '''Generate a downstairs'''
     min_walls: int
+    '''Minimum amount of walls to place inside'''
     lights: bool
+    '''Generate lights'''
     mons: int
+    '''Minimum amount of monsters on the level'''
     items: int
+    '''Minimum amount of items on the level'''
 
     upstair_pos: tuple = ()
+    '''Location of the upstairs on the level'''
     downstair_pos: tuple = ()
+    '''Location of the downstairs on the level'''
 
 class Generator:
     '''Reads from a config file to build all level objects'''

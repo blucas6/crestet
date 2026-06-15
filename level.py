@@ -45,7 +45,6 @@ class LevelManager:
         '''Connection to message queue from game'''
     
     def init(self, messager, rng, levelrows, levelcols):
-        '''Initialize the members'''
         self.levelrows = levelrows
         self.levelcols = levelcols
         self.Messager = messager

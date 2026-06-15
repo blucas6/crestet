@@ -44,6 +44,7 @@ class Display:
 
         level = levelmanager.get_curr_level()
 
+        # get the either the entire level or the FOV
         if useplayerFOV:
             entitylayer = levelmanager.Player.mentalmap
         elif level:
@@ -51,6 +52,7 @@ class Display:
         else:
             entitylayer = []
 
+        # make sure there is a level to grab from
         if level:
             lightlayer = level.LightLayer
         else:
@@ -68,6 +70,7 @@ class Display:
         return self.screenbuffer, self.colorbuffer
 
     def render_menus(self, menumanager):
+        '''Go through all menus and add their text buffers to the screen'''
         for menu in menumanager.get_menus():
             for r,row in enumerate(menu.text):
                 for c,ch in enumerate(row):
@@ -78,6 +81,7 @@ class Display:
                         self.colorbuffer[rw][cl] = clr.Color().white
 
     def render_lightlayer(self, lightlayer):
+        '''Add light highlighting to the screen'''
         color = clr.Color().bright_yellow
         for r,row in enumerate(lightlayer):
             for c,_ in enumerate(row):
@@ -86,7 +90,7 @@ class Display:
                     self.colorbuffer[rw][cl] = color
 
     def render_entitylayer(self, entitylayer):
-        # go through entity layer
+        '''Go through the entity layer and add it to the screen'''
         for r,row in enumerate(entitylayer):
             for c,col in enumerate(row):
                 rw, cl = self.level_to_screen_pos(r,c)
@@ -120,16 +124,19 @@ class Display:
         return True
 
     def level_to_screen_pos(self, r, c):
+        '''Helper function to convert an entity position to a screen position'''
         return r+self.levelorigin[0], c+self.levelorigin[1]
 
     def add_animation_frame(self, screenbuffer, colorbuffer, anim, key):
-            ar, ac = anim.origin[0], anim.origin[1]
-            # add frame array to the screen
-            for r,row in enumerate(anim.frames[key]):
-                for c,col in enumerate(row):
-                    if not col:
-                        continue
-                    rw, cl = self.level_to_screen_pos(ar+r,ac+c)
-                    screenbuffer[rw][cl] = col
-                    colorbuffer[rw][cl] = anim.color
+        '''Add the glyphs for the animation to the screen'''
+        ar, ac = anim.origin[0], anim.origin[1]
+        # add frame array to the screen
+        for r,row in enumerate(anim.frames[key]):
+            for c,col in enumerate(row):
+                if not col:
+                    continue
+                rw, cl = self.level_to_screen_pos(ar+r,ac+c)
+                screenbuffer[rw][cl] = col
+                colorbuffer[rw][cl] = anim.color
+
 

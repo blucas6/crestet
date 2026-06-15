@@ -64,6 +64,7 @@ class Engine:
         self.log_event(f'  Long Name:   {curses.longname()}')
 
     def end(self):
+        '''End the curses module correctly'''
         curses.nocbreak()
         self.stdscr.keypad(False)
         curses.echo()

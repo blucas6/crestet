@@ -23,6 +23,7 @@ class Environment:
                               timing=False)
 
     def start(self):
+        '''Start the environment'''
         try:
             self.Game.start()
         except Exception as ex:
