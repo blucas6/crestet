@@ -1,4 +1,5 @@
 import color
+import logger
 import item
 import utility
 import config
@@ -49,7 +50,8 @@ class Player(e.Entity):
         '''Player can run'''
         self.Inventory = component.Inventory(autopickuplist=['Dart', 'Dart Stack'])
         '''Inventory component'''
-        super().__init__(name='Player',
+        super().__init__(typeid=0,
+                         name='Player',
                          glyph='@',
                          color=color.Color().white,
                          layer=e.Layer.MONST_LAYER,
@@ -68,6 +70,10 @@ class Player(e.Entity):
 
     def update_mental_map(self, level):
         '''Updates the mental map of the player'''
+
+        if not level:
+            return
+
         # get FOV points for player
         pts = self.Brain.getFOV(level, [self.row,self.col])
 

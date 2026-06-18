@@ -72,9 +72,11 @@ class Entity:
     _id_gen = itertools.count(1)
     '''ID counter for all entities'''
 
-    def __init__(self, name, glyph, color, layer, size):
+    def __init__(self, typeid, name, glyph, color, layer, size):
         self.id = next(Entity._id_gen)
-        '''Unique id'''
+        '''Unique ID'''
+        self.typeid = typeid
+        '''ID corresponding to the specific type of entity'''
         self.name = name
         '''Name of entity'''
         self.glyph = glyph
@@ -350,16 +352,34 @@ class Entity:
         '''Pass an event for the entity to preform a certain action'''
         logger.Logger.log(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
 
+        if not isinstance(event, str):
+            return
+
         # Run
         # currently charging
         if hasattr(self, 'Charge') and self.Charge.charging:
-            self.handle_charging(levelmanager, animator, messager, menumanager, statemachine, event)
+            self.handle_charging(levelmanager,
+                                 animator,
+                                 messager,
+                                 menumanager,
+                                 statemachine,
+                                 event)
         # starting the charge
         elif hasattr(self, 'Charge') and len(event) > 1 and event[0] == '5':
-            self.handle_charging(levelmanager, animator, messager, menumanager, statemachine, event)
+            self.handle_charging(levelmanager,
+                                 animator,
+                                 messager,
+                                 menumanager,
+                                 statemachine,
+                                 event)
         # Walk
         elif event.isdigit():
-            self.movement(levelmanager, animator, messager, menumanager, statemachine, int(event))
+            self.movement(levelmanager,
+                          animator,
+                          messager,
+                          menumanager,
+                          statemachine,
+                          int(event))
         # Z
         elif event == '<': 
             self.moveZ(levelmanager, messager, 1)

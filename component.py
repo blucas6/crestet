@@ -65,6 +65,10 @@ class Inventory:
         self.autopickuplist = autopickuplist
         '''Items that should be picked up automatically'''
 
+    def get_all_items(self):
+        return [self.quiver, self.mainHand, self.offHand, self.head, self.body,
+                self.feet, self.ability] + self.contents
+
     def autopickup(self, levelmanager, entitylist):
         '''Check entity list for any items to pick up'''
         for ent in entitylist:
@@ -374,6 +378,8 @@ class Brain:
     
     def getFOV(self, level, mypos):
         '''Use FOV algorithm to get which points are visible'''
+        if not level:
+            return []
         grid = [[max([int(x.layer) for x in level.EntityLayer[r][c]]) if level.EntityLayer[r][c] else 0
                  for c in range(len(level.EntityLayer[r]))]
                     for r in range(len(level.EntityLayer))]

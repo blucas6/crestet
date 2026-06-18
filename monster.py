@@ -11,7 +11,8 @@ class Human(e.Entity):
     Human
     '''
     def __init__(self):
-        super().__init__(name='Human',
+        super().__init__(typeid=7,
+                         name='Human',
                          glyph='@',
                          color=color.Color().white,
                          layer=e.Layer.MONST_LAYER,
@@ -29,7 +30,8 @@ class Newt(e.Entity):
         self.Inventory = component.Inventory()
         self.speed = e.Speed.SLOW
         self.attackspeed = e.AttackSpeed.SLOW
-        super().__init__(name='Newt',
+        super().__init__(typeid=8,
+                         name='Newt',
                          glyph='n',
                          color=color.Color().yellow,
                          layer=e.Layer.MONST_LAYER,
@@ -58,7 +60,8 @@ class Jelly(e.Entity):
     Floating jelly creature
     '''
     def __init__(self):
-        super().__init__(name='Jelly',
+        super().__init__(typeid=9,
+                         name='Jelly',
                          glyph='j',
                          color=color.Color().blue,
                          layer=e.Layer.MONST_LAYER,

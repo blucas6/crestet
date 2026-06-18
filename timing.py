@@ -3,63 +3,68 @@ import datetime
 
 class Timing:
     '''Timing object'''
-    _instance = None
 
-    def __new__(cls):
-        if not cls._instance:
-            cls._instance = super(Timing, cls).__new__(cls)
-            cls._instance.init()
-        return cls._instance
+    measurements = {}
+    '''Holds all measurements'''
+    logfile = 'time.log'
+    '''Log file'''
+    current_name = ''
+    '''Current measurement name being taken'''
+    current_meas = []
+    '''Holds start and end time'''
+    gap = []
+    '''Holds start and end time of the pause'''
+    subtract = 0
+    '''Holds an amount of time to subtract at the end'''
+    allowTiming = True
 
-    def init(self):
-        self.measurements = {}
-        '''Holds all measurements'''
-        self.logfile = 'time.log'
-        '''Log file'''
-        self.currentName = ''
-        '''Current measurement name being taken'''
-        self.current = []
-        '''Holds start and end time'''
-        self.gap = []
-        '''Holds start and end time of the pause'''
-        self.subtract = 0
-        '''Holds an amount of time to subtract at the end'''
-        self.allowTiming = True
+    @staticmethod
+    def reset():
+        Timing.measurements = {}
+        Timing.current_name = ''
+        Timing.current_meas = []
+        Timing.gap = []
+        Timing.subtract = 0
 
-    def start(self, name):
+    @staticmethod
+    def start(name):
         '''Start the measurement'''
-        if self.allowTiming:
-            self.currentName = name
-            self.current = [time.perf_counter()]
+        if Timing.allowTiming:
+            Timing.current_name = name
+            Timing.current_meas = [time.perf_counter()]
     
-    def pause(self):
+    @staticmethod
+    def pause():
         '''Pause the measurement'''
-        if self.allowTiming:
-            self.gap = [time.perf_counter()]
+        if Timing.allowTiming:
+            Timing.gap = [time.perf_counter()]
     
-    def resume(self):
+    @staticmethod
+    def resume():
         '''Resume timing of the measurement'''
-        if self.allowTiming:
-            self.gap.append(time.perf_counter())
-            self.subtract += self.gap[1] - self.gap[0]
+        if Timing.allowTiming:
+            Timing.gap.append(time.perf_counter())
+            Timing.subtract += Timing.gap[1] - Timing.gap[0]
     
-    def end(self):
+    @staticmethod
+    def end():
         '''End the measurement and save it'''
-        if self.allowTiming:
-            self.current.append(time.perf_counter())
-            total = self.current[1] - self.current[0] - self.subtract
-            if not self.currentName in self.measurements:
-                self.measurements[self.currentName] = [total]
+        if Timing.allowTiming:
+            Timing.current_meas.append(time.perf_counter())
+            total = Timing.current_meas[1] - Timing.current_meas[0] - Timing.subtract
+            if not Timing.current_name in Timing.measurements:
+                Timing.measurements[Timing.current_name] = [total]
             else:
-                self.measurements[self.currentName].append(total)
-            self.subtract = 0
+                Timing.measurements[Timing.current_name].append(total)
+            Timing.subtract = 0
     
-    def show(self):
+    @staticmethod
+    def show():
         '''Prints out all measurements taken'''
-        if self.allowTiming:
-            with open(self.logfile, 'w+') as l:
+        if Timing.allowTiming:
+            with open(Timing.logfile, 'w+') as l:
                 l.write(f'Timing Analysis {datetime.datetime.now()}\n\n')
-                for measurement, times in self.measurements.items():
+                for measurement, times in Timing.measurements.items():
                     if len(times) > 1:
                         avg = sum([x for x in times]) / len(times)
                         l.write(f'{measurement}\n')

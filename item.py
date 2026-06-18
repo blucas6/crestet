@@ -5,7 +5,8 @@ import component
 
 class Fruit(e.Entity):
     def __init__(self):
-        super().__init__(name='Fruit',
+        super().__init__(typeid=10,
+                         name='Fruit',
                          glyph='&',
                          color=color.Color().green,
                          layer=e.Layer.OBJECT_LAYER,
@@ -14,7 +15,8 @@ class Fruit(e.Entity):
 
 class Wood(e.Entity):
     def __init__(self):
-        super().__init__(name='Wood',
+        super().__init__(typeid=11,
+                         name='Wood',
                          glyph='#',
                          color=color.Color().yellow,
                          layer=e.Layer.OBJECT_LAYER,
@@ -24,7 +26,8 @@ class Wood(e.Entity):
 
 class Bite(e.Entity):
     def __init__(self):
-        super().__init__(name='Bite',
+        super().__init__(typeid=12,
+                         name='Bite',
                          glyph='?',
                          color=color.Color().magenta,
                          layer=e.Layer.OBJECT_LAYER,
@@ -34,7 +37,8 @@ class Bite(e.Entity):
 
 class Sword(e.Entity):
     def __init__(self):
-        super().__init__(name='Sword',
+        super().__init__(typeid=13,
+                         name='Sword',
                          glyph='/',
                          color=color.Color().blue,
                          layer=e.Layer.OBJECT_LAYER,
@@ -44,12 +48,12 @@ class Sword(e.Entity):
 
 class DartStack(e.Entity):
     def __init__(self):
-        super().__init__(
-            name='Dart Stack',
-            glyph='≡',
-            color=color.Color().red,
-            layer=e.Layer.OBJECT_LAYER,
-            size=e.Size.VERY_SMALL)
+        super().__init__(typeid=14,
+                        name='Dart Stack',
+                        glyph='≡',
+                        color=color.Color().red,
+                        layer=e.Layer.OBJECT_LAYER,
+                        size=e.Size.VERY_SMALL)
         self.Stack = component.Stack(Dart)
         self.ItemType = component.ItemType.QUIVER
 
@@ -61,7 +65,8 @@ class DartStack(e.Entity):
 
 class Dart(e.Entity):
     def __init__(self):
-        super().__init__(name='Dart',
+        super().__init__(typeid=15,
+                         name='Dart',
                          glyph=')',
                          color=color.Color().red,
                          layer=e.Layer.OBJECT_LAYER,

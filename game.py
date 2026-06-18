@@ -1,4 +1,6 @@
 import state
+import generator
+import traceback
 import engine
 import timing as tt
 import message
@@ -32,14 +34,12 @@ class Game:
     '''
     Game class controls the entire game execution from start to finish
     '''
-    def __init__(self, specificseed=None, msgblocking=True, usedisplay=True, timing=False):
+    def __init__(self, seed=None, msgblocking=True, usedisplay=True, timing=False):
         # Properties
         self.running = False
         '''If the game is running'''
-        self.seed = None
+        self.seed = seed 
         '''Random seed for random calls'''
-        self.specificseed = specificseed
-        '''Set when recreating a seed'''
         self.messageblocking = msgblocking
         '''Set to true to pause on multiple messages being displayed'''
         self.usedisplay = usedisplay
@@ -66,28 +66,30 @@ class Game:
         '''Holds the animation queue'''
         self.Messager = message.Messager()
         '''Connection to the message queue instance'''
+        self.Generator = generator.Generator()
+        '''Sets up all levels from the config'''
 
         # Timing
-        logger.Logger.debug = not timing
         tt.Timing.allowTiming = timing
 
-    def start(self, stdscr: curses.window | None = None):
+
+    def start(self):
         '''
         Entry point for the game to start, will call the main loop after
         full initialization
         '''
         logger.Logger.init()
-        self.display_setup(stdscr)
-        self.game_setup()
-        self.main()
 
-    def display_setup(self, stdscr: curses.window | None, timedelay: int=0):
+        self.display_setup()
+        self.game_setup()
+
+    def display_setup(self, timedelay: int=0):
         '''
         Sets up the display for outputting to the screen
         '''
-        if stdscr and self.usedisplay:
+        if self.usedisplay:
             # initialize engine
-            self.Engine.init(stdscr, timedelay)
+            self.Engine.init(timedelay)
             # setup display
             self.Display.init(self.Engine.termrows, self.Engine.termcols,
                               levelorigin=config.LEVELORIGIN)
@@ -99,65 +101,88 @@ class Game:
         '''
         Sets up the game from a fresh start
         '''
-        tt.Timing().start('Game Setup')
-        # start running
-        self.running = True
-        # reset turn
-        self.turn = 1
-        # set up objects
-        if self.specificseed is None:
-            self.seed = secrets.randbits(64)
-        else:
-            self.seed = self.specificseed
-        self.RNG = random.Random(self.seed)
-        logger.Logger.log(f'SEED: {self.seed}')
-        self.MenuManager.init(self.Messager, self.messageblocking, self.turn)
-        self.LevelManager.init(
-                self.Messager,
-                totallevels=config.TOTALLEVELS,
-                currentz=0,
-                levelrows=config.ROWS,
-                levelcols=config.COLS,
-                rng=self.RNG)
-        self.LevelManager.level_setup_default((1,1))
-        # update player FOV
-        self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
-        # update menu health
-        self.MenuManager.HealthMenu.update(self.LevelManager.Player.Health)
-        # update menu z level
-        self.MenuManager.DepthMenu.update(self.LevelManager.currentz)
-        # update inventory
-        self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
-        tt.Timing().end()
+        try:
+            # timing measurement if using timing
+            tt.Timing.reset()
+            tt.Timing.start('Game Setup')
+
+            # start running
+            self.running = True
+            # reset turn
+            self.turn = 1
+            # set up seed
+            if self.seed is None:
+                self.seed = secrets.randbits(64)
+            self.RNG = random.Random(self.seed)
+            # menus
+            self.MenuManager.init(self.Messager, self.messageblocking, self.turn)
+            # level manager
+            self.LevelManager.init(self.Messager,
+                                   rng=self.RNG,
+                                   levelrows=config.LEVELROWS,
+                                   levelcols=config.LEVELCOLS)
+            # load generator and run the generation
+            self.Generator.load_config(config.LEVELROWS, config.LEVELCOLS, self.RNG)
+            self.Generator.generate_levels(self.LevelManager)
+            # add player to the map
+            self.LevelManager.place_player(config.PLAYERPOS, config.PLAYERZ)
+            # update player FOV
+            self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
+            # update menu health
+            self.MenuManager.HealthMenu.update(self.LevelManager.Player.Health)
+            # update menu z level
+            self.MenuManager.DepthMenu.update(self.LevelManager.currentz)
+            # update inventory
+            self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
+            tt.Timing.end()
+
+            logger.Logger.log(f'Game Settings:')
+            logger.Logger.log(f'  Running: {self.running}')
+            logger.Logger.log(f'  Seed: {self.seed}')
+            logger.Logger.log(f'  Message Will Block: {self.messageblocking}')
+            logger.Logger.log(f'  Display: {self.usedisplay}')
+            logger.Logger.log(f'  Turn: {self.turn}')
+            logger.Logger.log(f'  Player FOV: {self.playerFOV}')
+            logger.Logger.log(f'  Timing: {tt.Timing.allowTiming}')
+        except Exception as ex:
+            self.end(error_ex=ex, stack=traceback.format_exc())
 
     def main(self):
-        '''
-        Main process
-        '''
-        while self.running:
-            # check for events
-            event,eventtype = self.process_events()
-            # update the game
-            if eventtype == Event.CLEAR:
-                self.clear_state()
-            elif eventtype == Event.EVENT :
-                self.loop(event)
-            # output screen buffer to terminal
-            self.render()
-        self.end()
+        '''Main loop'''
+        try:
+            while self.running:
+                event = self.Engine.read_input()
+                self.game_loop(event)
+                # output screen buffer to terminal
+                self.render()
+            self.end()
+        except Exception as ex:
+            self.end(error_ex=ex, stack=traceback.format_exc())
 
-    def process_events(self):
+    def game_loop(self, event):
+        '''
+        Single game loop based on an event
+        '''
+        event,eventtype = self.process_events(event)
+        if eventtype == Event.CLEAR:
+            self.clear_state()
+        elif eventtype == Event.EVENT:
+            # update the game
+            self.loop(event)
+
+    def process_events(self, event):
         '''
         Gets an event and it's respective energy (continuously polling)
         '''
         if self.StateMachine.GameState != state.GameState.RUNNING:
-            event = self.Engine.read_input()
             eventtype,event = self.event_type(event)
         else:
             # do not check for events if running
             eventtype = Event.EVENT
             event = ' '
-            self.Engine.pause(config.CHARGE_FRAME_DELAY)
+            # do not call engine pause if the display is off
+            if self.usedisplay:
+                self.Engine.pause(config.CHARGE_FRAME_DELAY)
         return event,eventtype
 
     def clear_state(self):
@@ -187,7 +212,7 @@ class Game:
 
         logger.Logger.log(f'GAMESTATE: {self.StateMachine.GameState}')
 
-        if self.StateMachine.GameState == state.GameState.INTERACTING:
+        if self.StateMachine.GameState == state.GameState.INTERACTING and self.StateMachine.callback:
             self.StateMachine.callback(self.StateMachine, self.MenuManager, event)
         else:
             # update all entities
@@ -224,20 +249,15 @@ class Game:
 
     def render(self):
         '''Render the current game state to the screen'''
-        # rewrite all the map buffers and menu buffers to the screen
-        level = self.LevelManager.get_curr_level()
-        if level:
-            # do animations before the screen changes 
-            self.animations(copy.deepcopy(self.Display.screenbuffer),
-                            copy.deepcopy(self.Display.colorbuffer))
-            screenbuffer,colorbuffer = self.Display.prepare_buffers(self.LevelManager,
-                                                                    self.MenuManager,
-                                                                    self.playerFOV)
-        else:
-            screenbuffer = []
-            colorbuffer = []
+
+        # do animations before the screen changes 
+        self.animations(copy.deepcopy(self.Display.screenbuffer),
+                        copy.deepcopy(self.Display.colorbuffer))
+        screenbuffer,colorbuffer = self.Display.prepare_buffers(self.LevelManager,
+                                                                self.MenuManager,
+                                                                self.playerFOV)
         # display through engine
-        if self.Engine.frame_ready():
+        if self.usedisplay and self.Engine.frame_ready():
             # output
             self.Engine.output(screenchars=screenbuffer,
                                 screencolors=colorbuffer)
@@ -254,9 +274,16 @@ class Game:
             return True
         return False 
 
-    def end(self):
+    def end(self, error_ex=None, stack=''):
         '''Called when the game ends'''
-        tt.Timing().show()
+        self.running = False
+        if self.usedisplay:
+            self.Engine.end()
+        tt.Timing.show()
+        if error_ex:
+            error_str = f'\n**Critical Failure**\n{type(error_ex).__name__}: {error_ex}\n\n{stack}' 
+            logger.Logger.log(error_str)
+            print(error_str)
 
     def messages(self):
         '''Deal with messages in the queue'''

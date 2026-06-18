@@ -34,17 +34,20 @@ class Engine:
             return True
         return False
 
-    def init(self, stdscr: curses.window, timedelay: int=0):
+    def init(self, timedelay: int=0):
         '''
         Required to call at engine startup, returns size of terminal
         '''
+        self.stdscr = curses.initscr()
+        curses.noecho()
+        curses.cbreak()
+        self.stdscr.keypad(True)
         curses.start_color()
         self.Color = color.Color()
-        self.stdscr = stdscr
-        self.termrows, self.termcols = stdscr.getmaxyx()
+        self.termrows, self.termcols = self.stdscr.getmaxyx()
         curses.curs_set(0)
-        stdscr.nodelay(True)
-        stdscr.timeout(self.inputtimeout)
+        self.stdscr.nodelay(True)
+        self.stdscr.timeout(self.inputtimeout)
         if timedelay > 0:
             self.framedelay = timedelay
         if sys.platform == 'win32':
@@ -59,6 +62,13 @@ class Engine:
         self.log_event(f'  Frame Delay: {self.framedelay}')
         self.log_event(f'  Baudrate:    {curses.baudrate()} (bit/sec)')
         self.log_event(f'  Long Name:   {curses.longname()}')
+
+    def end(self):
+        '''End the curses module correctly'''
+        curses.nocbreak()
+        self.stdscr.keypad(False)
+        curses.echo()
+        curses.endwin()
 
     def output(self, screenchars: list=[], screencolors: list=[]):
         '''
