@@ -4,6 +4,26 @@ import level
 import logger
 import enum
 
+class Leveling:
+    def __init__(self):
+        self.curr_level = 1
+        self.xp = 0
+        self.nextlv = 1
+        self.scale_factor = 2
+
+    def level_up(self, parent_entity, messager):
+        self.curr_level += 1
+        messager.add_level_up_message(parent_entity)
+        if hasattr(parent_entity, 'Health'):
+            parent_entity.Health.restore_max_health()
+
+    def gain_xp(self, xp, parent_entity, messager):
+        self.xp += xp
+        while self.xp >= self.nextlv:
+            self.xp -= self.nextlv
+            self.nextlv *= self.scale_factor
+            self.level_up(parent_entity, messager)
+
 class Interact:
     def __init__(self):
         pass
@@ -320,6 +340,10 @@ class Health:
         '''Counter for current health'''
         self.alive = True
         '''True if health bar is above 0'''
+
+    def restore_max_health(self):
+        '''Gives the entity full health'''
+        self.currenthealth = self.maxhealth
 
     def change_health(self, amount):
         '''

@@ -114,8 +114,16 @@ class Game:
             if self.seed is None:
                 self.seed = secrets.randbits(64)
             self.RNG = random.Random(self.seed)
-            # menus
-            self.MenuManager.init(self.Messager, self.messageblocking, self.turn)
+
+            logger.Logger.log(f'Game Settings:')
+            logger.Logger.log(f'  Running: {self.running}')
+            logger.Logger.log(f'  Seed: {self.seed}')
+            logger.Logger.log(f'  Message Will Block: {self.messageblocking}')
+            logger.Logger.log(f'  Display: {self.usedisplay}')
+            logger.Logger.log(f'  Turn: {self.turn}')
+            logger.Logger.log(f'  Player FOV: {self.playerFOV}')
+            logger.Logger.log(f'  Timing: {tt.Timing.allowTiming}')
+
             # level manager
             self.LevelManager.init(self.Messager,
                                    rng=self.RNG,
@@ -128,6 +136,12 @@ class Game:
             self.LevelManager.place_player(config.PLAYERPOS, config.PLAYERZ)
             # update player FOV
             self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
+            # menus
+            leveling = self.LevelManager.Player.Leveling
+            lvl = leveling.curr_level
+            xp = leveling.xp
+            nextlv = leveling.nextlv
+            self.MenuManager.init(self.Messager, self.messageblocking, self.turn, lvl, xp, nextlv)
             # update menu health
             self.MenuManager.HealthMenu.update(self.LevelManager.Player.Health)
             # update menu z level
@@ -136,14 +150,6 @@ class Game:
             self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
             tt.Timing.end()
 
-            logger.Logger.log(f'Game Settings:')
-            logger.Logger.log(f'  Running: {self.running}')
-            logger.Logger.log(f'  Seed: {self.seed}')
-            logger.Logger.log(f'  Message Will Block: {self.messageblocking}')
-            logger.Logger.log(f'  Display: {self.usedisplay}')
-            logger.Logger.log(f'  Turn: {self.turn}')
-            logger.Logger.log(f'  Player FOV: {self.playerFOV}')
-            logger.Logger.log(f'  Timing: {tt.Timing.allowTiming}')
         except Exception as ex:
             self.end(error_ex=ex, stack=traceback.format_exc())
 
@@ -204,8 +210,12 @@ class Game:
         # event was valid, save it
         self.previousevent = event
 
-        # update the turn
-        self.MenuManager.StatusMenu.update(self.turn)
+        # update the status menu
+        player = self.LevelManager.Player
+        lvl = player.Leveling.curr_level
+        currxp = player.Leveling.xp
+        nextlv = player.Leveling.nextlv
+        self.MenuManager.StatusMenu.update(self.turn, lvl, currxp, nextlv)
 
         # clear current message
         self.MenuManager.MessageMenu.clear()
@@ -348,6 +358,9 @@ class Game:
             self.StateMachine.new_state('donemotion')
             # DO NOTHING - clears msg queue and previous event
             return Event.CLEAR,event
+        elif event == 'u':
+            self.LevelManager.Player.Leveling.gain_xp(1, self.LevelManager.Player, self.Messager)
+            return Event.EVENT, 'u'
         # MOTIONS 
         elif self.StateMachine.GameState == state.GameState.MOTION:
             self.StateMachine.new_state('donemotion')

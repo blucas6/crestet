@@ -97,6 +97,9 @@ class LevelManager:
 
     def is_entity_pos_valid(self, level, entity, pos, overwrite=False):
         '''Checks if an entity and a new position would be valid'''
+        
+        if not pos:
+            return False
 
         if not self.within_level(pos, level.z):
             return False

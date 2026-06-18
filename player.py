@@ -48,6 +48,8 @@ class Player(e.Entity):
         '''Player brain for game interactions'''
         self.Charge = component.Charge(self.speed)
         '''Player can run'''
+        self.Leveling = component.Leveling()
+        '''Player can level up'''
         self.Inventory = component.Inventory(autopickuplist=['Dart', 'Dart Stack'])
         '''Inventory component'''
         super().__init__(typeid=0,

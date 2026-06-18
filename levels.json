@@ -1,7 +1,5 @@
 {
-   "total_levels": 2,
-   "playerz": 0,
-   "player_pos": [1,1],
+   "total_levels": 4,
    "light_amount": 5,
    "wall_shapes": [
       [
@@ -32,13 +30,13 @@
       "downstair": false,
       "min_walls": 0,
       "lights": false,
-      "mons": 0,
-      "items": 0
+      "mons": 3,
+      "items": 3
    },
    "1": {
       "floor": true,
       "outer_walls": true,
-      "upstair": false,
+      "upstair": true,
       "downstair": true,
       "min_walls": 0,
       "lights": false,
@@ -48,7 +46,7 @@
    "3": {
       "floor": true,
       "outer_walls": true,
-      "upstair": false,
+      "upstair": true,
       "downstair": true,
       "min_walls": 0,
       "lights": false,
