@@ -125,11 +125,16 @@ class Player(e.Entity):
             return self.Inventory.get_damage()
 
     def on_placed(self, levelmanager, messager):
-        '''Check auto pickup component when moved'''
+        '''
+        Activates when an entity is placed on a square
+        Checks the rest of the entities already on the square
+        '''
         entitylist = levelmanager.Levels[self.z].EntityLayer[self.row][self.col]
         for ent in entitylist:
+            # check to auto eat anything
             if hasattr(ent, 'Edible') and hasattr(self, 'Health'):
-                ent.Edible.eat(levelmanager, messager, self)
+                ent.Edible.get_eaten(levelmanager, messager, self)
+        # check to auto pick up anything
         self.Inventory.autopickup(levelmanager, entitylist)
 
     def on_zchange(self):

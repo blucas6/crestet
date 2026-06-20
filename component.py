@@ -5,19 +5,27 @@ import logger
 import enum
 
 class Leveling:
+    '''Leveling component, if an entity can level up'''
     def __init__(self):
         self.curr_level = 1
+        '''Current level'''
         self.xp = 0
+        '''Current amount of experience points'''
         self.nextlv = 1
+        '''Amount of experience points for the next level'''
         self.scale_factor = 2
+        '''How much the next level will increase by'''
 
     def level_up(self, parent_entity, messager):
+        '''Activates when the entity goes to the next level'''
         self.curr_level += 1
         messager.add_level_up_message(parent_entity)
+        # health restore
         if hasattr(parent_entity, 'Health'):
             parent_entity.Health.restore_max_health()
 
     def gain_xp(self, xp, parent_entity, messager):
+        '''Send experience points to the component'''
         self.xp += xp
         while self.xp >= self.nextlv:
             self.xp -= self.nextlv
@@ -39,17 +47,20 @@ class Interact:
         statemachine.new_state('doneinteract')
 
 class Edible:
-    def __init__(self, parent, nutrition):
-        self.parent = parent
+    '''Edible component, if an item can be eaten'''
+    def __init__(self, parent_entity, nutrition):
+        self.parent_entity = parent_entity
         self.nutrition = nutrition
     
-    def eat(self, levelmanager, messager, entity):
-        if hasattr(entity, 'Health'):
-            entity.Health.change_health(self.nutrition)
-            messager.add_eat_message(entity, self.parent)
-            levelmanager.remove_entity(self.parent)
+    def get_eaten(self, levelmanager, messager, entity_eater):
+        '''Called when another entity eats this entity'''
+        if hasattr(entity_eater, 'Health'):
+            entity_eater.Health.change_health(self.nutrition)
+            messager.add_eat_message(entity_eater, self.parent_entity)
+            levelmanager.remove_entity(self.parent_entity)
 
 class ItemType(enum.Enum):
+    '''Inventory needs to know types of items to slot them correctly'''
     QUIVER = 0
     HEAD = 1
     BODY = 2
