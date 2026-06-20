@@ -1,5 +1,7 @@
 import enum
 
+from numpy import nested_iters
+
 import logger
 
 class GameState(enum.Enum):
@@ -17,6 +19,7 @@ class GameState(enum.Enum):
     MOTION = 4
     RUNNING = 5
     INTERACTING = 6
+    LOOKING = 7
 
 class StateMachine:
     def __init__(self):
@@ -54,6 +57,10 @@ class StateMachine:
              (self.GameState == GameState.PLAYING or self.GameState == self.GameState.RUNNING)):
             self.GameState = GameState.INTERACTING
         elif newstate == 'doneinteract' and self.GameState == GameState.INTERACTING:
+            self.GameState = GameState.PLAYING
+        elif newstate == 'looking':
+            self.GameState = GameState.LOOKING
+        elif newstate == 'donelooking':
             self.GameState = GameState.PLAYING
 
 
