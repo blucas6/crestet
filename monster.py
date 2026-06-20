@@ -24,18 +24,19 @@ class Newt(e.Entity):
     Newt creature
     '''
     def __init__(self):
-        self.Health = component.Health(health=config.NEWT_HEALTH)
-        self.Brain = component.Brain(sightrange=config.NEWT_SIGHTRANGE,
-                                     blockinglayer=e.Layer.MONST_LAYER)
-        self.Inventory = component.Inventory()
-        self.speed = e.Speed.SLOW
-        self.attackspeed = e.AttackSpeed.SLOW
         super().__init__(typeid=8,
                          name='Newt',
                          glyph='n',
                          color=color.Color().yellow,
                          layer=e.Layer.MONST_LAYER,
                          size=e.Size.MEDIUM)
+        self.Health = component.Health(health=config.NEWT_HEALTH)
+        self.Brain = component.Brain(sightrange=config.NEWT_SIGHTRANGE,
+                                     blockinglayer=e.Layer.MONST_LAYER)
+        self.Inventory = component.Inventory()
+        self.speed = e.Speed.SLOW
+        self.attackspeed = e.AttackSpeed.SLOW
+        self.xp = 1
         self.Inventory.equip(item.Bite())
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine):
@@ -68,6 +69,7 @@ class Jelly(e.Entity):
                          size=e.Size.MEDIUM)
         self.Health = component.Health(health=config.JELLY_HEALTH)
         self.splashdamage = config.JELLY_SPLASHDMG
+        self.xp = 2
 
     def death(self, levelmanager, animator, messager):
         '''
@@ -106,3 +108,4 @@ class Jelly(e.Entity):
                 continue
             for entity in levelmanager.Levels[self.z].EntityLayer[ptrow][ptcol]:
                 self.deal_damage(levelmanager, animator, messager, entity, self.splashdamage)
+

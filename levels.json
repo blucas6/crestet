@@ -28,8 +28,8 @@
       "outer_walls": true,
       "upstair": true,
       "downstair": false,
-      "min_walls": 0,
-      "lights": false,
+      "min_walls": 10,
+      "lights": true,
       "mons": 3,
       "items": 3
    },
@@ -38,10 +38,10 @@
       "outer_walls": true,
       "upstair": true,
       "downstair": true,
-      "min_walls": 0,
-      "lights": false,
-      "mons": 0,
-      "items": 0
+      "min_walls": 40,
+      "lights": true,
+      "mons": 5,
+      "items": 3
    },
    "3": {
       "floor": true,

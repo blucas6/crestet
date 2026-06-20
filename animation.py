@@ -4,7 +4,7 @@ class Animation:
     '''
     Holds all data for a single animation
     '''
-    def __init__(self, origin, frames: dict, color: color.Color, delay=0.01):
+    def __init__(self, origin, frames: dict, color, delay=0.01):
         self.origin = origin 
         '''Position of the animation relative to the map'''
         self.frames = frames

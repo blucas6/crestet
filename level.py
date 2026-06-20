@@ -153,6 +153,7 @@ class LevelManager:
         if energy == 100:
             energy = self.Player.speed
         logger.Logger.log(f'Player energy: {energy}')
+        logger.Logger.log(f'Player health: {self.Player.Health}')
 
         # energy
         for row in level.EntityLayer:

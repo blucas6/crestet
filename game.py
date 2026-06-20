@@ -205,22 +205,17 @@ class Game:
         Execute one loop in the game loop
         '''
 
+        logger.Logger.log(f'GAMESTATE: {self.StateMachine.GameState}')
+
+        # increment the turn
         self.turn += 1
 
         # event was valid, save it
         self.previousevent = event
 
-        # update the status menu
-        player = self.LevelManager.Player
-        lvl = player.Leveling.curr_level
-        currxp = player.Leveling.xp
-        nextlv = player.Leveling.nextlv
-        self.MenuManager.StatusMenu.update(self.turn, lvl, currxp, nextlv)
-
         # clear current message
         self.MenuManager.MessageMenu.clear()
 
-        logger.Logger.log(f'GAMESTATE: {self.StateMachine.GameState}')
 
         if self.StateMachine.GameState == state.GameState.INTERACTING and self.StateMachine.callback:
             self.StateMachine.callback(self.StateMachine, self.MenuManager, event)
@@ -236,15 +231,7 @@ class Game:
         # update player FOV
         self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
 
-        # update health menu
-        self.MenuManager.HealthMenu.update(self.LevelManager.Player.Health)
-
-        # update menu z level
-        self.MenuManager.DepthMenu.update(self.LevelManager.currentz)
-
-        # update inventory menu
-        self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
-
+        # check for ending the game
         if not self.StateMachine.GameState == state.GameState.END:
             if self.win():
                 self.StateMachine.new_state('endgame')
@@ -255,6 +242,23 @@ class Game:
 
         # update and grab any messages in the queue
         self.messages()
+
+        ## MENUS
+        # update status menu
+        player = self.LevelManager.Player
+        lvl = player.Leveling.curr_level
+        currxp = player.Leveling.xp
+        nextlv = player.Leveling.nextlv
+        self.MenuManager.StatusMenu.update(self.turn, lvl, currxp, nextlv)
+
+        # update health menu
+        self.MenuManager.HealthMenu.update(self.LevelManager.Player.Health)
+
+        # update menu z level
+        self.MenuManager.DepthMenu.update(self.LevelManager.currentz)
+
+        # update inventory menu
+        self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
 
 
     def render(self):
@@ -347,6 +351,12 @@ class Game:
             self.running = False
         elif event == 'r':
             # RESET
+            self.StateMachine.new_state('reset')
+            self.MenuManager.showinteract = False
+            self.game_setup()
+        elif event == 'R':
+            # RESET with new SEED
+            self.seed = None
             self.StateMachine.new_state('reset')
             self.MenuManager.showinteract = False
             self.game_setup()

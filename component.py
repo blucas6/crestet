@@ -341,6 +341,9 @@ class Health:
         self.alive = True
         '''True if health bar is above 0'''
 
+    def __repr__(self):
+        return f'({self.currenthealth}/{self.maxhealth})'
+
     def restore_max_health(self):
         '''Gives the entity full health'''
         self.currenthealth = self.maxhealth
@@ -351,7 +354,9 @@ class Health:
 
         Returns true if health change causes death
         '''
-        if self.currenthealth + amount < self.maxhealth:
+        if self.currenthealth + amount >= self.maxhealth:
+            self.currenthealth = self.maxhealth
+        else:
             self.currenthealth += amount
         if self.alive and self.currenthealth <= 0:
             self.alive = False

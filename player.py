@@ -112,14 +112,13 @@ class Player(e.Entity):
                     self.mentalmap[r][c] = level.EntityLayer[r][c]
 
     def fire(self, levelmanager, animator, messager, event):
-        # throw in a direction
+        '''Throw in a direction'''
         if event[1].isdigit():
             direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
             return self.throw(levelmanager, animator, messager, item.Dart(), direction)
 
     def get_damage(self):
         '''Choose damage source'''
-        # running
         if self.Charge.charging:
             return self.Charge.end()
         else:

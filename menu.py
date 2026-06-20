@@ -52,7 +52,7 @@ class StatusMenu(Menu):
     def update(self, turn, lvl, currxp, nextlv):
         '''Add the new turn'''
         super().update()
-        self.text[0] = f'Turn:{turn} lv:{lvl} ({currxp}/{nextlv})'
+        self.text[0] = f'Turn:{turn} Lv:{lvl} ({currxp}/{nextlv})'
 
 class MessageMenu(Menu):
     '''
@@ -71,7 +71,7 @@ class MessageMenu(Menu):
             self.msg = self.Messager.pop_message(self.blocking)
             self.text[0] = self.msg
             if self.Messager.MsgQueue:
-                self.text[0] += '--more--'
+                self.text[0] += ' --more--'
 
     def clear(self):
         self.msg = ''
