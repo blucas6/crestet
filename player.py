@@ -48,6 +48,8 @@ class Player(e.Entity):
         '''Player brain for game interactions'''
         self.Charge = component.Charge(self.speed)
         '''Player can run'''
+        self.Leveling = component.Leveling()
+        '''Player can level up'''
         self.Inventory = component.Inventory(autopickuplist=['Dart', 'Dart Stack'])
         '''Inventory component'''
         super().__init__(typeid=0,
@@ -110,25 +112,29 @@ class Player(e.Entity):
                     self.mentalmap[r][c] = level.EntityLayer[r][c]
 
     def fire(self, levelmanager, animator, messager, event):
-        # throw in a direction
+        '''Throw in a direction'''
         if event[1].isdigit():
             direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
             return self.throw(levelmanager, animator, messager, item.Dart(), direction)
 
     def get_damage(self):
         '''Choose damage source'''
-        # running
         if self.Charge.charging:
             return self.Charge.end()
         else:
             return self.Inventory.get_damage()
 
     def on_placed(self, levelmanager, messager):
-        '''Check auto pickup component when moved'''
+        '''
+        Activates when an entity is placed on a square
+        Checks the rest of the entities already on the square
+        '''
         entitylist = levelmanager.Levels[self.z].EntityLayer[self.row][self.col]
         for ent in entitylist:
+            # check to auto eat anything
             if hasattr(ent, 'Edible') and hasattr(self, 'Health'):
-                ent.Edible.eat(levelmanager, messager, self)
+                ent.Edible.get_eaten(levelmanager, messager, self)
+        # check to auto pick up anything
         self.Inventory.autopickup(levelmanager, entitylist)
 
     def on_zchange(self):

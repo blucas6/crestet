@@ -47,10 +47,6 @@ class Generator:
         '''Total levels in the game'''
         self.level_layouts: list[LevelLayout] = []
         '''List of all LevelLayout objects'''
-        self.playerz = -1
-        '''Player starting z index'''
-        self.player_pos = [-1,-1]
-        '''Player starting position'''
         self.light_amount = 0
         '''How many lights to generate in each level'''
         self.wall_shapes = {}
@@ -68,8 +64,6 @@ class Generator:
 
             # set up the generator class members
             self.total_levels = data['total_levels']
-            self.playerz = data['playerz']
-            self.player_pos = data['player_pos']
             self.light_amount = data['light_amount']
             self.wall_shapes = data['wall_shapes']
 
@@ -141,12 +135,15 @@ class Generator:
         r = self.RNG.randint(1,self.levelrows-2)
         c = self.RNG.randint(1,self.levelcols-2)
         levelmanager.place_entity(currlevel.z, tower.StairUp(), [r,c], overwrite=True)
-        logger.Logger.log(f'Placed UPSTAIR: {[r,c]}')
-        return [r,c]
+        logger.Logger.log(f'Placed UPSTAIR: {(r,c)}')
+        return (r,c)
     
     def generate_downstair(self, levelmanager: level.LevelManager, currlevel: level.Level,
                            levellayout: LevelLayout):
         '''Places the downstairs at the designated spot, returns the placement'''
+        if not levellayout.downstair_pos:
+            logger.Logger.log(f'ERROR: downstair position is empty! z:{currlevel.z}')
+            return ()
         levelmanager.place_entity(currlevel.z,
                                   tower.StairDown(),
                                   levellayout.downstair_pos,

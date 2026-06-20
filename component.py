@@ -4,6 +4,34 @@ import level
 import logger
 import enum
 
+class Leveling:
+    '''Leveling component, if an entity can level up'''
+    def __init__(self):
+        self.curr_level = 1
+        '''Current level'''
+        self.xp = 0
+        '''Current amount of experience points'''
+        self.nextlv = 1
+        '''Amount of experience points for the next level'''
+        self.scale_factor = 2
+        '''How much the next level will increase by'''
+
+    def level_up(self, parent_entity, messager):
+        '''Activates when the entity goes to the next level'''
+        self.curr_level += 1
+        messager.add_level_up_message(parent_entity)
+        # health restore
+        if hasattr(parent_entity, 'Health'):
+            parent_entity.Health.restore_max_health()
+
+    def gain_xp(self, xp, parent_entity, messager):
+        '''Send experience points to the component'''
+        self.xp += xp
+        while self.xp >= self.nextlv:
+            self.xp -= self.nextlv
+            self.nextlv *= self.scale_factor
+            self.level_up(parent_entity, messager)
+
 class Interact:
     def __init__(self):
         pass
@@ -19,17 +47,20 @@ class Interact:
         statemachine.new_state('doneinteract')
 
 class Edible:
-    def __init__(self, parent, nutrition):
-        self.parent = parent
+    '''Edible component, if an item can be eaten'''
+    def __init__(self, parent_entity, nutrition):
+        self.parent_entity = parent_entity
         self.nutrition = nutrition
     
-    def eat(self, levelmanager, messager, entity):
-        if hasattr(entity, 'Health'):
-            entity.Health.change_health(self.nutrition)
-            messager.add_eat_message(entity, self.parent)
-            levelmanager.remove_entity(self.parent)
+    def get_eaten(self, levelmanager, messager, entity_eater):
+        '''Called when another entity eats this entity'''
+        if hasattr(entity_eater, 'Health'):
+            entity_eater.Health.change_health(self.nutrition)
+            messager.add_eat_message(entity_eater, self.parent_entity)
+            levelmanager.remove_entity(self.parent_entity)
 
 class ItemType(enum.Enum):
+    '''Inventory needs to know types of items to slot them correctly'''
     QUIVER = 0
     HEAD = 1
     BODY = 2
@@ -321,13 +352,22 @@ class Health:
         self.alive = True
         '''True if health bar is above 0'''
 
+    def __repr__(self):
+        return f'({self.currenthealth}/{self.maxhealth})'
+
+    def restore_max_health(self):
+        '''Gives the entity full health'''
+        self.currenthealth = self.maxhealth
+
     def change_health(self, amount):
         '''
         Changes the health bar by an amount
 
         Returns true if health change causes death
         '''
-        if self.currenthealth + amount < self.maxhealth:
+        if self.currenthealth + amount >= self.maxhealth:
+            self.currenthealth = self.maxhealth
+        else:
             self.currenthealth += amount
         if self.alive and self.currenthealth <= 0:
             self.alive = False

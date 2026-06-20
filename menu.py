@@ -21,8 +21,8 @@ class Menu:
 
 class DepthMenu(Menu):
     '''Displays the level depth information'''
-    def __init__(self, origin, rows, cols):
-        super().__init__(origin, rows, cols)
+    def __init__(self, origin, size):
+        super().__init__(origin, size[0], size[1])
     
     def update(self, z):
         '''Updates the level index'''
@@ -31,37 +31,35 @@ class DepthMenu(Menu):
 
 class HealthMenu(Menu):
     '''Displays the health bar'''
-    def __init__(self, origin, rows, cols):
-        super().__init__(origin, rows, cols)
+    def __init__(self, origin, row, col):
+        super().__init__(origin, row, col)
 
     def update(self, healthcomponent):
         super().update()
         currenthealth = healthcomponent.currenthealth
         maxhealth = healthcomponent.maxhealth
-        amount = round(config.HEALTHMENU_LENGTH * currenthealth / maxhealth)
-        self.text[0] = '[' + amount*'\u2588' + (config.HEALTHMENU_LENGTH-amount)*' ' + ']'
+        amount = round(config.HEALTHMENU_BAR * currenthealth / maxhealth)
+        self.text[0] = '[' + amount*'\u2588' + (config.HEALTHMENU_BAR-amount)*' ' + ']'
 
 class StatusMenu(Menu):
     '''
     Display player status
     '''
-    def __init__(self, origin, rows, cols, turn):
-        super().__init__(origin, rows, cols)
-        self.turn = turn
-        self.text[0] = f'Player Turn:{self.turn}'
+    def __init__(self, origin, size, turn, lvl, currxp, nextlv):
+        super().__init__(origin, size[0], size[1])
+        self.update(turn, lvl, currxp, nextlv)
 
-    def update(self, turn):
+    def update(self, turn, lvl, currxp, nextlv):
         '''Add the new turn'''
         super().update()
-        self.turn = turn
-        self.text[0] = f'Player Turn:{self.turn}'
+        self.text[0] = f'Turn:{turn} Lv:{lvl} ({currxp}/{nextlv})'
 
 class MessageMenu(Menu):
     '''
     Display message queue
     '''
-    def __init__(self, messager, blocking, origin, rows, cols):
-        super().__init__(origin, rows, cols)
+    def __init__(self, messager, blocking, origin, size):
+        super().__init__(origin, size[0], size[1])
         self.Messager = messager
         self.msg = ''
         self.blocking = blocking
@@ -73,7 +71,7 @@ class MessageMenu(Menu):
             self.msg = self.Messager.pop_message(self.blocking)
             self.text[0] = self.msg
             if self.Messager.MsgQueue:
-                self.text[0] += '--more--'
+                self.text[0] += ' --more--'
 
     def clear(self):
         self.msg = ''
@@ -81,8 +79,8 @@ class MessageMenu(Menu):
 
 class InventoryMenu(Menu):
     '''Displays the player inventory'''
-    def __init__(self, origin, rows, cols):
-        super().__init__(origin, rows, cols)
+    def __init__(self, origin, size):
+        super().__init__(origin, size[0], size[1])
         self.count = 96
     
     def update(self, inventory):
@@ -130,8 +128,8 @@ class InventoryMenu(Menu):
         return chr(self.count)
 
 class InteractMenu(Menu):
-    def __init__(self, origin, rows, cols):
-        super().__init__(origin, rows, cols)
+    def __init__(self, origin, size):
+        super().__init__(origin, size[0], size[1])
 
     def update(self, message):
         super().update()
@@ -147,13 +145,13 @@ class MenuManager:
     def __init__(self):
         self.showinteract = False
 
-    def init(self, messager, blocking, turn):
-        self.StatusMenu = StatusMenu(config.STATUSMENU_ORIGIN, 1, 20, turn)
-        self.MessageMenu = MessageMenu(messager, blocking, config.MESSAGEMENU_ORIGIN, 1, 30)
-        self.HealthMenu = HealthMenu(config.HEALTHMENU_ORIGIN, 1, config.HEALTHMENU_LENGTH+2)
-        self.DepthMenu = DepthMenu(config.DEPTHMENU_ORIGIN, 1, 20)
-        self.InventoryMenu = InventoryMenu(config.INVENTORYMENU_ORIGIN, 20, 30)
-        self.InteractMenu = InteractMenu((5,5), 3, 20)
+    def init(self, messager, blocking, turn, lvl, currxp, nextlv):
+        self.StatusMenu = StatusMenu(config.STATUSMENU_ORIGIN, config.STATUSMENU_SZ, turn, lvl, currxp, nextlv)
+        self.MessageMenu = MessageMenu(messager, blocking, config.MESSAGEMENU_ORIGIN, config.MESSAGEMENU_SZ)
+        self.HealthMenu = HealthMenu(config.HEALTHMENU_ORIGIN, 1, config.HEALTHMENU_BAR+2)
+        self.DepthMenu = DepthMenu(config.DEPTHMENU_ORIGIN, config.DEPTHMENU_SZ)
+        self.InventoryMenu = InventoryMenu(config.INVENTORYMENU_ORIGIN, config.INVENTORYMENU_SZ)
+        self.InteractMenu = InteractMenu(config.INTERACTMENU_ORIGIN, config.INTERACTMENU_SZ)
 
     def get_menus(self):
         menulist = [self.StatusMenu, self.MessageMenu, self.HealthMenu, self.DepthMenu, self.InventoryMenu]

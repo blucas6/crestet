@@ -51,6 +51,12 @@ class Messager:
         else:
             self.MsgQueue.append(f'The {entitya.name} eats the {entityb.name}')
 
+    def add_level_up_message(self, entity):
+        if entity.name == 'Player':
+            self.MsgQueue.append(f'You level up!')
+        else:
+            self.MsgQueue.append(f'The {entity.name} levels up!');
+
     def pop_message(self, blocking=True):
         '''
         If messages are in the queue, get the messages by FIFO

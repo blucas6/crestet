@@ -205,12 +205,23 @@ class Entity:
         if hasattr(entity, 'Health'):
             logger.Logger.log(f'{self} dealing damage to {entity}: {damage} ')
             messager.add_damage_message(self, entity)
-            self.deal_damage(levelmanager, animator, messager, entity, damage)
+            # check for kill
+            if self.deal_damage(levelmanager, animator, messager, entity, damage):
+                messager.add_kill_message(self, entity)
+                # gain xp
+                if hasattr(self, 'Leveling') and hasattr(entity, 'xp'):
+                    self.Leveling.gain_xp(entity.xp, self, messager)
 
     def deal_damage(self, levelmanager, animator, messager, entity, damage):
-        '''Some types of damage are not from an attack'''
+        '''
+        Some types of damage are not from an attack
+        
+        Returns True if the damage caused death
+        '''
         if hasattr(entity, 'Health') and entity.Health.change_health(-damage):
             entity.death(levelmanager, animator, messager)
+            return True
+        return False
     
     def death(self, levelmanager, *_):
         '''Entities can add to this method to trigger on death actions'''
