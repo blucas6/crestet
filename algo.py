@@ -80,7 +80,7 @@ def astar(grid, src, dest, debug=False):
     '''
     A* search algorithm
 
-    return [ success_code, [list of points]]
+    return (success_code, [list of points])
 
     success codes:
         1 = success
@@ -127,9 +127,6 @@ def astar(grid, src, dest, debug=False):
     # Initialize the open list (cells to be visited) with the start cell
     open_list = []
     heapq.heappush(open_list, (0.0, i, j))
-
-    # Initialize the flag for whether destination is found
-    found_dest = False
 
     # Main loop of A* search algorithm
     while len(open_list) > 0:
@@ -181,8 +178,7 @@ def astar(grid, src, dest, debug=False):
                         cell_details[new_i][new_j].parent_j = j
 
     # If the destination is not found after visiting all cells
-    if not found_dest:
-        return -1, []
+    return -1, []
 
 def testAStar():
     grid = [
