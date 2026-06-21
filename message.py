@@ -55,7 +55,7 @@ class Messager:
         if entity.name == 'Player':
             self.MsgQueue.append(f'You level up!')
         else:
-            self.MsgQueue.append(f'The {entity.name} levels up!');
+            self.MsgQueue.append(f'The {entity.name} levels up!')
 
     def pop_message(self, blocking=True):
         '''

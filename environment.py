@@ -1,6 +1,7 @@
 import numpy as np
 import logger
 import game
+import config
 
 class Environment:
     def __init__(self, seed=None, display=False):
@@ -47,9 +48,8 @@ class Environment:
 
         Returns the initial observation and an optional info dict
         '''
-        if seed is not None:
-            self.np_random = np.random.default_rng(seed)
 
+        self.Game.seed = seed
         self.Game.game_setup()
 
         self.current_step = 0
@@ -83,17 +83,17 @@ class Environment:
     def get_player_fov(self):
         '''Flattens the player view of the level into a 1D array'''
         entity_layer = self.Game.LevelManager.Player.mentalmap
-        obs = [[entity.typeid for entity in col] for row in entity_layer for col in row if col]
-        return np.concatenate(obs)
+        obs = [col[ix].typeid if ix < len(col) else 0 for row in entity_layer for col in row for ix in range(config.LEVELMAX_ENTITIES)]
+        return obs
 
     def get_level_observation(self):
         '''Flattens the level entities into a 1D array'''
         currlevel = self.Game.LevelManager.get_curr_level()
         if not currlevel:
-            return np.empty(0)
-        obs = [[entity.typeid for entity in col] for row in currlevel.EntityLayer
-               for col in row if col]
-        return np.concatenate(obs)
+            return np.empty(config.LEVELROWS * config.LEVELCOLS * config.LEVELMAX_ENTITIES)
+        entity_layer = currlevel.EntityLayer
+        obs = [col[ix].typeid if ix < len(col) else 0 for row in entity_layer for col in row for ix in range(config.LEVELMAX_ENTITIES)]
+        return obs
 
     def get_curr_z(self):
         '''Returns the current level z index as a 1D array'''

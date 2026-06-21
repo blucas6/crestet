@@ -9,7 +9,7 @@ class Barrel(entity.Entity):
     '''Barrel entity'''
     def __init__(self):
         self.Health = component.Health(health=1)
-        super().__init__(typeid=1,
+        super().__init__(typeid=16,
                          name='Barrel',
                          glyph='0',
                          color=color.Color().yellow,
@@ -84,5 +84,6 @@ class Light(entity.Entity):
     def on_top(self, levelmanager):
         '''Trigger the light on or off'''
         self.light = not self.light
+        logger.Logger.log(f'{self} ACTIVATED {self.light}!')
         self.update_state(levelmanager)
     

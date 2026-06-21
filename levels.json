@@ -26,12 +26,12 @@
    "0": {
       "floor": true,
       "outer_walls": true,
-      "upstair": true,
+      "upstair": false,
       "downstair": false,
-      "min_walls": 10,
-      "lights": true,
-      "mons": 3,
-      "items": 3
+      "min_walls": 0,
+      "lights": false,
+      "mons": 0,
+      "items": 0
    },
    "1": {
       "floor": true,

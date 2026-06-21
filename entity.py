@@ -37,7 +37,7 @@ class Layer(enum.IntEnum):
             each other
         2: not stackable, entities that move around, FOV can see through them
         3: not stackable, can be pushed
-        3: not stackable, FOV cannot see through them
+        4: not stackable, FOV cannot see through them
     '''
     FLOOR_LAYER = 0
     OBJECT_LAYER = 1
