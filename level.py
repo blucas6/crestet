@@ -1,4 +1,6 @@
+from numpy import log
 import logger
+import config
 import message
 import timing
 import player
@@ -83,6 +85,17 @@ class LevelManager:
             entity.set_pos(r, c, level.z, 0)
         # if adding, append to the end
         else:
+            # check max entity count, excess objects will be deleted
+            entity_amount = len(level.EntityLayer[r][c])
+            deleteidx = 0
+            while entity_amount+1 > config.LEVELMAX_ENTITIES:
+                check_ent = level.EntityLayer[r][c][deleteidx]
+                if check_ent.layer == e.Layer.OBJECT_LAYER:
+                    logger.Logger.log(f'CULLING: {check_ent}')
+                    self.remove_entity(check_ent)
+                entity_amount = len(level.EntityLayer[r][c])
+                deleteidx += 1
+            # once there is room, place the entity
             level.EntityLayer[r][c].append(entity)
             idx = len(level.EntityLayer[r][c])-1
             entity.set_pos(r, c, level.z, idx)

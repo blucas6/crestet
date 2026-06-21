@@ -21,6 +21,9 @@ LEVELROWS = 10
 LEVELCOLS = 20
 '''Amount of columns in the level grid'''
 MAX_RETRIES = 100
+'''Amount of retries during generation for randomness'''
+LEVELMAX_ENTITIES = 10
+'''Maximum entities on a square'''
 
 ## PLAYER
 PLAYERPOS = [1,1]

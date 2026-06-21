@@ -115,7 +115,8 @@ class Player(e.Entity):
         '''Throw in a direction'''
         if event[1].isdigit():
             direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
-            return self.throw(levelmanager, animator, messager, item.Dart(), direction)
+            #return self.throw(levelmanager, animator, messager, item.Dart(), direction)
+            return self.throw(levelmanager, animator, messager, item.Wood(), direction)
 
     def get_damage(self):
         '''Choose damage source'''

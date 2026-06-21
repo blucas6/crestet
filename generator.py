@@ -54,6 +54,7 @@ class Generator:
 
     def load_config(self, levelrows, levelcols, rng):
         '''Read the config file and load the level layout objects'''
+        self.level_layouts = []
         self.levelrows = levelrows
         self.levelcols = levelcols
         self.RNG = rng
