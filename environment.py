@@ -47,9 +47,8 @@ class Environment:
 
         Returns the initial observation and an optional info dict
         '''
-        if seed is not None:
-            self.np_random = np.random.default_rng(seed)
 
+        self.Game.seed = seed
         self.Game.game_setup()
 
         self.current_step = 0

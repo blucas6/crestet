@@ -84,5 +84,6 @@ class Light(entity.Entity):
     def on_top(self, levelmanager):
         '''Trigger the light on or off'''
         self.light = not self.light
+        logger.Logger.log(f'{self} ACTIVATED {self.light}!')
         self.update_state(levelmanager)
     

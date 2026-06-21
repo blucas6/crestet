@@ -110,11 +110,14 @@ class Generator:
             if level_layout.lights:
                 self.generate_lights(levelmanager, currlevel)
             if upstair_pos and downstair_pos:
-                self.generate_path_to_stairs(levelmanager, currlevel, upstair_pos, downstair_pos)
+                self.generate_clear_path(levelmanager, currlevel, upstair_pos, downstair_pos)
             if level_layout.mons > 0:
                 self.generate_mons(levelmanager, currlevel, level_layout.mons)
             if level_layout.items > 0:
                 self.generate_items(levelmanager, currlevel, level_layout.items)
+            if z == config.PLAYERZ and level_layout.upstair:
+                # make path for player to upstair
+                self.generate_clear_path(levelmanager, currlevel, config.PLAYERPOS, upstair_pos)
         logger.Logger.log(f'----- FINISHED LEVEL GENERATION -----')
 
     def generate_floor(self, levelmanager: level.LevelManager, currlevel: level.Level):
@@ -150,7 +153,7 @@ class Generator:
                                   overwrite=True)
         return levellayout.downstair_pos
 
-    def generate_path_to_stairs(self, levelmanager:level.LevelManager, currlevel:level.Level, a, b):
+    def generate_clear_path(self, levelmanager:level.LevelManager, currlevel:level.Level, a, b):
         '''Creates a floor path between points a -> b'''
         if not a or not b:
             logger.Logger.log(f'Error: Clearing a path between {a}->{b} cannot be None!')
@@ -196,7 +199,8 @@ class Generator:
             r = self.RNG.randint(1,self.levelrows-2)
             c = self.RNG.randint(1,self.levelcols-2)
             _,myentity  = utility.get_max_layer(currlevel.EntityLayer[r][c])
-            if myentity.layer < entity.Layer.WALL_LAYER:
+            valid = all([False if type(ent) == tower.Light else True for ent in currlevel.EntityLayer[r][c]])
+            if myentity.layer < entity.Layer.WALL_LAYER and valid:
                 light = tower.Light()
                 levelmanager.place_entity(currlevel.z, light, (r,c))
                 light.update_state(levelmanager)
@@ -209,12 +213,14 @@ class Generator:
             if self.RNG.randint(0, 1) == 0:
                 r = self.RNG.randint(1,self.levelrows-2)
                 c = self.RNG.randint(1,self.levelcols-2)
-                if levelmanager.place_entity(currlevel.z, monster.Jelly(), (r,c)):
+                if ([r,c] != config.PLAYERPOS and
+                    levelmanager.place_entity(currlevel.z, monster.Jelly(), (r,c))):
                     mon_amount -= 1
             else:
                 r = self.RNG.randint(1,self.levelrows-2)
                 c = self.RNG.randint(1,self.levelcols-2)
-                if levelmanager.place_entity(currlevel.z, monster.Newt(), (r,c)):
+                if ([r,c] != config.PLAYERPOS and
+                    levelmanager.place_entity(currlevel.z, monster.Newt(), (r,c))):
                     mon_amount -= 1
         '''
         for _ in range(1):

@@ -118,7 +118,7 @@ class Game:
             logger.Logger.log(f'Game Settings:')
             logger.Logger.log(f'  Running: {self.running}')
             logger.Logger.log(f'  Seed: {self.seed}')
-            logger.Logger.log(f'  Message Will Block: {self.messageblocking}')
+            logger.Logger.log(f'  Messages Will Block: {self.messageblocking}')
             logger.Logger.log(f'  Display: {self.usedisplay}')
             logger.Logger.log(f'  Turn: {self.turn}')
             logger.Logger.log(f'  Player FOV: {self.playerFOV}')
