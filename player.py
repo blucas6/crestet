@@ -21,6 +21,12 @@ class FOVMemory(enum.Enum):
 
 class Player(e.Entity):
     def __init__(self):
+        super().__init__(typeid=1,
+                         name='Player',
+                         glyph='@',
+                         color=color.Color().white,
+                         layer=e.Layer.MONST_LAYER,
+                         size=e.Size.LARGE)
         self.mentalmap = []
         '''Entity map for output to the screen'''
         self.levelrows = 0
@@ -52,12 +58,6 @@ class Player(e.Entity):
         '''Player can level up'''
         self.Inventory = component.Inventory(autopickuplist=['Dart', 'Dart Stack'])
         '''Inventory component'''
-        super().__init__(typeid=0,
-                         name='Player',
-                         glyph='@',
-                         color=color.Color().white,
-                         layer=e.Layer.MONST_LAYER,
-                         size=e.Size.LARGE)
 
     def init(self, levelrows, levelcols):
         '''Initialize player data'''
