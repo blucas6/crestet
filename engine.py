@@ -112,6 +112,16 @@ class Engine:
         '''
         with open(self.eventlog, 'a+') as lf:
             lf.write(f'{msg}\n')
+    
+    def get_cursor(self):
+        if not self.initialized:
+            return
+        return self.stdscr.getyx()
+
+    def toggle_cursor(self, mode):
+        if not self.initialized:
+            return
+        curses.curs_set(mode)
 
     def cursor_position(self, pos):
         '''
@@ -120,6 +130,7 @@ class Engine:
         if not self.initialized:
             return
         if pos[0] < self.termrows and pos[1] < self.termcols:
+            self.log_event(f'Moving cursor {pos}')
             self.stdscr.move(pos[0], pos[1])
         else:
             self.log_event(f'Invalid cursor position {pos}')
@@ -135,3 +146,4 @@ class Engine:
         time.sleep(t)
         while self.stdscr.getch() != -1:
             pass
+

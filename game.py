@@ -17,19 +17,6 @@ import curses
 import enum
 import menu
 import animation
-import event
-
-class Event(enum.Enum):
-    '''
-    Event types from user
-
-    NA    : not an event - continue without looking at user input
-    CLEAR : clearing event - reset menus and message window
-    EVENT : normal event - look at user input
-    '''
-    NA = -1
-    CLEAR = 0
-    EVENT = 1
 
 class Game:
     '''
@@ -69,8 +56,6 @@ class Game:
         '''Connection to the message queue instance'''
         self.Generator = generator.Generator()
         '''Sets up all levels from the config'''
-        self.EventHandler = event.EventHandler()
-        '''Processes events during different contexts'''
 
         # Timing
         tt.Timing.allowTiming = timing
@@ -161,9 +146,11 @@ class Game:
         try:
             while self.running:
                 event = self.Engine.read_input()
-                self.game_loop(event)
+                eventtype,event = self.game_loop(event)
                 # output screen buffer to terminal
-                self.render()
+                if eventtype != state.Event.NA:
+                    logger.Logger.log(f'RENDER')
+                    self.render()
             self.end()
         except Exception as ex:
             self.end(error_ex=ex, stack=traceback.format_exc())
@@ -172,27 +159,28 @@ class Game:
         '''
         Single game loop based on an event
         '''
-        event,eventtype = self.process_events(event)
-        if eventtype == Event.CLEAR:
+        eventtype,event = self.process_events(event)
+        if eventtype == state.Event.CLEAR:
             self.clear_state()
-        elif eventtype == Event.EVENT:
+        elif eventtype == state.Event.EVENT:
             # update the game
             self.loop(event)
+        return eventtype,event
 
     def process_events(self, event):
         '''
         Gets an event and it's respective energy (continuously polling)
         '''
         if self.StateMachine.GameState != state.GameState.RUNNING:
-            eventtype,event = self.EventHandler.event_type(event)
+            eventtype,event = self.event_type(event)
         else:
             # do not check for events if running
-            eventtype = Event.EVENT
+            eventtype = state.Event.EVENT
             event = ' '
             # do not call engine pause if the display is off
             if self.usedisplay:
                 self.Engine.pause(config.CHARGE_FRAME_DELAY)
-        return event,eventtype
+        return eventtype,event
 
     def clear_state(self):
         '''Clears the current message'''
@@ -202,6 +190,8 @@ class Game:
         self.messages()
         # update inventory menu
         self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
+        # clear any engine cursors
+        self.Engine.toggle_cursor(0)
 
     def loop(self, event):
         '''
@@ -338,4 +328,102 @@ class Game:
         # done with all animations
         self.Animator.clearQueue()
 
+    def observation_event(self, event):
+        cursor_pos = self.Engine.get_cursor()
+        cursor_pos = self.Display.move_cursor((-1,0), cursor_pos)
+        self.Engine.cursor_position(cursor_pos)
+        return state.Event.NA, event
+
+    def motion_event(self, event):
+        '''Handles events that are part of a motion'''
+        self.StateMachine.new_state('donemotion')
+        # Throwing/Charge Action
+        if self.previousevent == 't' or self.previousevent == '5' or self.previousevent == 'F':
+            # expects a direction
+            if not event.isdigit() or event == '5':
+                self.Messager.add_message('Invalid direction!')
+                return state.Event.CLEAR,event
+            # valid direction increment turn
+            # return the combined event
+            if self.previousevent == '5':
+                self.StateMachine.new_state('startrun')
+            return state.Event.EVENT,self.previousevent+event
+        # Inventory Action
+        elif self.previousevent == 'e' or self.previousevent == 'u':
+            return state.Event.EVENT,self.previousevent+event
+        return state.Event.CLEAR,event
+
+    def player_event(self, event):
+        '''Process all events that are player actions'''
+        # Multi key action
+        if event == 't' or event == '5' or event == 'e' or event == 'u' or event == 'F':
+            if event == 'e':
+                self.Messager.add_message('Equip what?')
+            elif event == 'u':
+                self.Messager.add_message('Unequip what?')
+            else:
+                self.Messager.add_message('Direction?')
+            self.StateMachine.new_state('motion')
+            self.previousevent = event
+            return state.Event.CLEAR,event
+        else:
+            # Player
+            return state.Event.EVENT,event
+
+    def event_type(self, event):
+        '''
+        Process key press event from engine
+            NA:    does not count as an action
+            CLEAR: will not cause an update because turn counter does not increase, updates menus
+            EVENT: counts as a energy for updating entities
+        '''
+        # Disregard empty events
+        if not event:
+            return state.Event.NA,event
+        # GAME ACTIONS
+        if event == 'q':
+            # QUIT
+            self.running = False
+        elif event == 'r':
+            # RESET
+            self.StateMachine.new_state('reset')
+            self.MenuManager.showinteract = False
+            self.game_setup()
+            return state.Event.BLANK,event
+        elif event == 'R':
+            # RESET with new SEED
+            self.seed = None
+            self.StateMachine.new_state('reset')
+            self.MenuManager.showinteract = False
+            self.game_setup()
+            return state.Event.BLANK,event
+        elif event == 'f':
+            # TOGGLE FOV
+            self.playerFOV = not self.playerFOV
+            return state.Event.BLANK,event
+        elif event == 'o':
+            # START OBSERVATION TOOL
+            self.StateMachine.new_state('looking')
+            self.Engine.toggle_cursor(2)
+            self.Engine.cursor_position((0,5))
+        elif event == ' ' or event == chr(curses.ascii.ESC):
+            # DO NOTHING - clears msg queue and previous event
+            self.previousevent = ''
+            self.StateMachine.new_state('donemotion')
+            return state.Event.CLEAR,event
+        elif self.StateMachine.GameState == state.GameState.MOTION:
+            # MOTION
+            return self.motion_event(event)
+        elif self.StateMachine.GameState == state.GameState.PLAYING:
+            # PLAYER ACTIONS
+            return self.player_event(event)
+        elif self.StateMachine.GameState == state.GameState.INTERACTING:
+            # INTERACTING
+            return state.Event.EVENT,event
+        elif self.StateMachine.GameState == state.GameState.LOOKING:
+            # OBSERVATION TOOL
+            return self.observation_event(event)
+
+        # Defaults to returning NA for no action
+        return state.Event.NA,event
 

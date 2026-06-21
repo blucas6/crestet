@@ -37,6 +37,9 @@ class Display:
         self.colorbuffer = [[clr.Color().white for _ in range(self.termcols-1)] 
                                     for _ in range(self.termrows-1)]
 
+    def move_cursor(self, cursor_position, direction):
+        return (cursor_position[0]+direction[0], cursor_position[1]+direction[1])
+
     def prepare_buffers(self, levelmanager, menumanager, useplayerFOV):
         '''Build the buffers to send to the engine'''
 

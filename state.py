@@ -1,8 +1,19 @@
 import enum
-
-from numpy import nested_iters
-
 import logger
+
+class Event(enum.Enum):
+    '''
+    Event types from user
+
+    NA    : not an event - screen will not render
+    CLEAR : clearing event - reset menus and message window
+    BLANK : empty event - render the screen but no game loop or clearing
+    EVENT : normal event - cause a game loop
+    '''
+    NA = -1
+    CLEAR = 0
+    BLANK = 1
+    EVENT = 2
 
 class GameState(enum.Enum):
     '''
@@ -24,6 +35,7 @@ class GameState(enum.Enum):
 class StateMachine:
     def __init__(self):
         self.GameState = GameState.PLAYING
+        '''Current state of the game'''
         self.callback = None
 
     def new_state(self, newstate):
@@ -62,6 +74,7 @@ class StateMachine:
             self.GameState = GameState.LOOKING
         elif newstate == 'donelooking':
             self.GameState = GameState.PLAYING
-
+        else:
+            self.GameState = GameState.PLAYING
 
 
