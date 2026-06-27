@@ -1,5 +1,4 @@
 import enum
-from typing_extensions import get_annotations
 import logger
 
 class Event(enum.Enum):

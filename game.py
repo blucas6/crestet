@@ -278,7 +278,7 @@ class Game:
             self.Engine.output(screenchars=screenbuffer,screencolors=colorbuffer)
 
         if self.Display.cursor_on:
-            self.Engine.toggle_cursor(2)
+            self.Engine.toggle_cursor(config.CURSOR_HIGHLIGHT)
             cursor_position = self.Display.level_to_screen_pos(*self.Display.cursor_position)
             self.Engine.move_cursor(cursor_position)
 

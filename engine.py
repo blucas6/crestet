@@ -115,12 +115,22 @@ class Engine:
             lf.write(f'{msg}\n')
     
     def get_cursor(self):
+        '''Returns the current position of the cursor on screen'''
         if not self.initialized:
             return
         return self.stdscr.getyx()
 
     def toggle_cursor(self, mode):
+        '''
+        Changes the cursor state
+
+        0 : OFF
+        1 : ON
+        2 : ON HIGHLIGHTED
+        '''
         if not self.initialized:
+            return
+        if mode < 0 or mode > 2:
             return
         curses.curs_set(mode)
 

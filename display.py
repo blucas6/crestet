@@ -20,7 +20,9 @@ class Display:
         self.termcols = 0
         '''Total terminal columns'''
         self.cursor_on = False
+        '''Controls whether the engine cursor is on or not'''
         self.cursor_position = [0,0]
+        '''Current position of the cursor on the level (not the screen position)'''
 
     def init(self, termrows, termcols, levelorigin):
         '''Setup the buffers'''
