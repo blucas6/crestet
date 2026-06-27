@@ -69,6 +69,7 @@ class Engine:
         self.stdscr.keypad(False)
         curses.echo()
         curses.endwin()
+        self.log_event('--Engine Shutdown--')
 
     def output(self, screenchars: list=[], screencolors: list=[]):
         '''
@@ -112,15 +113,39 @@ class Engine:
         '''
         with open(self.eventlog, 'a+') as lf:
             lf.write(f'{msg}\n')
+    
+    def get_cursor(self):
+        '''Returns the current position of the cursor on screen'''
+        if not self.initialized:
+            return
+        return self.stdscr.getyx()
 
-    def cursor_position(self, pos):
+    def toggle_cursor(self, mode):
+        '''
+        Changes the cursor state
+
+        0 : OFF
+        1 : ON
+        2 : ON HIGHLIGHTED
+        '''
+        if not self.initialized:
+            return
+        if mode < 0 or mode > 2:
+            return
+        curses.curs_set(mode)
+
+    def move_cursor(self, pos):
         '''
         Moves the cursor to a position
         '''
         if not self.initialized:
             return
         if pos[0] < self.termrows and pos[1] < self.termcols:
-            self.stdscr.move(pos[0], pos[1])
+            try:
+                self.log_event(f'Moving cursor {pos}')
+                self.stdscr.move(pos[0], pos[1])
+            except Exception as e:
+                self.log_event(f'Failed to move cursor: {e}')
         else:
             self.log_event(f'Invalid cursor position {pos}')
 
@@ -135,3 +160,4 @@ class Engine:
         time.sleep(t)
         while self.stdscr.getch() != -1:
             pass
+
