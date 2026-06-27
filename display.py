@@ -7,7 +7,7 @@ class Display:
     def __init__(self):
         self.screenbuffer: list[list[str]] = list
         '''2D buffer the size of the terminal for outputting to engine'''
-        self.colorbuffer: list[list[str]] = list
+        self.colorbuffer: list[list[clr.Color]] = list
         '''2D buffer the size of the terminal for outputting to engine'''
         self.unknownglyph = ' '
         '''Glyph to show unexplored area'''
@@ -143,3 +143,5 @@ class Display:
                 screenbuffer[rw][cl] = col
                 colorbuffer[rw][cl] = anim.color
 
+    def get_new_buffer(self, buffer):
+        return [[item for item in row] for row in buffer]

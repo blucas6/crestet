@@ -265,8 +265,7 @@ class Game:
         '''Render the current game state to the screen'''
 
         # do animations before the screen changes 
-        self.animations(copy.deepcopy(self.Display.screenbuffer),
-                        copy.deepcopy(self.Display.colorbuffer))
+        self.animations(self.Display.screenbuffer, self.Display.colorbuffer)
 
         # get buffers
         screenbuffer,colorbuffer = self.Display.prepare_buffers(self.LevelManager,
@@ -315,19 +314,17 @@ class Game:
         else:
             self.StateMachine.new_state('msgQEmpty')
 
-    def animations(self, screenbuffer, colorbuffer):
+    def animations(self, original_screenbuffer, original_colorbuffer):
         '''Display animations queued'''
         if not self.Animator.AnimationQueue:
             return
-        # get copy buffers to reset to after each frame
-        oldscreenbuffer = copy.deepcopy(screenbuffer)
-        oldcolorbuffer = copy.deepcopy(colorbuffer)
+
         # go through each animation
         for anim in self.Animator.AnimationQueue:
             for num in anim.frames.keys():
                 # reset buffers
-                screenbuffer = copy.deepcopy(oldscreenbuffer)
-                colorbuffer = copy.deepcopy(oldcolorbuffer)
+                screenbuffer = self.Display.get_new_buffer(original_screenbuffer)
+                colorbuffer = self.Display.get_new_buffer(original_colorbuffer) 
                 self.Display.add_animation_frame(screenbuffer, colorbuffer, anim, num)
                 # display through engine
                 if self.Engine.frame_ready():
@@ -336,7 +333,10 @@ class Game:
                                         screencolors=colorbuffer)
                 self.Engine.pause(anim.delay)
             if anim.finalframe:
-                self.Display.add_animation_frame(oldscreenbuffer, oldcolorbuffer,
+                # get copy buffers to reset to after each frame
+                screenbuffer = self.Display.get_new_buffer(original_screenbuffer)
+                colorbuffer = self.Display.get_new_buffer(original_colorbuffer) 
+                self.Display.add_animation_frame(screenbuffer, colorbuffer,
                                                  anim, list(anim.frames.keys())[-1])
         # done with all animations
         self.Animator.clearQueue()
