@@ -352,6 +352,7 @@ class Entity:
         eidx,entity = utility.get_max_layer(entitylayer[row][col])
         # monsters or barrels can be damaged
         if entity.layer == Layer.MONST_LAYER or entity.layer == Layer.BARREL_LAYER:
+            logger.Logger.log(f'Fighting barrel')
             self.energy -= self.speed
             # calculate damage
             damage = self.get_damage()

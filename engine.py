@@ -69,6 +69,7 @@ class Engine:
         self.stdscr.keypad(False)
         curses.echo()
         curses.endwin()
+        self.log_event('--Engine Shutdown--')
 
     def output(self, screenchars: list=[], screencolors: list=[]):
         '''
@@ -123,15 +124,18 @@ class Engine:
             return
         curses.curs_set(mode)
 
-    def cursor_position(self, pos):
+    def move_cursor(self, pos):
         '''
         Moves the cursor to a position
         '''
         if not self.initialized:
             return
         if pos[0] < self.termrows and pos[1] < self.termcols:
-            self.log_event(f'Moving cursor {pos}')
-            self.stdscr.move(pos[0], pos[1])
+            try:
+                self.log_event(f'Moving cursor {pos}')
+                self.stdscr.move(pos[0], pos[1])
+            except Exception as e:
+                self.log_event(f'Failed to move cursor: {e}')
         else:
             self.log_event(f'Invalid cursor position {pos}')
 

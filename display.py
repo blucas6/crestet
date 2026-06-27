@@ -19,6 +19,8 @@ class Display:
         '''Total terminal rows'''
         self.termcols = 0
         '''Total terminal columns'''
+        self.cursor_on = False
+        self.cursor_position = [0,0]
 
     def init(self, termrows, termcols, levelorigin):
         '''Setup the buffers'''
@@ -36,9 +38,6 @@ class Display:
                                     for _ in range(self.termrows-1)]
         self.colorbuffer = [[clr.Color().white for _ in range(self.termcols-1)] 
                                     for _ in range(self.termrows-1)]
-
-    def move_cursor(self, cursor_position, direction):
-        return (cursor_position[0]+direction[0], cursor_position[1]+direction[1])
 
     def prepare_buffers(self, levelmanager, menumanager, useplayerFOV):
         '''Build the buffers to send to the engine'''
@@ -141,5 +140,4 @@ class Display:
                 rw, cl = self.level_to_screen_pos(ar+r,ac+c)
                 screenbuffer[rw][cl] = col
                 colorbuffer[rw][cl] = anim.color
-
 

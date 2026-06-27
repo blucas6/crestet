@@ -17,6 +17,7 @@ import curses
 import enum
 import menu
 import animation
+import utility
 
 class Game:
     '''
@@ -139,21 +140,18 @@ class Game:
             tt.Timing.end()
 
         except Exception as ex:
-            self.end(error_ex=ex, stack=traceback.format_exc())
+            self.end(errorex=ex, stack=traceback.format_exc())
 
     def main(self):
         '''Main loop'''
         try:
+            self.render()
             while self.running:
                 event = self.Engine.read_input()
-                eventtype,event = self.game_loop(event)
-                # output screen buffer to terminal
-                if eventtype != state.Event.NA:
-                    logger.Logger.log(f'RENDER')
-                    self.render()
+                self.game_loop(event)
             self.end()
         except Exception as ex:
-            self.end(error_ex=ex, stack=traceback.format_exc())
+            self.end(errorex=ex, stack=traceback.format_exc())
 
     def game_loop(self, event):
         '''
@@ -162,10 +160,17 @@ class Game:
         eventtype,event = self.process_events(event)
         if eventtype == state.Event.CLEAR:
             self.clear_state()
+        elif eventtype == state.Event.BLANK:
+            # clear the previous message
+            self.MenuManager.MessageMenu.clear()
+            self.messages()
         elif eventtype == state.Event.EVENT:
             # update the game
             self.loop(event)
-        return eventtype,event
+        # output screen buffer to terminal
+        if eventtype != state.Event.NA:
+            logger.Logger.log(f'RENDER')
+            self.render()
 
     def process_events(self, event):
         '''
@@ -191,7 +196,9 @@ class Game:
         # update inventory menu
         self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
         # clear any engine cursors
-        self.Engine.toggle_cursor(0)
+        if self.Display.cursor_on:
+            self.Engine.toggle_cursor(0)
+            self.Display.cursor_on = False
 
     def loop(self, event):
         '''
@@ -260,14 +267,20 @@ class Game:
         # do animations before the screen changes 
         self.animations(copy.deepcopy(self.Display.screenbuffer),
                         copy.deepcopy(self.Display.colorbuffer))
+
+        # get buffers
         screenbuffer,colorbuffer = self.Display.prepare_buffers(self.LevelManager,
                                                                 self.MenuManager,
                                                                 self.playerFOV)
         # display through engine
         if self.usedisplay and self.Engine.frame_ready():
             # output
-            self.Engine.output(screenchars=screenbuffer,
-                                screencolors=colorbuffer)
+            self.Engine.output(screenchars=screenbuffer,screencolors=colorbuffer)
+
+        if self.Display.cursor_on:
+            self.Engine.toggle_cursor(2)
+            cursor_position = self.Display.level_to_screen_pos(*self.Display.cursor_position)
+            self.Engine.move_cursor(cursor_position)
 
     def win(self):
         '''Returns true if the game has been won'''
@@ -281,14 +294,14 @@ class Game:
             return True
         return False 
 
-    def end(self, error_ex=None, stack=''):
+    def end(self, errorex=None, stack=''):
         '''Called when the game ends'''
         self.running = False
         if self.usedisplay:
             self.Engine.end()
         tt.Timing.show()
-        if error_ex:
-            error_str = f'\n**Critical Failure**\n{type(error_ex).__name__}: {error_ex}\n\n{stack}' 
+        if errorex:
+            error_str = f'\n**Critical Failure**\n{type(errorex).__name__}: {errorex}\n\n{stack}' 
             logger.Logger.log(error_str)
             print(error_str)
 
@@ -329,14 +342,30 @@ class Game:
         self.Animator.clearQueue()
 
     def observation_event(self, event):
-        cursor_pos = self.Engine.get_cursor()
-        cursor_pos = self.Display.move_cursor((-1,0), cursor_pos)
-        self.Engine.cursor_position(cursor_pos)
-        return state.Event.NA, event
+        if not event.isdigit():
+            return state.Event.NA, event
+        key = int(event)
+        row,col = utility.get_new_pos(self.Display.cursor_position, key)
+        self.Display.cursor_position = [row,col]
+        if self.LevelManager.within_level((row,col), self.LevelManager.currentz):
+            msg = ''
+            map = []
+            if self.playerFOV:
+                map = self.LevelManager.Player.mentalmap[row][col]
+            else:
+                level = self.LevelManager.get_curr_level()
+                if level:
+                    map = level.EntityLayer[row][col]
+            for ix,ent in enumerate(map):
+                msg += ent.name
+                if ix != len(map)-1:
+                    msg += ','
+            self.Messager.add_message(msg)
+        return state.Event.BLANK, event
 
     def motion_event(self, event):
         '''Handles events that are part of a motion'''
-        self.StateMachine.new_state('donemotion')
+        self.StateMachine.new_state('done')
         # Throwing/Charge Action
         if self.previousevent == 't' or self.previousevent == '5' or self.previousevent == 'F':
             # expects a direction
@@ -404,12 +433,16 @@ class Game:
         elif event == 'o':
             # START OBSERVATION TOOL
             self.StateMachine.new_state('looking')
-            self.Engine.toggle_cursor(2)
-            self.Engine.cursor_position((0,5))
+            if self.StateMachine.GameState == state.GameState.LOOKING:
+                self.Display.cursor_on = True
+                prow, pcol = (self.LevelManager.Player.row, self.LevelManager.Player.col)
+                self.Display.cursor_position = [prow,pcol]
+                self.Messager.add_message('-- Observation Tool --')
+            return state.Event.BLANK,event
         elif event == ' ' or event == chr(curses.ascii.ESC):
             # DO NOTHING - clears msg queue and previous event
             self.previousevent = ''
-            self.StateMachine.new_state('donemotion')
+            self.StateMachine.new_state('done')
             return state.Event.CLEAR,event
         elif self.StateMachine.GameState == state.GameState.MOTION:
             # MOTION
