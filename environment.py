@@ -42,16 +42,13 @@ class Environment:
 
         return obs
 
-    def reset(self, seed=None):
+    def reset(self, new_seed=False):
         '''
         Reset the environment to start a brand new episode
 
         Returns the initial observation and an optional info dict
         '''
-
-        self.Game.seed = seed
-        self.Game.game_setup()
-
+        self.Game.reset(new_seed=new_seed)
         self.current_step = 0
         return self.get_observation(), {}
 

@@ -60,6 +60,7 @@ class Game:
 
         # Timing
         tt.Timing.allowTiming = timing
+        logger.Logger.logging = not timing
 
 
     def start(self):
@@ -112,6 +113,7 @@ class Game:
             logger.Logger.log(f'  Turn: {self.turn}')
             logger.Logger.log(f'  Player FOV: {self.playerFOV}')
             logger.Logger.log(f'  Timing: {tt.Timing.allowTiming}')
+            logger.Logger.log(f'  Total Levels: {self.LevelManager.totallevels}')
 
             # level manager
             self.LevelManager.init(self.Messager,
@@ -401,6 +403,14 @@ class Game:
             # Player
             return state.Event.EVENT,event
 
+    def reset(self, new_seed=False):
+        '''Restarts the game, new seed will generate a new game'''
+        if new_seed:
+            self.seed = None
+        self.StateMachine.new_state('reset')
+        self.MenuManager.showinteract = False
+        self.game_setup()
+
     def event_type(self, event):
         '''
         Process key press event from engine
@@ -417,16 +427,11 @@ class Game:
             self.running = False
         elif event == 'r':
             # RESET
-            self.StateMachine.new_state('reset')
-            self.MenuManager.showinteract = False
-            self.game_setup()
+            self.reset()
             return state.Event.BLANK,event
         elif event == 'R':
             # RESET with new SEED
-            self.seed = None
-            self.StateMachine.new_state('reset')
-            self.MenuManager.showinteract = False
-            self.game_setup()
+            self.reset(new_seed=True)
             return state.Event.BLANK,event
         elif event == 'f':
             # TOGGLE FOV
