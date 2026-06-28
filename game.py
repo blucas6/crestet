@@ -263,6 +263,8 @@ class Game:
 
     def render(self):
         '''Render the current game state to the screen'''
+        if not self.usedisplay:
+            return
 
         # do animations before the screen changes 
         self.animations(self.Display.screenbuffer, self.Display.colorbuffer)
