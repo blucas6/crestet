@@ -5,12 +5,12 @@ import agent
 import time
 
 class Training:
-    def __init__(self, seed=None, display=False):
+    def __init__(self, seed=None, display=False, timing=False):
         self.num_episodes = 1
         self.training_mode = False 
         self.rewards = []
         self.display = display
-        self.environment = environment.Environment(seed, display)
+        self.environment = environment.Environment(seed, display, timing)
         self.agent = agent.Agent(self.environment.obs_size, self.environment.action_size)
         self.turn_delay_secs = 0.1
 

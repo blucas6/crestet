@@ -4,7 +4,7 @@ import game
 import config
 
 class Environment:
-    def __init__(self, seed=None, display=False):
+    def __init__(self, seed=None, display=False, timing=False):
         '''
         Initialize the environment
 
@@ -21,7 +21,7 @@ class Environment:
         self.Game = game.Game(seed=seed,
                               msgblocking=False,
                               usedisplay=display,
-                              timing=False)
+                              timing=timing)
 
     def start(self):
         '''Start the environment'''
@@ -38,7 +38,7 @@ class Environment:
         myobs = self.get_player_fov()
         #myobs = self.get_level_observation()
         #myobs = self.get_curr_inventory()
-        logger.Logger.log(f'AGENT:\n {myobs}')
+        #logger.Logger.log(f'AGENT:\n {myobs}')
 
         return obs
 

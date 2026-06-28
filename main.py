@@ -14,7 +14,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.agent:
-        training = training.Training(seed=args.seed, display=args.display) 
+        training = training.Training(seed=args.seed, display=args.display, timing=args.timing) 
         training.start()
         training.run()
     else:
