@@ -11,9 +11,9 @@ class Profiling:
     def __init__(self, seed, display, timing=True):
         self.display = display
         self.environment = environment.Environment(seed, display, timing)
-        self.turn_delay_secs = 0.002
-        self.actions_per_game = 100
-        self.levels_per_stage = [1, 5, 10, 20]
+        self.turn_delay_secs = 0.1
+        self.actions_per_game = 50
+        self.levels_per_stage = [10, 15, 20, 30, 40, 50, 80, 100]
         self.fps_per_stage = []
 
     def start(self):
@@ -69,7 +69,7 @@ class Profiling:
         plt.figure(figsize=(8, 6))
         plt.plot(self.levels_per_stage, self.fps_per_stage, marker='o', linestyle='-', linewidth=2)
         plt.title('FPS per Game', fontsize=14, fontweight='bold', pad=15)
-        plt.xlabel('Games', fontsize=12)
+        plt.xlabel('Levels', fontsize=12)
         plt.ylabel('FPS', fontsize=12)
         plt.grid(True, linestyle='--', alpha=0.6)
         plt.show()
