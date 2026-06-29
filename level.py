@@ -138,6 +138,7 @@ class LevelManager:
         return None
 
     def update_level(self, level, energy, animator, messager, menumanager, statemachine):
+        '''Updates all entities on a single level with a given amount of energy'''
         if not level:
             return
 
@@ -189,9 +190,7 @@ class LevelManager:
                         entity.update_state(self)
 
     def update_all(self, animator, messager, menumanager, statemachine, event):
-        '''
-        Go through all entities and update them
-        '''
+        '''Go through all entities and update them'''
 
         timing.Timing.start('Game Loop')
 
