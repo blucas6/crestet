@@ -143,7 +143,7 @@ class Generator:
         r = self.RNG.randint(1,self.levelrows-2)
         c = self.RNG.randint(1,self.levelcols-2)
         levelmanager.place_entity(currlevel.z, tower.StairUp(), [r,c], overwrite=True)
-        logger.Logger.log(f'Placed UPSTAIR: {(r,c)}')
+        logger.Logger.log(f'Placed UPSTAIR z:{currlevel.z}: {(r,c)}')
         return (r,c)
     
     def generate_downstair(self, levelmanager: level.LevelManager, currlevel: level.Level,

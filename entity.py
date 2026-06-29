@@ -102,7 +102,7 @@ class Entity:
         #logger.Logger.log(f'Creating new entity: {self} {self.pos()}')
 
     def __repr__(self):
-        return f'[{self.name}|{self.id}]'
+        return f'[{self.name}|{self.id}|({self.row},{self.col},{self.z},{self.idx})]'
 
     def pos(self):
         '''Used for getting the entire position'''

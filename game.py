@@ -223,7 +223,7 @@ class Game:
             self.StateMachine.callback(self.StateMachine, self.MenuManager, event)
         else:
             # update all entities
-            self.LevelManager.update_level(self.Animator, self.Messager, self.MenuManager, self.StateMachine, event)
+            self.LevelManager.update_all(self.Animator, self.Messager, self.MenuManager, self.StateMachine, event)
 
             # end the player charge, get back into playing mode
             if (self.StateMachine.GameState == state.GameState.RUNNING and
