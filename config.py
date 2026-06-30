@@ -30,7 +30,7 @@ PLAYERPOS = [1,1]
 '''Starting player position'''
 PLAYERZ = 0
 '''Starting player z index'''
-PLAYERFOV = 5
+PLAYERFOV = 20
 '''Player FOV range'''
 PLAYERHEALTH = 20
 '''Player health amount'''

@@ -35,7 +35,7 @@ class Player(e.Entity):
         '''Columns for mental map'''
         self.fovpoints = []
         '''Used for simple FOV'''
-        self.fovmemory = FOVMemory.OBJECTS
+        self.fovmemory = FOVMemory.EVERYTHING
         '''Decides the type of FOV the player gets'''
         self.sightrange = config.PLAYERFOV
         '''How far the FOV will check'''

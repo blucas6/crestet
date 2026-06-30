@@ -2,6 +2,7 @@ import curses
 import sys
 import color
 import time
+import os
 
 class Engine:
     '''
