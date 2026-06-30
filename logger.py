@@ -4,16 +4,13 @@ import datetime
 class Logger:
     '''Class to log all information to the same location'''
     logfile = 'log.log'
-    enabled = False
+    logging = True
 
     @staticmethod
     def init(dire='', logfile='', enabled=False): 
         '''Clear and set the log file'''
-        Logger.enabled = enabled
-        
-        if not Logger.enabled:
-            return  
-            
+        if not Logger.logging:
+            return
         if logfile:
             Logger.logfile = logfile
         if dire:
@@ -27,8 +24,7 @@ class Logger:
     @staticmethod
     def log(msg):
         '''Log a message'''
-        if not Logger.enabled:
+        if not Logger.logging:
             return
-            
         with open(Logger.logfile, 'a+') as l:
             l.write(f'{datetime.datetime.now()} - {msg}\n')

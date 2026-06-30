@@ -1,6 +1,19 @@
 import enum
-
 import logger
+
+class Event(enum.Enum):
+    '''
+    Event types from user
+
+    NA    : not an event - nothing happens
+    CLEAR : clearing event - reset menus and message window, render screen
+    BLANK : empty event - check message loop and render the screen, no clearing or game loop
+    EVENT : normal event - full game loop
+    '''
+    NA = -1
+    CLEAR = 0
+    BLANK = 1
+    EVENT = 2
 
 class GameState(enum.Enum):
     '''
@@ -17,18 +30,19 @@ class GameState(enum.Enum):
     MOTION = 4
     RUNNING = 5
     INTERACTING = 6
+    LOOKING = 7
 
 class StateMachine:
     def __init__(self):
         self.GameState = GameState.PLAYING
+        '''Current state of the game'''
         self.callback = None
 
     def new_state(self, newstate):
         '''
         Change the game state
         '''
-        logger.Logger.log(f'NEW STATE: {newstate}')
-        if newstate == 'msgQFull' and self.GameState == GameState.PLAYING:
+        if newstate == 'msgQFull':
             # too many messages to display, block user input until resolved
             self.GameState = GameState.PAUSEONMSG
         elif newstate == 'msgQEmpty' and self.GameState == GameState.PAUSEONMSG:
@@ -41,7 +55,9 @@ class StateMachine:
         elif newstate == 'motion' and self.GameState == GameState.PLAYING:
             # start the key motion
             self.GameState = GameState.MOTION
-        elif newstate == 'donemotion' and self.GameState == GameState.MOTION:
+        elif newstate == 'done' and (self.GameState == GameState.MOTION or
+                                     self.GameState == GameState.INTERACTING or
+                                     self.GameState == GameState.LOOKING):
             # end the key motion
             self.GameState = GameState.PLAYING
         elif newstate == 'startrun' and self.GameState == GameState.PLAYING:
@@ -53,8 +69,9 @@ class StateMachine:
         elif (newstate == 'interact' and
              (self.GameState == GameState.PLAYING or self.GameState == self.GameState.RUNNING)):
             self.GameState = GameState.INTERACTING
-        elif newstate == 'doneinteract' and self.GameState == GameState.INTERACTING:
-            self.GameState = GameState.PLAYING
+        elif newstate == 'looking' and self.GameState == GameState.PLAYING:
+            self.GameState = GameState.LOOKING
 
+        logger.Logger.log(f'NEW STATE: {newstate} RESULT: {self.GameState}')
 
 

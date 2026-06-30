@@ -1,4 +1,3 @@
-from numpy import log
 import logger
 import config
 import message
@@ -138,36 +137,14 @@ class LevelManager:
             return self.Levels[self.currentz]
         return None
 
-    def update_level(self, animator, messager, menumanager, statemachine, event):
-        '''
-        Go through all entities and update them
-        '''
-
-        timing.Timing.start('Game Loop')
-
-        logger.Logger.log('----------TURN UPDATE-----------')
-
-        self.Player.energy = 100
-        self.Player.do_action(self, animator, messager, menumanager, statemachine, event)
-        self.Player.turn += 1
-
-        # update the level the player is on
-        self.currentz = self.Player.z
-
-        level = self.get_curr_level()
+    def update_level(self, level, energy, animator, messager, menumanager, statemachine):
+        '''Updates all entities on a single level with a given amount of energy'''
         if not level:
             return
 
         # clear light layer
         level.LightLayer = [[0 for _ in range(self.levelcols)]
                                 for _ in range(self.levelrows)]
-
-        energy = 100 - self.Player.energy
-        if energy == 100:
-            energy = self.Player.speed
-        logger.Logger.log(f'Player energy: {energy}')
-        logger.Logger.log(f'Player health: {self.Player.Health}')
-
         # energy
         for row in level.EntityLayer:
             for entitylist in row:
@@ -211,6 +188,29 @@ class LevelManager:
                 for entity in entitylist:
                     if entity.name == 'Light':
                         entity.update_state(self)
+
+    def update_all(self, animator, messager, menumanager, statemachine, event):
+        '''Go through all entities and update them'''
+
+        timing.Timing.start('Game Loop')
+
+        logger.Logger.log('----------TURN UPDATE-----------')
+
+        self.Player.energy = 100
+        self.Player.do_action(self, animator, messager, menumanager, statemachine, event)
+        self.Player.turn += 1
+
+        # calculate how much energy the player used
+        energy = 100 - self.Player.energy
+        if energy == 100:
+            # player rested
+            energy = self.Player.speed
+
+        # update the level the player is on
+        self.currentz = self.Player.z
+
+        for level in self.Levels:
+            self.update_level(level, energy, animator, messager, menumanager, statemachine)
 
         timing.Timing.end()
 

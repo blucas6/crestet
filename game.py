@@ -17,18 +17,7 @@ import curses
 import enum
 import menu
 import animation
-
-class Event(enum.Enum):
-    '''
-    Event types from user
-
-    NA    : not an event - continue without looking at user input
-    CLEAR : clearing event - reset menus and message window
-    EVENT : normal event - look at user input
-    '''
-    NA = -1
-    CLEAR = 0
-    EVENT = 1
+import utility
 
 class Game:
     '''
@@ -71,6 +60,7 @@ class Game:
 
         # Timing
         tt.Timing.allowTiming = timing
+        logger.Logger.logging = not timing
 
 
     def start(self):
@@ -123,6 +113,7 @@ class Game:
             logger.Logger.log(f'  Turn: {self.turn}')
             logger.Logger.log(f'  Player FOV: {self.playerFOV}')
             logger.Logger.log(f'  Timing: {tt.Timing.allowTiming}')
+            logger.Logger.log(f'  Total Levels: {self.LevelManager.totallevels}')
 
             # level manager
             self.LevelManager.init(self.Messager,
@@ -151,30 +142,37 @@ class Game:
             tt.Timing.end()
 
         except Exception as ex:
-            self.end(error_ex=ex, stack=traceback.format_exc())
+            self.end(errorex=ex, stack=traceback.format_exc())
 
     def main(self):
         '''Main loop'''
         try:
+            self.render()
             while self.running:
                 event = self.Engine.read_input()
                 self.game_loop(event)
-                # output screen buffer to terminal
-                self.render()
             self.end()
         except Exception as ex:
-            self.end(error_ex=ex, stack=traceback.format_exc())
+            self.end(errorex=ex, stack=traceback.format_exc())
 
     def game_loop(self, event):
         '''
         Single game loop based on an event
         '''
-        event,eventtype = self.process_events(event)
-        if eventtype == Event.CLEAR:
+        eventtype,event = self.process_events(event)
+        if eventtype == state.Event.CLEAR:
             self.clear_state()
-        elif eventtype == Event.EVENT:
+        elif eventtype == state.Event.BLANK:
+            # clear the previous message
+            self.MenuManager.MessageMenu.clear()
+            self.messages()
+        elif eventtype == state.Event.EVENT:
             # update the game
             self.loop(event)
+        # output screen buffer to terminal
+        if eventtype != state.Event.NA:
+            logger.Logger.log(f'RENDER')
+            self.render()
 
     def process_events(self, event):
         '''
@@ -184,12 +182,12 @@ class Game:
             eventtype,event = self.event_type(event)
         else:
             # do not check for events if running
-            eventtype = Event.EVENT
+            eventtype = state.Event.EVENT
             event = ' '
             # do not call engine pause if the display is off
             if self.usedisplay:
                 self.Engine.pause(config.CHARGE_FRAME_DELAY)
-        return event,eventtype
+        return eventtype,event
 
     def clear_state(self):
         '''Clears the current message'''
@@ -199,6 +197,10 @@ class Game:
         self.messages()
         # update inventory menu
         self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
+        # clear any engine cursors
+        if self.Display.cursor_on:
+            self.Engine.toggle_cursor(0)
+            self.Display.cursor_on = False
 
     def loop(self, event):
         '''
@@ -221,7 +223,7 @@ class Game:
             self.StateMachine.callback(self.StateMachine, self.MenuManager, event)
         else:
             # update all entities
-            self.LevelManager.update_level(self.Animator, self.Messager, self.MenuManager, self.StateMachine, event)
+            self.LevelManager.update_all(self.Animator, self.Messager, self.MenuManager, self.StateMachine, event)
 
             # end the player charge, get back into playing mode
             if (self.StateMachine.GameState == state.GameState.RUNNING and
@@ -263,18 +265,25 @@ class Game:
 
     def render(self):
         '''Render the current game state to the screen'''
+        if not self.usedisplay:
+            return
 
         # do animations before the screen changes 
-        self.animations(copy.deepcopy(self.Display.screenbuffer),
-                        copy.deepcopy(self.Display.colorbuffer))
+        self.animations(self.Display.screenbuffer, self.Display.colorbuffer)
+
+        # get buffers
         screenbuffer,colorbuffer = self.Display.prepare_buffers(self.LevelManager,
                                                                 self.MenuManager,
                                                                 self.playerFOV)
         # display through engine
         if self.usedisplay and self.Engine.frame_ready():
             # output
-            self.Engine.output(screenchars=screenbuffer,
-                                screencolors=colorbuffer)
+            self.Engine.output(screenchars=screenbuffer,screencolors=colorbuffer)
+
+        if self.Display.cursor_on:
+            self.Engine.toggle_cursor(config.CURSOR_HIGHLIGHT)
+            cursor_position = self.Display.level_to_screen_pos(*self.Display.cursor_position)
+            self.Engine.move_cursor(cursor_position)
 
     def win(self):
         '''Returns true if the game has been won'''
@@ -288,14 +297,14 @@ class Game:
             return True
         return False 
 
-    def end(self, error_ex=None, stack=''):
+    def end(self, errorex=None, stack=''):
         '''Called when the game ends'''
         self.running = False
         if self.usedisplay:
             self.Engine.end()
         tt.Timing.show()
-        if error_ex:
-            error_str = f'\n**Critical Failure**\n{type(error_ex).__name__}: {error_ex}\n\n{stack}' 
+        if errorex:
+            error_str = f'\n**Critical Failure**\n{type(errorex).__name__}: {errorex}\n\n{stack}' 
             logger.Logger.log(error_str)
             print(error_str)
 
@@ -309,19 +318,17 @@ class Game:
         else:
             self.StateMachine.new_state('msgQEmpty')
 
-    def animations(self, screenbuffer, colorbuffer):
+    def animations(self, original_screenbuffer, original_colorbuffer):
         '''Display animations queued'''
         if not self.Animator.AnimationQueue:
             return
-        # get copy buffers to reset to after each frame
-        oldscreenbuffer = copy.deepcopy(screenbuffer)
-        oldcolorbuffer = copy.deepcopy(colorbuffer)
+
         # go through each animation
         for anim in self.Animator.AnimationQueue:
             for num in anim.frames.keys():
                 # reset buffers
-                screenbuffer = copy.deepcopy(oldscreenbuffer)
-                colorbuffer = copy.deepcopy(oldcolorbuffer)
+                screenbuffer = self.Display.get_new_buffer(original_screenbuffer)
+                colorbuffer = self.Display.get_new_buffer(original_colorbuffer) 
                 self.Display.add_animation_frame(screenbuffer, colorbuffer, anim, num)
                 # display through engine
                 if self.Engine.frame_ready():
@@ -330,10 +337,79 @@ class Game:
                                         screencolors=colorbuffer)
                 self.Engine.pause(anim.delay)
             if anim.finalframe:
-                self.Display.add_animation_frame(oldscreenbuffer, oldcolorbuffer,
+                # get copy buffers to reset to after each frame
+                screenbuffer = self.Display.get_new_buffer(original_screenbuffer)
+                colorbuffer = self.Display.get_new_buffer(original_colorbuffer) 
+                self.Display.add_animation_frame(screenbuffer, colorbuffer,
                                                  anim, list(anim.frames.keys())[-1])
         # done with all animations
         self.Animator.clearQueue()
+
+    def observation_event(self, event):
+        if not event.isdigit():
+            return state.Event.NA, event
+        key = int(event)
+        row,col = utility.get_new_pos(self.Display.cursor_position, key)
+        self.Display.cursor_position = [row,col]
+        if self.LevelManager.within_level((row,col), self.LevelManager.currentz):
+            msg = ''
+            map = []
+            if self.playerFOV:
+                map = self.LevelManager.Player.mentalmap[row][col]
+            else:
+                level = self.LevelManager.get_curr_level()
+                if level:
+                    map = level.EntityLayer[row][col]
+            for ix,ent in enumerate(map):
+                msg += ent.name
+                if ix != len(map)-1:
+                    msg += ','
+            self.Messager.add_message(msg)
+        return state.Event.BLANK, event
+
+    def motion_event(self, event):
+        '''Handles events that are part of a motion'''
+        self.StateMachine.new_state('done')
+        # Throwing/Charge Action
+        if self.previousevent == 't' or self.previousevent == '5' or self.previousevent == 'F':
+            # expects a direction
+            if not event.isdigit() or event == '5':
+                self.Messager.add_message('Invalid direction!')
+                return state.Event.CLEAR,event
+            # valid direction increment turn
+            # return the combined event
+            if self.previousevent == '5':
+                self.StateMachine.new_state('startrun')
+            return state.Event.EVENT,self.previousevent+event
+        # Inventory Action
+        elif self.previousevent == 'e' or self.previousevent == 'u':
+            return state.Event.EVENT,self.previousevent+event
+        return state.Event.CLEAR,event
+
+    def player_event(self, event):
+        '''Process all events that are player actions'''
+        # Multi key action
+        if event == 't' or event == '5' or event == 'e' or event == 'u' or event == 'F':
+            if event == 'e':
+                self.Messager.add_message('Equip what?')
+            elif event == 'u':
+                self.Messager.add_message('Unequip what?')
+            else:
+                self.Messager.add_message('Direction?')
+            self.StateMachine.new_state('motion')
+            self.previousevent = event
+            return state.Event.CLEAR,event
+        else:
+            # Player
+            return state.Event.EVENT,event
+
+    def reset(self, new_seed=False):
+        '''Restarts the game, new seed will generate a new game'''
+        if new_seed:
+            self.seed = None
+        self.StateMachine.new_state('reset')
+        self.MenuManager.showinteract = False
+        self.game_setup()
 
     def event_type(self, event):
         '''
@@ -344,69 +420,50 @@ class Game:
         '''
         # Disregard empty events
         if not event:
-            return Event.NA,event
+            return state.Event.NA,event
         # GAME ACTIONS
         if event == 'q':
             # QUIT
             self.running = False
         elif event == 'r':
             # RESET
-            self.StateMachine.new_state('reset')
-            self.MenuManager.showinteract = False
-            self.game_setup()
+            self.reset()
+            return state.Event.BLANK,event
         elif event == 'R':
             # RESET with new SEED
-            self.seed = None
-            self.StateMachine.new_state('reset')
-            self.MenuManager.showinteract = False
-            self.game_setup()
+            self.reset(new_seed=True)
+            return state.Event.BLANK,event
         elif event == 'f':
             # TOGGLE FOV
             self.playerFOV = not self.playerFOV
+            return state.Event.BLANK,event
+        elif event == 'o':
+            # START OBSERVATION TOOL
+            self.StateMachine.new_state('looking')
+            if self.StateMachine.GameState == state.GameState.LOOKING:
+                self.Display.cursor_on = True
+                prow, pcol = (self.LevelManager.Player.row, self.LevelManager.Player.col)
+                self.Display.cursor_position = [prow,pcol]
+                self.Messager.add_message('-- Observation Tool --')
+            return state.Event.BLANK,event
         elif event == ' ' or event == chr(curses.ascii.ESC):
-            self.previousevent = ''
-            self.StateMachine.new_state('donemotion')
             # DO NOTHING - clears msg queue and previous event
-            return Event.CLEAR,event
-        elif event == 'u':
-            self.LevelManager.Player.Leveling.gain_xp(1, self.LevelManager.Player, self.Messager)
-            return Event.EVENT, 'u'
-        # MOTIONS 
+            self.previousevent = ''
+            self.StateMachine.new_state('done')
+            return state.Event.CLEAR,event
         elif self.StateMachine.GameState == state.GameState.MOTION:
-            self.StateMachine.new_state('donemotion')
-            # Throwing/Charge Action
-            if self.previousevent == 't' or self.previousevent == '5' or self.previousevent == 'F':
-                # expects a direction
-                if not event.isdigit() or event == '5':
-                    self.Messager.add_message('Invalid direction!')
-                    return Event.CLEAR,event
-                # valid direction increment turn
-                # return the combined event
-                if self.previousevent == '5':
-                    self.StateMachine.new_state('startrun')
-                return Event.EVENT,self.previousevent+event
-            # Inventory Action
-            elif self.previousevent == 'e' or self.previousevent == 'u':
-                return Event.EVENT,self.previousevent+event
-        # PLAYER ACTIONS
+            # MOTION
+            return self.motion_event(event)
         elif self.StateMachine.GameState == state.GameState.PLAYING:
-            # Multi key action
-            if event == 't' or event == '5' or event == 'e' or event == 'u' or event == 'F':
-                if event == 'e':
-                    self.Messager.add_message('Equip what?')
-                elif event == 'u':
-                    self.Messager.add_message('Unequip what?')
-                else:
-                    self.Messager.add_message('Direction?')
-                self.StateMachine.new_state('motion')
-                self.previousevent = event
-                return Event.CLEAR,event
-            else:
-                # Player
-                return Event.EVENT,event
+            # PLAYER ACTIONS
+            return self.player_event(event)
         elif self.StateMachine.GameState == state.GameState.INTERACTING:
-            return Event.EVENT,event
+            # INTERACTING
+            return state.Event.EVENT,event
+        elif self.StateMachine.GameState == state.GameState.LOOKING:
+            # OBSERVATION TOOL
+            return self.observation_event(event)
 
         # Defaults to returning NA for no action
-        return Event.NA,event
+        return state.Event.NA,event
 

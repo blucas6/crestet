@@ -6,7 +6,7 @@ import heapq
 from collections import deque
 
 class Environment:
-    def __init__(self, seed=None, display=False):
+    def __init__(self, seed=None, display=False, timing=False):
         '''
         Initialize the environment
 
@@ -248,16 +248,13 @@ class Environment:
         # Return as a list of tuples
         return list(unique_coords)
     
-    def reset(self, seed=None):
+    def reset(self, new_seed=None):
         '''
         Reset the environment to start a brand new episode
 
         Returns the initial observation and an optional info dict
         '''
-
-        self.Game.seed = seed
-        self.Game.game_setup()
-
+        self.Game.reset(new_seed=new_seed)
         self.current_step = 0
         return self.get_observation(), {}
 

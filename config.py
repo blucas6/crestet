@@ -20,7 +20,7 @@ LEVELROWS = 10
 '''Amount of rows in the level grid'''
 LEVELCOLS = 20
 '''Amount of columns in the level grid'''
-MAX_RETRIES = 100
+MAX_RETRIES = 1000
 '''Amount of retries during generation for randomness'''
 LEVELMAX_ENTITIES = 10
 '''Maximum entities on a square'''
@@ -58,4 +58,5 @@ INVENTORYMENU_SZ = [20,30]
 INTERACTMENU_ORIGIN = (5, 5)
 INTERACTMENU_SZ = [3,20]
 
-
+### ENGINE
+CURSOR_HIGHLIGHT = 2

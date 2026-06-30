@@ -116,9 +116,13 @@ class Generator:
                 self.generate_mons(levelmanager, currlevel, level_layout.mons)
             if level_layout.items > 0:
                 self.generate_items(levelmanager, currlevel, level_layout.items)
-            if z == config.PLAYERZ and level_layout.upstair:
-                # make path for player to upstair
-                self.generate_clear_path(levelmanager, currlevel, config.PLAYERPOS, upstair_pos)
+            if z == config.PLAYERZ:
+                # make sure player can be placed
+                levelmanager.place_entity(currlevel.z, tower.Floor(), config.PLAYERPOS, overwrite=True)
+                if level_layout.upstair:
+                    logger.Logger.log(f'Clearing path for player')
+                    # make path for player to upstair
+                    self.generate_clear_path(levelmanager, currlevel, config.PLAYERPOS, upstair_pos)
         logger.Logger.log(f'----- FINISHED LEVEL GENERATION -----')
 
     def generate_floor(self, levelmanager: level.LevelManager, currlevel: level.Level):
@@ -139,7 +143,7 @@ class Generator:
         r = self.RNG.randint(1,self.levelrows-2)
         c = self.RNG.randint(1,self.levelcols-2)
         levelmanager.place_entity(currlevel.z, tower.StairUp(), [r,c], overwrite=True)
-        logger.Logger.log(f'Placed UPSTAIR: {(r,c)}')
+        logger.Logger.log(f'Placed UPSTAIR z:{currlevel.z}: {(r,c)}')
         return (r,c)
     
     def generate_downstair(self, levelmanager: level.LevelManager, currlevel: level.Level,
@@ -159,10 +163,10 @@ class Generator:
         if not a or not b:
             logger.Logger.log(f'Error: Clearing a path between {a}->{b} cannot be None!')
             return
-        logger.Logger.log(f'Clear Path: {a} -> {b}')
         grid = [[max([ent.layer for ent in elist]) for elist in row]
                     for row in currlevel.EntityLayer]
         pts = algo.dijkstra(grid, tuple(a), tuple(b), diagonals=False)
+        logger.Logger.log(f'Clear Path ({currlevel.z}): {a} -> {b}\n{pts}')
         if pts:
             for pt in pts:
                 maxlayer = max([x.layer for x in currlevel.EntityLayer[pt[0]][pt[1]]])

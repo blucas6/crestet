@@ -87,14 +87,12 @@ class Player(e.Entity):
         elif self.fovmemory == FOVMemory.EVERYTHING:
             # just add new seen points
             for pt in pts:
-                self.mentalmap[pt[0]][pt[1]] = copy.deepcopy(
-                                                    level.EntityLayer[pt[0]][pt[1]]
-                                                    )
+                self.mentalmap[pt[0]][pt[1]] = level.EntityLayer[pt[0]][pt[1]]
         elif self.fovmemory == FOVMemory.OBJECTS:
             for r,row in enumerate(level.EntityLayer):
                 for c,col in enumerate(row):
                     if (r,c) in pts:
-                        self.mentalmap[r][c] = copy.deepcopy(level.EntityLayer[r][c])
+                        self.mentalmap[r][c] = level.EntityLayer[r][c]
                     elif self.mentalmap[r][c]:
                         # seen before, but not in current FOV
                         # only add the object layer
@@ -115,8 +113,7 @@ class Player(e.Entity):
         '''Throw in a direction'''
         if event[1].isdigit():
             direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
-            #return self.throw(levelmanager, animator, messager, item.Dart(), direction)
-            return self.throw(levelmanager, animator, messager, item.Wood(), direction)
+            return self.throw(levelmanager, animator, messager, item.Dart(), direction)
 
     def get_damage(self):
         '''Choose damage source'''
