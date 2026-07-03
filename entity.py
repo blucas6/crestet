@@ -293,22 +293,38 @@ class Entity:
             for ent in entitylayer[objr][objc]:
                 self.attack(levelmanager, animator, messager, ent, dmg)
 
-    def moveZ(self, levelmanager, messager, incrementz):
+    def moveZ(self, levelmanager, animator, messager, incrementz):
         '''Move an to another z level'''
         if self.energy < self.speed:
             return
         # make sure there is a stairwell
+        newz = self.z + incrementz
         for ent in levelmanager.Levels[self.z].EntityLayer[self.row][self.col]:
-            if ent.name == 'Upstair' and incrementz > 0:
-                if levelmanager.move_entity_z(self, self.z + incrementz, [self.row,self.col]):
-                    messager.add_message('You walk up the stairs')
-                    self.energy -= self.speed
+            if ent.name == 'Upstair' or ent.name == 'Downstair':
+                # make sure there is a level to go to
+                if newz >= len(levelmanager.Levels):
+                    messager.add_message("There is nothing above you")
                     return
-            elif ent.name == 'Downstair' and incrementz < 0:
-                if levelmanager.move_entity_z(self, self.z + incrementz, [self.row,self.col]):
-                    messager.add_message('You walk down the stairs')
-                    self.energy -= self.speed
+                elif newz < 0:
+                    messager.add_message("There is nothing below you")
                     return
+                # check if there are monsters on the next level
+                entitylayer = levelmanager.Levels[newz].EntityLayer
+                _,an_entity = utility.get_max_layer(entitylayer[self.row][self.col])
+                if an_entity.layer == Layer.MONST_LAYER:
+                    # auto fight the entity
+                    self.energy -= self.speed
+                    damage = self.get_damage()
+                    self.attack(levelmanager, animator, messager, an_entity, damage)
+                    return
+                else:
+                    if levelmanager.move_entity_z(self, newz, [self.row,self.col]):
+                        if ent.name == 'Upstair':
+                            messager.add_message('You walk up the stairs')
+                        else:
+                            messager.add_message('You walk down the stairs')
+                        self.energy -= self.speed
+                        return
         # stairwell not on this space
         if incrementz > 0:
             messager.add_message("Can't go up here")
@@ -393,9 +409,9 @@ class Entity:
                           int(event))
         # Z
         elif event == '<': 
-            self.moveZ(levelmanager, messager, 1)
+            self.moveZ(levelmanager, animator, messager, 1)
         elif event == '>':
-            self.moveZ(levelmanager, messager, -1)
+            self.moveZ(levelmanager, animator, messager, -1)
         # Inventory
         elif (hasattr(self, 'Inventory') and
             len(event) > 1 and
