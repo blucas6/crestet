@@ -181,7 +181,7 @@ class Generator:
         wallsplaced = 0
         attempt = 0
         # go through until minimum wall amount was reached or max tries
-        while wallsplaced <= minwalls and attempt < config.MAX_RETRIES:
+        while wallsplaced < minwalls and attempt < config.MAX_RETRIES:
             attempt += 1
             for r in range(self.levelrows):
                 for c in range(self.levelcols): 
@@ -197,6 +197,8 @@ class Generator:
                                     pt = [r+sr,c+sc]
                                     levelmanager.place_entity(currlevel.z, tower.Wall(), pt)
                                     wallsplaced += 1
+                                    if wallsplaced >= minwalls:
+                                        return
 
     def generate_lights(self, levelmanager:level.LevelManager, currlevel:level.Level):
         '''Add lights to the level'''

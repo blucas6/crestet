@@ -4,18 +4,20 @@ import environment
 import agent 
 import time
 import numpy as np
+import logger
 
 class Training:
-    def __init__(self, seed=None, display=False):
+    def __init__(self, seed=None, display=False, timing=False):
         self.num_episodes = 1000
         self.training_mode = True
         self.rewards = []
         self.mse_losses = []
         self.avg_q_values = []
         self.display = display
-        self.environment = environment.Environment(seed, display)
+        self.environment = environment.Environment(seed, display, timing)
+        logger.Logger.logging = False
         self.agent = agent.Agent(self.environment.obs_size, self.environment.action_size)
-        self.turn_delay_secs = 0.1
+        self.turn_delay_secs = 1
         self.seed = seed
 
     def start(self):
@@ -49,10 +51,9 @@ class Training:
             while not (done or truncated):
 
                 # sample action
-                action = self.agent.sample_action(obs, self.environment.action_mask(), self.training_mode)
+                #action = self.agent.sample_action(obs, self.environment.action_mask(), self.training_mode)
                 action_mask = self.environment.action_mask()
-                #action = np.argmax(action_mask)
-                
+                action = np.argmax(action_mask)
                 
                 # step
                 next_obs, reward, done, truncated, _ = self.environment.step(action)
