@@ -23,7 +23,7 @@ class Environment:
         self.Game = game.Game(seed=seed,
                               msgblocking=False,
                               usedisplay=display,
-                              timing=False)
+                              timing=timing)
         
         # Action To String Game Action
         # 1, 2, 3, 4, 6, 7, 8, 9, <, >

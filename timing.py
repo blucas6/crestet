@@ -14,7 +14,7 @@ class Profiling:
         '''Boolean if the display is on'''
         self.environment = environment.Environment(seed, display, timing)
         '''Environment to run the games'''
-        self.turn_delay_secs = 0.1
+        self.turn_delay_secs = 0.0001
         '''If using the display this will slow the speed between actions'''
         self.actions_per_game = 50
         '''Number of actions during each game'''
@@ -64,7 +64,7 @@ class Profiling:
                 
                 # random moves
                 actions = [1, 2, 3, 4, 6, 7, 8, 9]
-                self.environment.step(actions[random.randint(0,len(actions)-1)])
+                self.environment.Game.game_loop(str(actions[random.randint(0,len(actions)-1)]))
 
                 if self.display:
                     time.sleep(self.turn_delay_secs)
