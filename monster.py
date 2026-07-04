@@ -6,6 +6,41 @@ import component
 import utility
 import item
 
+class Goblin(e.Entity):
+    '''
+    Goblin creature
+    '''
+    def __init__(self):
+        super().__init__(typeid=17,
+                         name='Goblin',
+                         glyph='g',
+                         color=color.Color().green,
+                         layer=e.Layer.MONST_LAYER,
+                         size=e.Size.MEDIUM)
+        self.Health = component.Health(health=config.GOBLIN_HEALTH)
+        self.Brain = component.Brain(sightrange=config.GOBLIN_SIGHTRANGE,
+                                     blockinglayer=e.Layer.MONST_LAYER)
+        self.Inventory = component.Inventory()
+        self.speed = e.Speed.SLOW
+        self.attackspeed = e.AttackSpeed.AVERAGE
+        self.xp = config.GOBLIN_XP
+        self.Inventory.equip(item.Bite())
+
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine):
+        '''Uses brain to select an action'''
+        self.do_action(
+            levelmanager,
+            animator,
+            messager,
+            menumanager,
+            statemachine,
+            self.Brain.get_action(
+                levelmanager.Levels[self.z],
+                [self.row,self.col],
+                self.energy
+            )
+        )
+        
 class Human(e.Entity):
     '''
     Human
@@ -34,9 +69,9 @@ class Newt(e.Entity):
         self.Brain = component.Brain(sightrange=config.NEWT_SIGHTRANGE,
                                      blockinglayer=e.Layer.MONST_LAYER)
         self.Inventory = component.Inventory()
-        self.speed = e.Speed.SLOW
+        self.speed = e.Speed.VERY_SLOW
         self.attackspeed = e.AttackSpeed.SLOW
-        self.xp = 1
+        self.xp = config.NEWT_XP
         self.Inventory.equip(item.Bite())
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine):

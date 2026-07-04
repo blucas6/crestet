@@ -24,11 +24,14 @@ class AttackSpeed(enum.IntEnum):
 
 class Speed(enum.IntEnum):
     '''Corresponding energy costs for movements'''
-    VERY_SLOW = 55
+    CRAWLING = 40
+    VERY_SLOW = 35
     SLOW = 30
-    AVERAGE = 12
-    FAST = 5
-    VERY_FAST = 3
+    AVERAGE = 25
+    MEDIUM = 15
+    FAST = 10
+    VERY_FAST = 5
+    HYPER = 1
 
 class Layer(enum.IntEnum):
     '''

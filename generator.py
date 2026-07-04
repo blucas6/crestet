@@ -217,17 +217,19 @@ class Generator:
         attempt = 0
         while mon_amount > 0 and attempt < config.MAX_RETRIES:
             attempt += 1
-            if self.RNG.randint(0, 1) == 0:
-                r = self.RNG.randint(1,self.levelrows-2)
-                c = self.RNG.randint(1,self.levelcols-2)
-                if ([r,c] != config.PLAYERPOS and
-                    levelmanager.place_entity(currlevel.z, monster.Jelly(), (r,c))):
+            num = self.RNG.randint(0, 2)
+            r = self.RNG.randint(1,self.levelrows-2)
+            c = self.RNG.randint(1,self.levelcols-2)
+            if [r,c] == config.PLAYERPOS:
+                continue
+            if num == 0:
+                if levelmanager.place_entity(currlevel.z, monster.Jelly(), (r,c)):
+                    mon_amount -= 1
+            elif num == 1:
+                if levelmanager.place_entity(currlevel.z, monster.Goblin(), (r,c)):
                     mon_amount -= 1
             else:
-                r = self.RNG.randint(1,self.levelrows-2)
-                c = self.RNG.randint(1,self.levelcols-2)
-                if ([r,c] != config.PLAYERPOS and
-                    levelmanager.place_entity(currlevel.z, monster.Newt(), (r,c))):
+                if levelmanager.place_entity(currlevel.z, monster.Newt(), (r,c)):
                     mon_amount -= 1
         '''
         for _ in range(1):
