@@ -48,10 +48,8 @@ class Newt(e.Entity):
             menumanager,
             statemachine,
             self.Brain.get_action(
-                levelmanager.get_curr_level(),
+                levelmanager.Levels[self.z],
                 [self.row,self.col],
-                self.z,
-                levelmanager.Player,
                 self.energy
             )
         )
