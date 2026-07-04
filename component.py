@@ -384,14 +384,30 @@ class Brain:
         self.blockinglayer = blockinglayer
         '''Highest level (exclusive) FOV will see through'''
 
-    def get_action(self, level, mypos, myz, player, energy):
+    def get_action(self, currlevel, mypos, energy):
         '''Returns an action'''
-        if player.z == myz:
-            # only follow if player is on the same level
-            pts = self.getFOV(level, mypos)
-            if tuple([player.row,player.col]) in pts:
-                return self.move_towards_pt(mypos, [player.row,player.col])
+        pts = self.getFOV(currlevel, mypos)
+        for pt in pts:
+            for ent in currlevel.EntityLayer[pt[0]][pt[1]]:
+                if ent.name == 'Player':
+                    return self.find_path(currlevel.EntityLayer, mypos, pt)
         return '.'
+
+    def find_path(self, entitylayer, mypos, playerpos):
+        '''Finds a path using A* to the player position'''
+        # create the 1,0 grid
+        grid = [[1 if max([int(x.layer) for x in elist]) > entity.Layer.OBJECT_LAYER else 0
+                    for elist in row]
+                    for row in entitylayer]
+        # set the source/dest positions to open
+        grid[mypos[0]][mypos[1]] = 0
+        grid[playerpos[0]][playerpos[1]] = 0
+        # call A* to get a set of pts
+        returncode, pts = algo.astar(grid, mypos, playerpos)
+        if returncode != 1:
+            logger.Logger.log(f'Error: brain failed to find path -> {returncode}')
+            return '.'
+        return self.move_towards_pt(mypos, pts[1])
     
     def move_towards_pt(self, mypos, otherpos):
         '''Moves towards a point on the map'''
