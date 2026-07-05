@@ -43,11 +43,6 @@ class Player(e.Entity):
         '''For FOV, highest level (exclusive) to see through'''
         self.speed = e.Speed.AVERAGE
         '''Speed component'''
-        self.attackspeed = e.AttackSpeed.AVERAGE
-        '''Attack speed'''
-        self.throwspeed = e.AttackSpeed.AVERAGE
-        '''Amount of energy to throw an object'''
-
         self.Health = component.Health(health=config.PLAYERHEALTH)
         '''Health component'''
         self.Brain = component.Brain(self.sightrange, self.blockinglayer)

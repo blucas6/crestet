@@ -19,10 +19,11 @@ class Goblin(e.Entity):
                          size=e.Size.MEDIUM)
         self.Health = component.Health(health=config.GOBLIN_HEALTH)
         self.Brain = component.Brain(sightrange=config.GOBLIN_SIGHTRANGE,
-                                     blockinglayer=e.Layer.MONST_LAYER)
+                                     blockinglayer=e.Layer.MONST_LAYER,
+                                     attacks=[e.AttackType.THROW,
+                                              e.AttackType.MELEE])
         self.Inventory = component.Inventory()
         self.speed = e.Speed.SLOW
-        self.attackspeed = e.AttackSpeed.AVERAGE
         self.xp = config.GOBLIN_XP
         self.Inventory.equip(item.Bite())
 
@@ -40,6 +41,12 @@ class Goblin(e.Entity):
                 self.energy
             )
         )
+
+    def fire(self, levelmanager, animator, messager, event):
+        '''Throw in a direction'''
+        if event[1].isdigit():
+            direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
+            return self.throw(levelmanager, animator, messager, item.Dart(), direction)
         
 class Human(e.Entity):
     '''
@@ -67,10 +74,10 @@ class Newt(e.Entity):
                          size=e.Size.MEDIUM)
         self.Health = component.Health(health=config.NEWT_HEALTH)
         self.Brain = component.Brain(sightrange=config.NEWT_SIGHTRANGE,
-                                     blockinglayer=e.Layer.MONST_LAYER)
+                                     blockinglayer=e.Layer.MONST_LAYER,
+                                     attacks=[e.AttackType.MELEE])
         self.Inventory = component.Inventory()
         self.speed = e.Speed.VERY_SLOW
-        self.attackspeed = e.AttackSpeed.SLOW
         self.xp = config.NEWT_XP
         self.Inventory.equip(item.Bite())
 

@@ -378,20 +378,42 @@ class Brain:
     '''
     Brain component, if an entity needs to make decisions
     '''
-    def __init__(self, sightrange, blockinglayer):
+    def __init__(self, sightrange, blockinglayer, attacks=[]):
         self.sightrange = sightrange
         '''How far FOV will check'''
         self.blockinglayer = blockinglayer
         '''Highest level (exclusive) FOV will see through'''
+        self.attacks = attacks
 
     def get_action(self, currlevel, mypos, energy):
         '''Returns an action'''
         pts = self.getFOV(currlevel, mypos)
+        playerpos = self.find_player(currlevel, pts)
+        if playerpos:
+            for attack in self.attacks:
+                if attack == entity.AttackType.THROW and self.throw_attack_possible(mypos, playerpos):
+                    return self.throw_attack(mypos, playerpos)
+                elif attack == entity.AttackType.MELEE:
+                    return self.find_path(currlevel.EntityLayer, mypos, playerpos)
+        return '.'
+
+    def throw_attack_possible(self, mypos, playerpos):
+        drow = abs(mypos[0] - playerpos[0])
+        dcol = abs(mypos[1] - playerpos[1])
+        if drow == 0 or dcol == 0 or drow == dcol:
+            return True
+        return False
+
+    def throw_attack(self, mypos, playerpos):
+        d = self.move_towards_pt(mypos, playerpos)
+        return 't' + str(d)
+
+    def find_player(self, currlevel, pts):
         for pt in pts:
             for ent in currlevel.EntityLayer[pt[0]][pt[1]]:
                 if ent.name == 'Player':
-                    return self.find_path(currlevel.EntityLayer, mypos, pt)
-        return '.'
+                    return pt
+        return None
 
     def find_path(self, entitylayer, mypos, playerpos):
         '''Finds a path using A* to the player position'''

@@ -195,10 +195,10 @@ class Generator:
                             for sc,scols in enumerate(srows):
                                 if scols:
                                     pt = [r+sr,c+sc]
-                                    levelmanager.place_entity(currlevel.z, tower.Wall(), pt)
-                                    wallsplaced += 1
-                                    if wallsplaced >= minwalls:
-                                        return
+                                    if levelmanager.place_entity(currlevel.z, tower.Wall(), pt):
+                                        wallsplaced += 1
+                                        if wallsplaced >= minwalls:
+                                            return
 
     def generate_lights(self, levelmanager:level.LevelManager, currlevel:level.Level):
         '''Add lights to the level'''
