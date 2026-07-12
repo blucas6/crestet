@@ -2,6 +2,23 @@ import entity as e
 import color
 import component
 
+class Arrow(e.Entity):
+    def __init__(self):
+        super().__init__(typeid=18,
+                         name='Arrow',
+                         glyph=')',
+                         color=color.Color().blue,
+                         layer=e.Layer.OBJECT_LAYER,
+                         size=e.Size.VERY_SMALL)
+        self.ItemType = component.ItemType.QUIVER
+        self.Group = component.Group(
+                parent = self,
+                unstack_name = 'Arrow',
+                unstack_glyph = ')',
+                stack_name = 'Arrow Stack',
+                stack_glyph = '≡',
+            )
+
 
 class Fruit(e.Entity):
     def __init__(self):
@@ -71,12 +88,12 @@ class Dart(e.Entity):
                          color=color.Color().red,
                          layer=e.Layer.OBJECT_LAYER,
                          size=e.Size.VERY_SMALL)
-        self.Stackable = component.Stackable(DartStack)
         self.ItemType = component.ItemType.QUIVER
-
-    def on_placed(self, levelmanager, messager):
-        '''Check new square for other darts or dart stacks'''
-        level = levelmanager.Levels[self.z]
-        entitylist = level.EntityLayer[self.row][self.col]
-        self.Stackable.check_entitylist(self, entitylist)
+        self.Group = component.Group(
+                parent = self,
+                unstack_name = 'Dart',
+                unstack_glyph = ')',
+                stack_name = 'Dart Stack',
+                stack_glyph = '≡',
+                )
 

@@ -102,7 +102,7 @@ class Entity:
 
     def __repr__(self):
         return f'[{self.name}|{self.id}|({self.row},{self.col},{self.z},{self.idx})]'
-
+    
     def pos(self):
         '''Used for getting the entire position'''
         return [self.row, self.col, self.z, self.idx]
@@ -129,9 +129,10 @@ class Entity:
         '''Hook gets called when an entity is placed on the level'''
         pass
 
-    def on_top(self, *_):
+    def on_top(self, entity, levelmanager):
         '''Hook gets called when another entity is placed in the same square'''
-        pass
+        if hasattr(self, 'Group'):
+            self.Group.check_square(entity, levelmanager)
 
     def on_zchange(self, *_):
         '''Hook gets called when the entity changes z levels'''

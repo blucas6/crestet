@@ -198,13 +198,24 @@ class Inventory:
     def add_to_bag(self, entity):
         '''Handles adding objects to the bag'''
         logger.Logger.log(f'Adding to bag: {entity}')
-        self.contents.append(entity)
-        entity.idx = len(self.contents)-1
-        # Stack / Stackable items
-        if hasattr(entity, 'Stack'):
-            entity.Stack.check_entitylist(entity, self.contents)
-        elif hasattr(entity, 'Stackable'):
-            entity.Stackable.check_entitylist(entity, self.contents)
+
+        if hasattr(entity, 'Group'):
+            for ent in self.contents:
+                if hasattr(ent, 'Group'):
+                    if ent.Group.group_up(entity):
+                        return
+
+        success = False
+        if hasattr(entity, 'ItemType') and entity.ItemType == ItemType.QUIVER:
+            success = self.add_to_quiver(entity)
+        if not success:
+            self.contents.append(entity)
+            entity.idx = len(self.contents)-1
+            # Stack / Stackable items
+            if hasattr(entity, 'Stack'):
+                entity.Stack.check_entitylist(entity, self.contents)
+            elif hasattr(entity, 'Stackable'):
+                entity.Stackable.check_entitylist(entity, self.contents)
     
     def unequip(self, entity):
         '''
@@ -265,6 +276,15 @@ class Inventory:
                 self.unequip(entity)
             elif not valid:
                 messager.add_message('Invalid inventory key!')
+
+    def add_to_quiver(self, entity):
+        if self.quiver is None:
+            self.quiver = entity
+            return True
+        elif hasattr(self.quiver, 'Group'):
+            if self.quiver.Group.group_up(entity):
+                return True
+        return False
 
 class Stackable:
     '''
@@ -339,6 +359,42 @@ class Stack:
                 entitylist.pop(myself.idx)
                 ent.Stack.add_to_stack(self.amount)
                 return
+
+class Group:
+    def __init__(self, parent, unstack_name, unstack_glyph, stack_name, stack_glyph):
+        self.parent = parent
+        self.amount = 1
+        self.unstack_name = unstack_name
+        self.unstack_glyph = unstack_glyph
+        self.stack_name = stack_name
+        self.stack_glyph = stack_glyph
+        self.stacked = False
+
+    def stack(self):
+        self.stacked = True
+        self.parent.name = self.stack_name
+        self.parent.glyph = self.stack_glyph
+
+    def unstack(self):
+        self.stacked = False
+        self.parent.name = self.unstack_name 
+        self.parent.glyph = self.unstack_glyph 
+
+    def group_up(self, new_entity):
+        if type(new_entity) == type(self.parent) and hasattr(new_entity, 'Group'):
+            self.amount += new_entity.Group.amount
+            if not self.stacked:
+                self.stack()
+            return True
+        return False
+
+    def check_square(self, entity, levelmanager):
+        level = levelmanager.Levels[entity.z]
+        entitylist = level.EntityLayer[entity.row][entity.col]
+        if not entity in entitylist:
+            return
+        if self.group_up(entity):
+            levelmanager.remove_entity(entity)
 
 class Health:
     '''

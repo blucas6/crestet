@@ -116,7 +116,10 @@ class InventoryMenu(Menu):
     
     def display_item(self, preText, item):
         '''Display an item to the menu, pretext is usually the letter key'''
-        if hasattr(item, 'Stack'):
+        if hasattr(item, 'Group'):
+            amount = item.Group.amount
+            return f'{preText}{item.name} ({amount})'
+        elif hasattr(item, 'Stack'):
             amount = item.Stack.amount
             return f'{preText}{item.name} ({amount})'
         else:
