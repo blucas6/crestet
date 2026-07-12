@@ -108,6 +108,14 @@ class Generator:
                     self.level_layouts[z+1].downstair_pos = upstair_pos
             if level_layout.downstair:
                 downstair_pos = self.generate_downstair(levelmanager, currlevel, level_layout)
+            # clear path before any items are placed
+            if z == config.PLAYERZ:
+                # make sure player can be placed
+                levelmanager.place_entity(currlevel.z, tower.Floor(), config.PLAYERPOS, overwrite=True)
+                if level_layout.upstair:
+                    logger.Logger.log(f'Clearing path for player')
+                    # make path for player to upstair
+                    self.generate_clear_path(levelmanager, currlevel, config.PLAYERPOS, upstair_pos)
             if level_layout.lights:
                 self.generate_lights(levelmanager, currlevel)
             if upstair_pos and downstair_pos:
@@ -116,13 +124,6 @@ class Generator:
                 self.generate_mons(levelmanager, currlevel, level_layout.mons)
             if level_layout.items > 0:
                 self.generate_items(levelmanager, currlevel, level_layout.items)
-            if z == config.PLAYERZ:
-                # make sure player can be placed
-                levelmanager.place_entity(currlevel.z, tower.Floor(), config.PLAYERPOS, overwrite=True)
-                if level_layout.upstair:
-                    logger.Logger.log(f'Clearing path for player')
-                    # make path for player to upstair
-                    self.generate_clear_path(levelmanager, currlevel, config.PLAYERPOS, upstair_pos)
         logger.Logger.log(f'----- FINISHED LEVEL GENERATION -----')
 
     def generate_floor(self, levelmanager: level.LevelManager, currlevel: level.Level):
@@ -242,14 +243,20 @@ class Generator:
         '''Add items to the level'''
         attempt = 0
         while item_amount > 0 and attempt < config.MAX_RETRIES:
-            if self.RNG.randint(0, 1) == 0:
-                r = self.RNG.randint(1,self.levelrows-2)
-                c = self.RNG.randint(1,self.levelcols-2)
-                if levelmanager.place_entity(currlevel.z, tower.Barrel(), (r,c)):
-                    item_amount -= 1
+            r = self.RNG.randint(1,self.levelrows-2)
+            c = self.RNG.randint(1,self.levelcols-2)
+            new_item = None
+            n = self.RNG.randint(0, 3)
+            if n == 0:
+                new_item = tower.Barrel()
+            elif n == 1:
+                new_item = item.Fruit()
+            elif n == 2:
+                new_item = item.Arrow()
             else:
-                r = self.RNG.randint(1,self.levelrows-2)
-                c = self.RNG.randint(1,self.levelcols-2)
-                if levelmanager.place_entity(currlevel.z, item.Fruit(), (r,c)):
-                    item_amount -= 1
+                new_item = item.Dart()
+
+            if levelmanager.place_entity(currlevel.z, new_item, (r,c)):
+                item_amount -= 1
+
 

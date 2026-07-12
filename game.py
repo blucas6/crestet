@@ -146,6 +146,8 @@ class Game:
 
     def main(self):
         '''Main loop'''
+        if not self.running:
+            return
         try:
             self.render()
             while self.running:

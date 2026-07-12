@@ -285,6 +285,20 @@ class Inventory:
             if self.quiver.Group.group_up(entity):
                 return True
         return False
+    
+    def fire_quiver(self):
+        if self.quiver is None:
+            return None
+        else:
+            if hasattr(self.quiver, 'Group'):
+                entity = self.quiver.Group.pop_one()
+                if entity.id == self.quiver.id:
+                    self.quiver = None
+                return entity
+            else:
+                entity = self.quiver
+                self.quiver = None
+                return entity 
 
 class Stackable:
     '''
@@ -369,6 +383,15 @@ class Group:
         self.stack_name = stack_name
         self.stack_glyph = stack_glyph
         self.stacked = False
+
+    def pop_one(self):
+        if self.stacked:
+            self.amount -= 1
+            if self.amount <= 1:
+                self.unstack()
+            return type(self.parent)()
+        else:
+            return self.parent
 
     def stack(self):
         self.stacked = True
