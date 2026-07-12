@@ -1,4 +1,5 @@
 import entity as e
+import logger
 import animation
 import config
 import color
@@ -22,13 +23,21 @@ class Goblin(e.Entity):
                                      blockinglayer=e.Layer.MONST_LAYER,
                                      attacks=[e.AttackType.THROW,
                                               e.AttackType.MELEE])
-        self.Inventory = component.Inventory()
+        self.Inventory = component.Inventory(
+                autopickuplist=['Dart', 'Dart Stack']
+                )
         self.speed = e.Speed.SLOW
         self.xp = config.GOBLIN_XP
+
         self.Inventory.equip(item.Bite())
+        for _ in range(5):
+            self.Inventory.add_to_bag(item.Dart())
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine):
         '''Uses brain to select an action'''
+        logger.Logger.log(f'Goblin: {self.Inventory.quiver}')
+        if self.Inventory.has_ammo():
+            logger.Logger.log(f'Goblin Ammo: {self.Inventory.quiver.Group.amount}')
         self.do_action(
             levelmanager,
             animator,
@@ -38,15 +47,10 @@ class Goblin(e.Entity):
             self.Brain.get_action(
                 levelmanager.Levels[self.z],
                 [self.row,self.col],
-                self.energy
+                self.energy,
+                self.Inventory
             )
         )
-
-    def fire(self, levelmanager, animator, messager, event):
-        '''Throw in a direction'''
-        if event[1].isdigit():
-            direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
-            return self.throw(levelmanager, animator, messager, item.Arrow(), direction)
         
 class Human(e.Entity):
     '''

@@ -286,19 +286,23 @@ class Inventory:
                 return True
         return False
     
+    def has_ammo(self):
+        if self.quiver is None:
+            return False
+        return True
+    
     def fire_quiver(self):
         if self.quiver is None:
             return None
-        else:
-            if hasattr(self.quiver, 'Group'):
-                entity = self.quiver.Group.pop_one()
-                if entity.id == self.quiver.id:
-                    self.quiver = None
-                return entity
-            else:
-                entity = self.quiver
+        elif hasattr(self.quiver, 'Group'):
+            entity = self.quiver.Group.pop_one()
+            if entity.id == self.quiver.id:
                 self.quiver = None
-                return entity 
+            return entity
+        else:
+            entity = self.quiver
+            self.quiver = None
+            return entity 
 
 class Stackable:
     '''
@@ -464,19 +468,22 @@ class Brain:
         '''Highest level (exclusive) FOV will see through'''
         self.attacks = attacks
 
-    def get_action(self, currlevel, mypos, energy):
+    def get_action(self, currlevel, mypos, energy, inventory=None):
         '''Returns an action'''
         pts = self.getFOV(currlevel, mypos)
         playerpos = self.find_player(currlevel, pts)
         if playerpos:
             for attack in self.attacks:
-                if attack == entity.AttackType.THROW and self.throw_attack_possible(mypos, playerpos):
+                if (attack == entity.AttackType.THROW and
+                    self.throw_attack_possible(mypos, playerpos, inventory)):
                     return self.throw_attack(mypos, playerpos)
                 elif attack == entity.AttackType.MELEE:
                     return self.find_path(currlevel.EntityLayer, mypos, playerpos)
         return '.'
 
-    def throw_attack_possible(self, mypos, playerpos):
+    def throw_attack_possible(self, mypos, playerpos, inventory):
+        if not inventory.has_ammo():
+            return False
         drow = abs(mypos[0] - playerpos[0])
         dcol = abs(mypos[1] - playerpos[1])
         if drow == 0 or dcol == 0 or drow == dcol:

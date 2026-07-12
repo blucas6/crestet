@@ -392,7 +392,13 @@ class Game:
         '''Process all events that are player actions'''
         # Multi key action
         if event == 't' or event == '5' or event == 'e' or event == 'u' or event == 'F':
-            if event == 'e':
+            if event == 't':
+                if not self.LevelManager.Player.Inventory.has_ammo():
+                    self.Messager.add_message('No ammo')
+                    return state.Event.CLEAR,event
+                else:
+                    self.Messager.add_message('Direction?')
+            elif event == 'e':
                 self.Messager.add_message('Equip what?')
             elif event == 'u':
                 self.Messager.add_message('Unequip what?')

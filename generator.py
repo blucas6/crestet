@@ -110,8 +110,6 @@ class Generator:
                 downstair_pos = self.generate_downstair(levelmanager, currlevel, level_layout)
             # clear path before any items are placed
             if z == config.PLAYERZ:
-                # make sure player can be placed
-                levelmanager.place_entity(currlevel.z, tower.Floor(), config.PLAYERPOS, overwrite=True)
                 if level_layout.upstair:
                     logger.Logger.log(f'Clearing path for player')
                     # make path for player to upstair
@@ -124,6 +122,9 @@ class Generator:
                 self.generate_mons(levelmanager, currlevel, level_layout.mons)
             if level_layout.items > 0:
                 self.generate_items(levelmanager, currlevel, level_layout.items)
+            # make sure player can be placed, even after placing all items down
+            if z == config.PLAYERZ:
+                levelmanager.place_entity(currlevel.z, tower.Floor(), config.PLAYERPOS, overwrite=True)
         logger.Logger.log(f'----- FINISHED LEVEL GENERATION -----')
 
     def generate_floor(self, levelmanager: level.LevelManager, currlevel: level.Level):

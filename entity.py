@@ -125,9 +125,13 @@ class Entity:
         '''
         self.energy = 0
 
-    def on_placed(self, *_):
+    def on_placed(self, levelmanager, messager):
         '''Hook gets called when an entity is placed on the level'''
-        pass
+
+        # check for auto pickup
+        if hasattr(self, 'Inventory'):
+            entitylist = levelmanager.Levels[self.z].EntityLayer[self.row][self.col]
+            self.Inventory.autopickup(levelmanager, entitylist)
 
     def on_top(self, entity, levelmanager):
         '''Hook gets called when another entity is placed in the same square'''
@@ -222,6 +226,25 @@ class Entity:
             entity.death(levelmanager, animator, messager)
             return True
         return False
+
+    def fire(self, levelmanager, animator, messager, event):
+        '''Checks the inventory for the quiver item and calls throw()'''
+        # need inventory component
+        if not hasattr(self, 'Inventory'):
+            return
+        if event[1].isdigit():
+            direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
+            if self.energy < self.speed:
+                logger.Logger.log(f'[{self.name}|{self.id}]: Firing not enough energy')
+                return
+            fired_entity = self.Inventory.fire_quiver()
+            if fired_entity is None:
+                return
+            return self.throw(levelmanager,
+                              animator,
+                              messager,
+                              fired_entity,
+                              direction)
     
     def death(self, levelmanager, *_):
         '''Entities can add to this method to trigger on death actions'''
@@ -230,8 +253,6 @@ class Entity:
 
     def throw(self, levelmanager, animator, messager, entity, direction: tuple=(), target: tuple=()):
         '''
-        Child classes should use their own methods to call this base method 
-
         If direction is included, the entity will be thrown in that direction
         until it hits a wall layer
 

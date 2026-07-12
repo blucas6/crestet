@@ -104,12 +104,6 @@ class Player(e.Entity):
                 if col:
                     self.mentalmap[r][c] = level.EntityLayer[r][c]
 
-    def fire(self, levelmanager, animator, messager, event):
-        '''Throw in a direction'''
-        if event[1].isdigit():
-            direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
-            return self.throw(levelmanager, animator, messager, item.Dart(), direction)
-
     def get_damage(self):
         '''Choose damage source'''
         if self.Charge.charging:
@@ -122,13 +116,16 @@ class Player(e.Entity):
         Activates when an entity is placed on a square
         Checks the rest of the entities already on the square
         '''
+        super().on_placed(levelmanager, messager)
         entitylist = levelmanager.Levels[self.z].EntityLayer[self.row][self.col]
         for ent in entitylist:
             # check to auto eat anything
             if hasattr(ent, 'Edible') and hasattr(self, 'Health'):
                 ent.Edible.get_eaten(levelmanager, messager, self)
+        '''
         # check to auto pick up anything
         self.Inventory.autopickup(levelmanager, entitylist)
+        '''
 
     def on_zchange(self):
         self.clear_memory()
