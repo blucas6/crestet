@@ -1,5 +1,5 @@
 {
-   "total_levels": 10,
+   "total_levels": 3,
    "light_amount": 5,
    "wall_shapes": [
       [
@@ -28,19 +28,21 @@
       "outer_walls": true,
       "upstair": true,
       "downstair": false,
-      "min_walls": 1,
+      "min_walls": 20,
       "lights": true,
-      "mons": 1,
-      "items": 0
+      "mons": 3,
+      "items": 5,
+      "runes": 1
    },
    "1": {
       "floor": true,
       "outer_walls": true,
       "upstair": true,
       "downstair": true,
-      "min_walls": 1,
+      "min_walls": 50,
       "lights": true,
-      "mons": 1,
-      "items": 0
+      "mons": 5,
+      "items": 5,
+      "runes": 1
    }
 }
