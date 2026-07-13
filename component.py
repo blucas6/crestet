@@ -168,9 +168,8 @@ class Inventory:
         # QUIVER
         if entity.ItemType == ItemType.QUIVER:
             if self.quiver:
-                if self.quiver.name != entity.name:
-                    self.add_to_bag(self.quiver)
-                self.quiver = entity
+                self.add_to_bag(self.quiver)
+            self.quiver = entity
         # WEARABLE
         elif entity.ItemType == ItemType.HEAD:
             if self.head:
@@ -195,35 +194,32 @@ class Inventory:
         elif entity.ItemType == ItemType.ABILITY:
             self.ability = entity
 
+    def collect(self, entity):
+        '''Entrance for items being added into the inventory'''
+        logger.Logger.log(f'Collecting: {entity}')
+
+        # try to add it to the quiver
+        if hasattr(entity, 'ItemType') and entity.ItemType == ItemType.QUIVER:
+            if self.add_to_quiver(entity):
+                return
+
+        # default to bag
+        self.add_to_bag(entity)
+
     def add_to_bag(self, entity):
-        '''Handles adding objects to the bag'''
-        logger.Logger.log(f'Adding to bag: {entity}')
+        '''Handles adding objects directly to the bag'''
+
+        # check for grouping first before adding to bag
+        if hasattr(entity, 'Group'):
+            for ent in self.contents:
+                if hasattr(ent, 'Group'):
+                    if ent.Group.group_up(entity):
+                        logger.Logger.log(f'Inventory grouped: {ent} {entity}')
+                        return
+
+        # default is add to bag
         self.contents.append(entity)
         entity.idx = len(self.contents)-1
-        # Stack / Stackable items
-        if hasattr(entity, 'Stack'):
-            entity.Stack.check_entitylist(entity, self.contents)
-        elif hasattr(entity, 'Stackable'):
-            entity.Stackable.check_entitylist(entity, self.contents)
-    
-    def unequip(self, entity):
-        '''
-        Pass in an entity to set the corresponding slot to empty and place
-        the entity into the bag
-        '''
-        if self.quiver and self.quiver.id == entity.id:
-            self.quiver = None
-        elif self.head and self.head.id == entity.id:
-            self.head = None
-        elif self.body and self.body.id == entity.id:
-            self.body = None
-        elif self.feet and self.feet.id == entity.id:
-            self.feet = None
-        elif self.mainHand and self.mainHand.id == entity.id:
-            self.mainHand = None
-        elif self.offHand and self.offHand.id == entity.id:
-            self.offHand = None
-        self.add_to_bag(entity)
 
     def get_damage(self):
         '''Based on the slot information calculate the damage'''
@@ -237,9 +233,9 @@ class Inventory:
         return damage
     
     def pick_up(self, levelmanager, entity):
-        '''Pass in an entity to add it to the bag'''
+        '''Pass in an entity to add it to the inventory'''
         ent = levelmanager.remove_entity(entity)
-        self.add_to_bag(entity)
+        self.collect(ent)
 
     def drop(self):
         '''Place an entity to the ground'''
@@ -262,83 +258,109 @@ class Inventory:
             entity,valid = self.get_entity_from_key(key)
             logger.Logger.log(f'Unequipping: {entity}')
             if entity:
-                self.unequip(entity)
+                self.add_to_bag(entity)
             elif not valid:
                 messager.add_message('Invalid inventory key!')
 
-class Stackable:
-    '''
-    Stackable component, entities will combine into the passed in type
-    '''
-    def __init__(self, stack):
-        self.stack = stack
-        '''Entity stacked form'''
-
-    def get_stack(self):
-        '''Returns the stacked form of the entity'''
-        return self.stack()
-
-    def check_entitylist(self, myself, entitylist):
-        '''
-        Modify entity list if there is a stackable object that works with this object
-        Works with any entity list
-        Entity (myself) must be placed in the list first
-        '''
-        for ent in entitylist:
-            if ent.id == myself.id:
-                continue
-            if hasattr(ent, 'Stack') and ent.Stack.unstack == type(myself):
-                ent.Stack.add_to_stack()
-                entitylist.pop(myself.idx)
-                return
-            elif type(myself) == type(ent):
-                logger.Logger.log(f'Stackable component: ent{ent} myself{myself} {entitylist}')
-                stack = ent.Stackable.get_stack()
-                stack.Stack.add_to_stack(2)
-                entitylist[ent.idx] = stack
-                stack.set_pos(myself.row, myself.col, myself.z, ent.idx)
-                entitylist.pop(myself.idx)
-                logger.Logger.log(f'Stackable component: after {entitylist}')
-                return
-
-class Stack:
-    '''
-    Stack component, if an entity is a stack of entities
-    '''
-    def __init__(self, unstack):
-        self.unstack = unstack
-        '''Unstacked single entity form'''
-        self.amount = 0
-        '''Keep track of amount of entities stacked'''
+    def add_to_quiver(self, entity):
+        '''Tries to add an item to the quiver, returns False if it cannot'''
+        # try to slot it
+        if self.quiver is None:
+            self.quiver = entity
+            return True
+        # try to group on it
+        elif hasattr(self.quiver, 'Group'):
+            if self.quiver.Group.group_up(entity):
+                return True
+        return False
     
-    def add_to_stack(self, am=1):
-        '''Add to the amount of stacked entities'''
-        self.amount += am
-
-    def get_one(self):
-        '''Unstack one entity and return the unstacked single form'''
-        self.amount -= 1
-        return self.unstack()
-
-    def check_entitylist(self, myself, entitylist):
+    def has_ammo(self):
+        '''Simple check if there is ammo for the quiver to shoot'''
+        if self.quiver is None:
+            return False
+        return True
+    
+    def fire_quiver(self):
         '''
-        Modify entity list if there is a stackable object that works with this object
-        Works with any entity list
-        Entity (myself) must be placed in the list first
+        Returns the entity being fired from the quiver
+        Returns None if there is no entity
         '''
-        for ent in entitylist:
-            if ent.id == myself.id:
-                continue
-            if hasattr(ent, 'Stackable') and ent.Stackable.stack == type(myself):
-                self.add_to_stack()
-                entitylist.pop(myself.idx)
-                entitylist[ent.idx] = myself
-                myself.set_pos(myself.row, myself.col, myself.z, ent.idx)
-                return
-            elif hasattr(ent, 'Stack') and type(myself) == type(ent):
-                entitylist.pop(myself.idx)
-                ent.Stack.add_to_stack(self.amount)
-                return
+        if self.quiver is None:
+            return None
+        elif hasattr(self.quiver, 'Group'):
+            entity = self.quiver.Group.pop_one()
+            if entity.id == self.quiver.id:
+                self.quiver = None
+            return entity
+        else:
+            entity = self.quiver
+            self.quiver = None
+            return entity 
+
+class Group:
+    '''Group component, if an entity can group up with others of the same type'''
+    def __init__(self, parent, unstack_name, unstack_glyph, stack_name, stack_glyph):
+        self.parent = parent
+        '''Parent entity of the component'''
+        self.amount = 1
+        '''Current amount of the entities in the group'''
+        self.unstack_name = unstack_name
+        '''Name of the entity when not stacked'''
+        self.unstack_glyph = unstack_glyph
+        '''Glyph of the entity when not stacked'''
+        self.stack_name = stack_name
+        '''Name of the entity when stacked'''
+        self.stack_glyph = stack_glyph
+        '''Glyph of the entity when stacked'''
+        self.stacked = False
+        '''Tracks if the entity is stacked or not'''
+
+    def pop_one(self):
+        '''
+        Returns one of the entities in the stack
+        Will unstack itself if there are less than 2 entities
+        '''
+        if self.stacked:
+            self.amount -= 1
+            if self.amount < 2:
+                self.unstack()
+            return type(self.parent)()
+        else:
+            return self.parent
+
+    def stack(self):
+        '''Turn the parent entity into it's stacked form'''
+        self.stacked = True
+        self.parent.name = self.stack_name
+        self.parent.glyph = self.stack_glyph
+
+    def unstack(self):
+        '''Turn the parent entity into it's regular form'''
+        self.stacked = False
+        self.parent.name = self.unstack_name 
+        self.parent.glyph = self.unstack_glyph 
+
+    def group_up(self, new_entity):
+        '''
+        Add the entity passed in to the stack if able, otherwise return False
+        '''
+        if type(new_entity) == type(self.parent) and hasattr(new_entity, 'Group'):
+            self.amount += new_entity.Group.amount
+            if not self.stacked:
+                self.stack()
+            return True
+        return False
+
+    def check_square(self, entity, levelmanager):
+        '''
+        Pass an entity and remove it if it gets added to this stack
+        '''
+        level = levelmanager.Levels[entity.z]
+        entitylist = level.EntityLayer[entity.row][entity.col]
+        if not entity in entitylist:
+            return
+        if self.group_up(entity):
+            levelmanager.remove_entity(entity)
 
 class Health:
     '''
@@ -378,20 +400,52 @@ class Brain:
     '''
     Brain component, if an entity needs to make decisions
     '''
-    def __init__(self, sightrange, blockinglayer):
+    def __init__(self, sightrange, blockinglayer, attacks=[]):
         self.sightrange = sightrange
         '''How far FOV will check'''
         self.blockinglayer = blockinglayer
         '''Highest level (exclusive) FOV will see through'''
+        self.attacks = attacks
+        '''List of AttackType enums'''
 
-    def get_action(self, currlevel, mypos, energy):
+    def get_action(self, currlevel, mypos, energy, inventory=None):
         '''Returns an action'''
         pts = self.getFOV(currlevel, mypos)
+        playerpos = self.find_player(currlevel, pts)
+        # if the player is near, try to attack
+        if playerpos:
+            # go through possible attacks
+            for attack in self.attacks:
+                if (attack == entity.AttackType.THROW and
+                    self.throw_attack_possible(mypos, playerpos, inventory)):
+                    return self.throw_attack(mypos, playerpos)
+                elif attack == entity.AttackType.MELEE:
+                    return self.find_path(currlevel.EntityLayer, mypos, playerpos)
+        # rest if not able to do anything
+        return '.'
+
+    def throw_attack_possible(self, mypos, playerpos, inventory):
+        '''Check if the player is reachable by a throw'''
+        if not inventory.has_ammo():
+            return False
+        drow = abs(mypos[0] - playerpos[0])
+        dcol = abs(mypos[1] - playerpos[1])
+        if drow == 0 or dcol == 0 or drow == dcol:
+            return True
+        return False
+
+    def throw_attack(self, mypos, playerpos):
+        '''Get the throw command'''
+        d = self.move_towards_pt(mypos, playerpos)
+        return 't' + str(d)
+
+    def find_player(self, currlevel, pts):
+        '''In a set of FOV points, check if the player exists'''
         for pt in pts:
             for ent in currlevel.EntityLayer[pt[0]][pt[1]]:
                 if ent.name == 'Player':
-                    return self.find_path(currlevel.EntityLayer, mypos, pt)
-        return '.'
+                    return pt
+        return None
 
     def find_path(self, entitylayer, mypos, playerpos):
         '''Finds a path using A* to the player position'''

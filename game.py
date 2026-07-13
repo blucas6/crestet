@@ -147,6 +147,8 @@ class Game:
 
     def main(self):
         '''Main loop'''
+        if not self.running:
+            return
         try:
             self.render()
             while self.running:
@@ -423,8 +425,17 @@ class Game:
         '''Process all events that are player actions'''
         # Multi key action
         if event == 't' or event == '5' or event == 'e' or event == 'u' or event == 'F':
-            if event == 'e':
+            # throw
+            if event == 't':
+                if not self.LevelManager.Player.Inventory.has_ammo():
+                    self.Messager.add_message('No ammo')
+                    return state.Event.CLEAR,event
+                else:
+                    self.Messager.add_message('Direction?')
+            # equip
+            elif event == 'e':
                 self.Messager.add_message('Equip what?')
+            # unequip
             elif event == 'u':
                 self.Messager.add_message('Unequip what?')
             else:
