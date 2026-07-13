@@ -31,6 +31,7 @@ class GameState(enum.Enum):
     RUNNING = 5
     INTERACTING = 6
     LOOKING = 7
+    VIEWING = 8
 
 class StateMachine:
     def __init__(self):
@@ -71,6 +72,8 @@ class StateMachine:
             self.GameState = GameState.INTERACTING
         elif newstate == 'looking' and self.GameState == GameState.PLAYING:
             self.GameState = GameState.LOOKING
+        elif newstate == 'viewing' and self.GameState == GameState.PLAYING:
+            self.GameState = GameState.VIEWING
 
         logger.Logger.log(f'NEW STATE: {newstate} RESULT: {self.GameState}')
 
