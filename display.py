@@ -41,26 +41,10 @@ class Display:
         self.colorbuffer = [[clr.Color().white for _ in range(self.termcols-1)] 
                                     for _ in range(self.termrows-1)]
 
-    def prepare_buffers(self, levelmanager, menumanager, useplayerFOV):
+    def prepare_buffers(self, entitylayer, lightlayer, menumanager):
         '''Build the buffers to send to the engine'''
 
         self.clear_buffers()
-
-        level = levelmanager.get_curr_level()
-
-        # get the either the entire level or the FOV
-        if useplayerFOV:
-            entitylayer = levelmanager.Player.mentalmap
-        elif level:
-            entitylayer = level.EntityLayer
-        else:
-            entitylayer = []
-
-        # make sure there is a level to grab from
-        if level:
-            lightlayer = level.LightLayer
-        else:
-            lightlayer = []
 
         # go through entity layer
         self.render_entitylayer(entitylayer)

@@ -39,6 +39,7 @@ class Game:
         '''Keeps track of game turn'''
         self.playerFOV = True
         '''Use player FOV to generate map'''
+        self.viewing_level = -1
 
         # Objects
         self.StateMachine = state.StateMachine()
@@ -192,7 +193,7 @@ class Game:
         return eventtype,event
 
     def clear_state(self):
-        '''Clears the current message'''
+        '''Clears all active states'''
         # clear the message queue
         self.MenuManager.MessageMenu.clear()
         # grab new message
@@ -203,6 +204,8 @@ class Game:
         if self.Display.cursor_on:
             self.Engine.toggle_cursor(0)
             self.Display.cursor_on = False
+        # clear viewing level 
+        self.viewing_level = -1
 
     def loop(self, event):
         '''
@@ -273,10 +276,28 @@ class Game:
         # do animations before the screen changes 
         self.animations(self.Display.screenbuffer, self.Display.colorbuffer)
 
-        # get buffers
-        screenbuffer,colorbuffer = self.Display.prepare_buffers(self.LevelManager,
-                                                                self.MenuManager,
-                                                                self.playerFOV)
+        if self.StateMachine.GameState == state.GameState.VIEWING:
+            currlevel = self.LevelManager.Levels[self.viewing_level]
+        else:
+            currlevel = self.LevelManager.get_curr_level()
+
+        # get the either the entire level or the FOV
+        if self.playerFOV:
+            entitylayer = self.LevelManager.Player.mentalmap
+        elif currlevel:
+            entitylayer = currlevel.EntityLayer
+        else:
+            entitylayer = []
+
+        # make sure there is a level to grab from
+        if currlevel:
+            lightlayer = currlevel.LightLayer
+        else:
+            lightlayer = []
+
+        screenbuffer,colorbuffer = self.Display.prepare_buffers(entitylayer,
+                                                                lightlayer,
+                                                                self.MenuManager)
         # display through engine
         if self.usedisplay and self.Engine.frame_ready():
             # output
@@ -369,6 +390,18 @@ class Game:
             self.Messager.add_message(msg)
         return state.Event.BLANK, event
 
+    def view_event(self, event):
+        if self.viewing_level == -1:
+            self.viewing_level = self.LevelManager.Player.z
+        if event == '<':
+            if self.viewing_level + 1 < len(self.LevelManager.Levels):
+                self.viewing_level += 1
+        elif event == '>':
+            if self.viewing_level - 1 >= 0:
+                self.viewing_level -= 1
+        self.Messager.add_message(f'Viewing Level: {self.viewing_level}')
+        return state.Event.BLANK, event
+    
     def motion_event(self, event):
         '''Handles events that are part of a motion'''
         self.StateMachine.new_state('done')
@@ -454,6 +487,13 @@ class Game:
                 self.Display.cursor_position = [prow,pcol]
                 self.Messager.add_message('-- Observation Tool --')
             return state.Event.BLANK,event
+        elif event == 'v':
+            # START VIEW MODE
+            self.StateMachine.new_state('viewing')
+            if self.StateMachine.GameState == state.GameState.VIEWING:
+                self.Messager.add_message('-- View Mode --')
+                self.viewing_level = self.LevelManager.Player.z
+            return state.Event.BLANK,event
         elif event == ' ' or event == chr(curses.ascii.ESC):
             # DO NOTHING - clears msg queue and previous event
             self.previousevent = ''
@@ -471,6 +511,9 @@ class Game:
         elif self.StateMachine.GameState == state.GameState.LOOKING:
             # OBSERVATION TOOL
             return self.observation_event(event)
+        elif self.StateMachine.GameState == state.GameState.VIEWING:
+            # VIEW MODE
+            return self.view_event(event)
 
         # Defaults to returning NA for no action
         return state.Event.NA,event
