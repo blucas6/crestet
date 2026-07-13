@@ -7,10 +7,12 @@ import logger
 import enum
 
 class AttackType(enum.Enum):
+    '''Possible attack options'''
     THROW = 0
     MELEE = 1
 
 class MoveAction(enum.Enum):
+    '''Results of a move request'''
     INVALID = 0
     NOENERGY = 1
     ATTACKED = 2
@@ -126,7 +128,11 @@ class Entity:
         self.energy = 0
 
     def on_placed(self, levelmanager, messager):
-        '''Hook gets called when an entity is placed on the level'''
+        '''
+        Hook gets called when an entity is placed on the level
+
+        Base class checks for Inventory auto pickup
+        '''
 
         # check for auto pickup
         if hasattr(self, 'Inventory'):
@@ -134,7 +140,11 @@ class Entity:
             self.Inventory.autopickup(levelmanager, entitylist)
 
     def on_top(self, entity, levelmanager):
-        '''Hook gets called when another entity is placed in the same square'''
+        '''
+        Hook gets called when another entity is placed in the same square
+        
+        Base class checks for stacking
+        '''
         if hasattr(self, 'Group'):
             self.Group.check_square(entity, levelmanager)
 
@@ -233,13 +243,16 @@ class Entity:
         if not hasattr(self, 'Inventory'):
             return
         if event[1].isdigit():
+            # get the direction
             direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
             if self.energy < self.speed:
                 logger.Logger.log(f'[{self.name}|{self.id}]: Firing not enough energy')
                 return
+            # get the ammo entity
             fired_entity = self.Inventory.fire_quiver()
             if fired_entity is None:
                 return
+            # throw
             return self.throw(levelmanager,
                               animator,
                               messager,

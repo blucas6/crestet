@@ -122,10 +122,6 @@ class Player(e.Entity):
             # check to auto eat anything
             if hasattr(ent, 'Edible') and hasattr(self, 'Health'):
                 ent.Edible.get_eaten(levelmanager, messager, self)
-        '''
-        # check to auto pick up anything
-        self.Inventory.autopickup(levelmanager, entitylist)
-        '''
 
     def on_zchange(self):
         self.clear_memory()

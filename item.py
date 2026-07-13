@@ -74,9 +74,9 @@ class Dart(e.Entity):
         self.ItemType = component.ItemType.QUIVER
         self.Group = component.Group(
                 parent = self,
-                unstack_name = 'Dart',
-                unstack_glyph = ')',
-                stack_name = 'Dart Stack',
+                unstack_name = self.name,
+                unstack_glyph = self.glyph,
+                stack_name = self.name + ' Stack',
                 stack_glyph = '≡',
                 )
 

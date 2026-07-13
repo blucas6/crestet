@@ -207,7 +207,7 @@ class Inventory:
         self.add_to_bag(entity)
 
     def add_to_bag(self, entity):
-        '''Handles adding objects to the bag'''
+        '''Handles adding objects directly to the bag'''
 
         # check for grouping first before adding to bag
         if hasattr(entity, 'Group'):
@@ -233,9 +233,9 @@ class Inventory:
         return damage
     
     def pick_up(self, levelmanager, entity):
-        '''Pass in an entity to add it to the bag'''
+        '''Pass in an entity to add it to the inventory'''
         ent = levelmanager.remove_entity(entity)
-        self.collect(entity)
+        self.collect(ent)
 
     def drop(self):
         '''Place an entity to the ground'''
@@ -263,20 +263,28 @@ class Inventory:
                 messager.add_message('Invalid inventory key!')
 
     def add_to_quiver(self, entity):
+        '''Tries to add an item to the quiver, returns False if it cannot'''
+        # try to slot it
         if self.quiver is None:
             self.quiver = entity
             return True
+        # try to group on it
         elif hasattr(self.quiver, 'Group'):
             if self.quiver.Group.group_up(entity):
                 return True
         return False
     
     def has_ammo(self):
+        '''Simple check if there is ammo for the quiver to shoot'''
         if self.quiver is None:
             return False
         return True
     
     def fire_quiver(self):
+        '''
+        Returns the entity being fired from the quiver
+        Returns None if there is no entity
+        '''
         if self.quiver is None:
             return None
         elif hasattr(self.quiver, 'Group'):
@@ -290,35 +298,52 @@ class Inventory:
             return entity 
 
 class Group:
+    '''Group component, if an entity can group up with others of the same type'''
     def __init__(self, parent, unstack_name, unstack_glyph, stack_name, stack_glyph):
         self.parent = parent
+        '''Parent entity of the component'''
         self.amount = 1
+        '''Current amount of the entities in the group'''
         self.unstack_name = unstack_name
+        '''Name of the entity when not stacked'''
         self.unstack_glyph = unstack_glyph
+        '''Glyph of the entity when not stacked'''
         self.stack_name = stack_name
+        '''Name of the entity when stacked'''
         self.stack_glyph = stack_glyph
+        '''Glyph of the entity when stacked'''
         self.stacked = False
+        '''Tracks if the entity is stacked or not'''
 
     def pop_one(self):
+        '''
+        Returns one of the entities in the stack
+        Will unstack itself if there are less than 2 entities
+        '''
         if self.stacked:
             self.amount -= 1
-            if self.amount <= 1:
+            if self.amount < 2:
                 self.unstack()
             return type(self.parent)()
         else:
             return self.parent
 
     def stack(self):
+        '''Turn the parent entity into it's stacked form'''
         self.stacked = True
         self.parent.name = self.stack_name
         self.parent.glyph = self.stack_glyph
 
     def unstack(self):
+        '''Turn the parent entity into it's regular form'''
         self.stacked = False
         self.parent.name = self.unstack_name 
         self.parent.glyph = self.unstack_glyph 
 
     def group_up(self, new_entity):
+        '''
+        Add the entity passed in to the stack if able, otherwise return False
+        '''
         if type(new_entity) == type(self.parent) and hasattr(new_entity, 'Group'):
             self.amount += new_entity.Group.amount
             if not self.stacked:
@@ -327,6 +352,9 @@ class Group:
         return False
 
     def check_square(self, entity, levelmanager):
+        '''
+        Pass an entity and remove it if it gets added to this stack
+        '''
         level = levelmanager.Levels[entity.z]
         entitylist = level.EntityLayer[entity.row][entity.col]
         if not entity in entitylist:
@@ -378,21 +406,26 @@ class Brain:
         self.blockinglayer = blockinglayer
         '''Highest level (exclusive) FOV will see through'''
         self.attacks = attacks
+        '''List of AttackType enums'''
 
     def get_action(self, currlevel, mypos, energy, inventory=None):
         '''Returns an action'''
         pts = self.getFOV(currlevel, mypos)
         playerpos = self.find_player(currlevel, pts)
+        # if the player is near, try to attack
         if playerpos:
+            # go through possible attacks
             for attack in self.attacks:
                 if (attack == entity.AttackType.THROW and
                     self.throw_attack_possible(mypos, playerpos, inventory)):
                     return self.throw_attack(mypos, playerpos)
                 elif attack == entity.AttackType.MELEE:
                     return self.find_path(currlevel.EntityLayer, mypos, playerpos)
+        # rest if not able to do anything
         return '.'
 
     def throw_attack_possible(self, mypos, playerpos, inventory):
+        '''Check if the player is reachable by a throw'''
         if not inventory.has_ammo():
             return False
         drow = abs(mypos[0] - playerpos[0])
@@ -402,10 +435,12 @@ class Brain:
         return False
 
     def throw_attack(self, mypos, playerpos):
+        '''Get the throw command'''
         d = self.move_towards_pt(mypos, playerpos)
         return 't' + str(d)
 
     def find_player(self, currlevel, pts):
+        '''In a set of FOV points, check if the player exists'''
         for pt in pts:
             for ent in currlevel.EntityLayer[pt[0]][pt[1]]:
                 if ent.name == 'Player':
