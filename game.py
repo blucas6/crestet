@@ -508,6 +508,11 @@ class Game:
             # TOGGLE FOV
             self.playerFOV = not self.playerFOV
             return state.Event.BLANK,event
+        elif event == ' ' or event == chr(curses.ascii.ESC):
+            # DO NOTHING - clears msg queue and previous event
+            self.previousevent = ''
+            self.StateMachine.new_state('done')
+            return state.Event.CLEAR,event
         elif event == 'o':
             # START OBSERVATION TOOL
             self.StateMachine.new_state('looking')
@@ -524,11 +529,6 @@ class Game:
                 self.Messager.add_message('-- View Mode --')
                 self.viewing_level = self.LevelManager.Player.z
             return state.Event.BLANK,event
-        elif event == ' ' or event == chr(curses.ascii.ESC):
-            # DO NOTHING - clears msg queue and previous event
-            self.previousevent = ''
-            self.StateMachine.new_state('done')
-            return state.Event.CLEAR,event
         elif self.StateMachine.GameState == state.GameState.MOTION:
             # MOTION
             return self.motion_event(event)

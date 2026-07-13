@@ -58,7 +58,8 @@ class StateMachine:
             self.GameState = GameState.MOTION
         elif newstate == 'done' and (self.GameState == GameState.MOTION or
                                      self.GameState == GameState.INTERACTING or
-                                     self.GameState == GameState.LOOKING):
+                                     self.GameState == GameState.LOOKING or
+                                     self.GameState == GameState.VIEWING):
             # end the key motion
             self.GameState = GameState.PLAYING
         elif newstate == 'startrun' and self.GameState == GameState.PLAYING:
