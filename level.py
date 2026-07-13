@@ -107,8 +107,8 @@ class LevelManager:
             # trigger the on top hook because entity was placed on top of other entities
             for ent in level.EntityLayer[r][c]:
                 if ent.id != entity.id:
-                    ent.on_top(self)
-        #logger.Logger.log(f'Entity {entity.name} placed at {entity.pos()}')
+                    ent.on_top(entity, self)
+        logger.Logger.log(f'Entity {entity.name} placed at {entity.pos()}')
         return True
 
     def is_entity_pos_valid(self, level, entity, pos, overwrite=False):

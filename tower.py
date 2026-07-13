@@ -81,7 +81,7 @@ class Light(entity.Entity):
             for pt in points:
                 levelmanager.Levels[self.z].LightLayer[pt[0]][pt[1]] = 1
     
-    def on_top(self, levelmanager):
+    def on_top(self, entity, levelmanager):
         '''Trigger the light on or off'''
         self.light = not self.light
         logger.Logger.log(f'{self} ACTIVATED {self.light}!')

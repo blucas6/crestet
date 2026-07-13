@@ -1,4 +1,5 @@
 import entity as e
+import logger
 import animation
 import config
 import color
@@ -6,6 +7,51 @@ import component
 import utility
 import item
 
+class Goblin(e.Entity):
+    '''
+    Goblin creature
+    '''
+    def __init__(self):
+        super().__init__(typeid=17,
+                         name='Goblin',
+                         glyph='g',
+                         color=color.Color().green,
+                         layer=e.Layer.MONST_LAYER,
+                         size=e.Size.MEDIUM)
+        self.Health = component.Health(health=config.GOBLIN_HEALTH)
+        self.Brain = component.Brain(sightrange=config.GOBLIN_SIGHTRANGE,
+                                     blockinglayer=e.Layer.MONST_LAYER,
+                                     attacks=[e.AttackType.THROW,
+                                              e.AttackType.MELEE])
+        self.Inventory = component.Inventory(
+                autopickuplist=['Dart', 'Dart Stack']
+                )
+        self.speed = e.Speed.SLOW
+        self.xp = config.GOBLIN_XP
+
+        self.Inventory.equip(item.Bite())
+        for _ in range(5):
+            self.Inventory.collect(item.Dart())
+
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine):
+        '''Uses brain to select an action'''
+        logger.Logger.log(f'Goblin: {self.Inventory.quiver}')
+        if self.Inventory.has_ammo():
+            logger.Logger.log(f'Goblin Ammo: {self.Inventory.quiver.Group.amount}')
+        self.do_action(
+            levelmanager,
+            animator,
+            messager,
+            menumanager,
+            statemachine,
+            self.Brain.get_action(
+                levelmanager.Levels[self.z],
+                [self.row,self.col],
+                self.energy,
+                self.Inventory
+            )
+        )
+        
 class Human(e.Entity):
     '''
     Human
@@ -32,11 +78,11 @@ class Newt(e.Entity):
                          size=e.Size.MEDIUM)
         self.Health = component.Health(health=config.NEWT_HEALTH)
         self.Brain = component.Brain(sightrange=config.NEWT_SIGHTRANGE,
-                                     blockinglayer=e.Layer.MONST_LAYER)
+                                     blockinglayer=e.Layer.MONST_LAYER,
+                                     attacks=[e.AttackType.MELEE])
         self.Inventory = component.Inventory()
-        self.speed = e.Speed.SLOW
-        self.attackspeed = e.AttackSpeed.SLOW
-        self.xp = 1
+        self.speed = e.Speed.VERY_SLOW
+        self.xp = config.NEWT_XP
         self.Inventory.equip(item.Bite())
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine):

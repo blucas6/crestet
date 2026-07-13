@@ -6,7 +6,13 @@ import algo
 import logger
 import enum
 
+class AttackType(enum.Enum):
+    '''Possible attack options'''
+    THROW = 0
+    MELEE = 1
+
 class MoveAction(enum.Enum):
+    '''Results of a move request'''
     INVALID = 0
     NOENERGY = 1
     ATTACKED = 2
@@ -14,21 +20,16 @@ class MoveAction(enum.Enum):
     PUSHED = 4
     INTERACT = 5
 
-class AttackSpeed(enum.IntEnum):
-    '''Corresponding energy costs for attacking'''
-    VERY_SLOW = 7
-    SLOW = 6
-    AVERAGE = 5
-    FAST = 4
-    VERY_FAST = 3
-
 class Speed(enum.IntEnum):
     '''Corresponding energy costs for movements'''
-    VERY_SLOW = 55
-    SLOW = 30
-    AVERAGE = 12
-    FAST = 5
-    VERY_FAST = 3
+    CRAWLING = 64
+    VERY_SLOW = 51
+    SLOW = 37
+    AVERAGE = 26
+    MEDIUM = 15
+    FAST = 9
+    VERY_FAST = 4
+    HYPER = 1
 
 class Layer(enum.IntEnum):
     '''
@@ -103,7 +104,7 @@ class Entity:
 
     def __repr__(self):
         return f'[{self.name}|{self.id}|({self.row},{self.col},{self.z},{self.idx})]'
-
+    
     def pos(self):
         '''Used for getting the entire position'''
         return [self.row, self.col, self.z, self.idx]
@@ -126,13 +127,26 @@ class Entity:
         '''
         self.energy = 0
 
-    def on_placed(self, *_):
-        '''Hook gets called when an entity is placed on the level'''
-        pass
+    def on_placed(self, levelmanager, messager):
+        '''
+        Hook gets called when an entity is placed on the level
 
-    def on_top(self, *_):
-        '''Hook gets called when another entity is placed in the same square'''
-        pass
+        Base class checks for Inventory auto pickup
+        '''
+
+        # check for auto pickup
+        if hasattr(self, 'Inventory'):
+            entitylist = levelmanager.Levels[self.z].EntityLayer[self.row][self.col]
+            self.Inventory.autopickup(levelmanager, entitylist)
+
+    def on_top(self, entity, levelmanager):
+        '''
+        Hook gets called when another entity is placed in the same square
+        
+        Base class checks for stacking
+        '''
+        if hasattr(self, 'Group'):
+            self.Group.check_square(entity, levelmanager)
 
     def on_zchange(self, *_):
         '''Hook gets called when the entity changes z levels'''
@@ -205,7 +219,7 @@ class Entity:
         return self.move(levelmanager, (row,col))
 
     def attack(self, levelmanager, animator, messager, entity, damage):
-        '''Attack the entity passed in'''
+        '''Attack the entity passed in - does NOT check energy usage'''
         if hasattr(entity, 'Health'):
             logger.Logger.log(f'{self} dealing damage to {entity}: {damage} ')
             messager.add_damage_message(self, entity)
@@ -226,6 +240,28 @@ class Entity:
             entity.death(levelmanager, animator, messager)
             return True
         return False
+
+    def fire(self, levelmanager, animator, messager, event):
+        '''Checks the inventory for the quiver item and calls throw()'''
+        # need inventory component
+        if not hasattr(self, 'Inventory'):
+            return
+        if event[1].isdigit():
+            # get the direction
+            direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
+            if self.energy < self.speed:
+                logger.Logger.log(f'[{self.name}|{self.id}]: Firing not enough energy')
+                return
+            # get the ammo entity
+            fired_entity = self.Inventory.fire_quiver()
+            if fired_entity is None:
+                return
+            # throw
+            return self.throw(levelmanager,
+                              animator,
+                              messager,
+                              fired_entity,
+                              direction)
     
     def death(self, levelmanager, *_):
         '''Entities can add to this method to trigger on death actions'''
@@ -234,8 +270,6 @@ class Entity:
 
     def throw(self, levelmanager, animator, messager, entity, direction: tuple=(), target: tuple=()):
         '''
-        Child classes should use their own methods to call this base method 
-
         If direction is included, the entity will be thrown in that direction
         until it hits a wall layer
 
@@ -243,59 +277,70 @@ class Entity:
         position
         '''
         # make sure there is enough energy to throw
-        if hasattr(self, 'throwspeed') and self.energy >= self.throwspeed:
-            objr = self.row
-            objc = self.col
-            entitylayer = levelmanager.Levels[self.z].EntityLayer
-            if direction: 
-                # find the final position for the thrown object
-                # start object from entity position
-                while True:
-                    r,c = objr + direction[0], objc + direction[1]
-                    if entitylayer:
-                        maxlayer = max([x.layer for x in entitylayer[r][c]])
-                        # set final position at the monster
-                        if maxlayer == Layer.MONST_LAYER or maxlayer == Layer.BARREL_LAYER:
-                            objr, objc = r, c
-                            break
-                        # set final position before wall
-                        elif maxlayer == Layer.WALL_LAYER:
-                            break
-                    objr, objc = r, c
-                levelmanager.place_entity(self.z, entity, (objr,objc))
-            elif target:
-                # set to the target position
-                levelmanager.place_entity(self.z,
-                                          entity, (target[0],target[1]))
-                objr = entity.row
-                objc = entity.col
-            else:
-                logger.Logger.log(f'Error: invalid throw')
-                return
+        if not hasattr(self, 'speed'):
+            logger.Logger.log(f'Speed component missing')
+            return
+        if self.energy < self.speed:
+            logger.Logger.log(f'[{self.name}|{self.id}]: throwing not enough energy')
+            return
 
-            # construct a grid of [0-1] (makes sure path to end point is valid)
-            grid = [[1 if max([int(x.layer) for x in elist]) > Layer.BARREL_LAYER else 0
-                    for elist in row]
-                    for row in entitylayer]
-            returncode, pts = algo.astar(grid, (self.row,self.col), (objr,objc))
-            if returncode != 1:
-                logger.Logger.log(f'Error: failed to throw -> {returncode}')
-                return
+        objr = self.row
+        objc = self.col
+        entitylayer = levelmanager.Levels[self.z].EntityLayer
+        if direction: 
+            # find the final position for the thrown object
+            # start object from entity position
+            while True:
+                r,c = objr + direction[0], objc + direction[1]
+                if entitylayer:
+                    maxlayer = max([x.layer for x in entitylayer[r][c]])
+                    # set final position at the monster
+                    if maxlayer == Layer.MONST_LAYER or maxlayer == Layer.BARREL_LAYER:
+                        objr, objc = r, c
+                        break
+                    # set final position before wall
+                    elif maxlayer == Layer.WALL_LAYER:
+                        break
+                objr, objc = r, c
+            levelmanager.place_entity(self.z, entity, (objr,objc))
+        elif target:
+            # set to the target position
+            levelmanager.place_entity(self.z,
+                                      entity, (target[0],target[1]))
+            objr = entity.row
+            objc = entity.col
+        else:
+            logger.Logger.log(f'Error: invalid throw')
+            return
 
-            # create the animation
-            frames = {}
-            for idx,pt in enumerate(pts):
-                frames[str(idx)] = [['' for _ in row] for row in grid]
-                frames[str(idx)][pt[0]][pt[1]] = entity.glyph
-            origin = [0,0]
-            delay = config.THROW_ANIM_DELAY
-            anim = animation.Animation(origin, frames, entity.color, delay=delay)
-            animator.queueUp(anim)
+        # construct a grid of [0-1] (makes sure path to end point is valid)
+        grid = [[1 if max([int(x.layer) for x in elist]) > Layer.BARREL_LAYER else 0
+                for elist in row]
+                for row in entitylayer]
+        returncode, pts = algo.astar(grid, (self.row,self.col), (objr,objc))
+        if returncode != 1:
+            logger.Logger.log(f'Error: failed to throw -> {returncode}')
+            return
 
-            # deal damage
-            dmg = entity.size * 2
-            for ent in entitylayer[objr][objc]:
-                self.attack(levelmanager, animator, messager, ent, dmg)
+        # create the animation
+        frames = {}
+        for idx,pt in enumerate(pts):
+            frames[str(idx)] = [['' for _ in row] for row in grid]
+            frames[str(idx)][pt[0]][pt[1]] = entity.glyph
+        origin = [0,0]
+        delay = config.THROW_ANIM_DELAY
+        anim = animation.Animation(origin, frames, entity.color, delay=delay)
+        animator.queueUp(anim)
+
+        # deal damage
+        dmg = entity.size * 2
+        for ent in entitylayer[objr][objc]:
+            self.attack(levelmanager, animator, messager, ent, dmg)
+
+        # subtract energy
+        self.energy -= self.speed
+
+        logger.Logger.log(f'throwing object')
 
     def moveZ(self, levelmanager, animator, messager, incrementz):
         '''Move an to another z level'''
