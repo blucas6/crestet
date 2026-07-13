@@ -31,7 +31,7 @@ class Goblin(e.Entity):
 
         self.Inventory.equip(item.Bite())
         for _ in range(5):
-            self.Inventory.add_to_bag(item.Dart())
+            self.Inventory.collect(item.Dart())
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine):
         '''Uses brain to select an action'''

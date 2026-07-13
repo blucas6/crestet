@@ -119,9 +119,6 @@ class InventoryMenu(Menu):
         if hasattr(item, 'Group'):
             amount = item.Group.amount
             return f'{preText}{item.name} ({amount})'
-        elif hasattr(item, 'Stack'):
-            amount = item.Stack.amount
-            return f'{preText}{item.name} ({amount})'
         else:
             return f'{preText}{item.name}'
 

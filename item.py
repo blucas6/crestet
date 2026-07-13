@@ -63,23 +63,6 @@ class Sword(e.Entity):
         self.Attack = component.Attack(name='Sword', damage=2)
         self.ItemType = component.ItemType.HAND
 
-class DartStack(e.Entity):
-    def __init__(self):
-        super().__init__(typeid=14,
-                        name='Dart Stack',
-                        glyph='≡',
-                        color=color.Color().red,
-                        layer=e.Layer.OBJECT_LAYER,
-                        size=e.Size.VERY_SMALL)
-        self.Stack = component.Stack(Dart)
-        self.ItemType = component.ItemType.QUIVER
-
-    def on_placed(self, levelmanager, messager):
-        '''Check new square for other darts or dart stacks'''
-        level = levelmanager.Levels[self.z]
-        entitylist = level.EntityLayer[self.row][self.col]
-        self.Stack.check_entitylist(self, entitylist)
-
 class Dart(e.Entity):
     def __init__(self):
         super().__init__(typeid=15,
