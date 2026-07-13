@@ -56,7 +56,7 @@ class Player(e.Entity):
         '''Player can run'''
         self.Leveling = component.Leveling()
         '''Player can level up'''
-        self.Inventory = component.Inventory(autopickuplist=['Dart', 'Dart Stack'])
+        self.Inventory = component.Inventory(autopickuplist=['Dart', 'Rune'])
         '''Inventory component'''
 
     def init(self, levelrows, levelcols):

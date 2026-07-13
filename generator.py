@@ -1,4 +1,5 @@
 import config
+import rune
 import item
 import monster
 import utility 
@@ -30,6 +31,8 @@ class LevelLayout:
     '''Minimum amount of monsters on the level'''
     items: int
     '''Minimum amount of items on the level'''
+    runes: int
+    '''Minimum amount of runes on the level'''
 
     upstair_pos: tuple = ()
     '''Location of the upstairs on the level'''
@@ -116,6 +119,8 @@ class Generator:
                 self.generate_mons(levelmanager, currlevel, level_layout.mons)
             if level_layout.items > 0:
                 self.generate_items(levelmanager, currlevel, level_layout.items)
+            if level_layout.runes > 0:
+                self.generate_runes(levelmanager, currlevel, level_layout.runes)
             if z == config.PLAYERZ:
                 # make sure player can be placed
                 levelmanager.place_entity(currlevel.z, tower.Floor(), config.PLAYERPOS, overwrite=True)
@@ -250,4 +255,17 @@ class Generator:
                 c = self.RNG.randint(1,self.levelcols-2)
                 if levelmanager.place_entity(currlevel.z, item.Fruit(), (r,c)):
                     item_amount -= 1
+
+    def generate_runes(self, levelmanager: level.LevelManager, currlevel: level.Level, rune_amount):
+        attempt = 0
+        while rune_amount > 0 and attempt < config.MAX_RETRIES:
+            r = self.RNG.randint(1,self.levelrows-2)
+            c = self.RNG.randint(1,self.levelcols-2)
+            new_rune = None
+            n = self.RNG.randint(0, 1)
+            if n == 0:
+                new_rune = rune.EmberRune()
+            if new_rune:
+                if levelmanager.place_entity(currlevel.z, new_rune, (r,c)):
+                    rune_amount -= 1
 

@@ -66,6 +66,10 @@ class LevelManager:
     def place_entity(self, z, entity, pos, overwrite=False):
         '''Place an entity into the level'''
 
+        if not entity:
+            logger.Logger.log(f'Error: cannot place null entity')
+            return False
+
         if z < 0 or z >= len(self.Levels):
             return False
 

@@ -138,6 +138,10 @@ class Entity:
         '''Hook gets called when the entity changes z levels'''
         pass
 
+    def on_apply(self, cmd, levelmanager, messager):
+        messager.add_message('Nothing happens')
+        return False
+
     def update_state(self, *_):
         '''Gets called after initialization'''
         pass
@@ -336,7 +340,7 @@ class Entity:
         self.Inventory.show()
         if self.energy >= self.Inventory.cost:
             self.energy -= self.Inventory.cost
-            self.Inventory.action(levelmanager, messager, event)
+            self.Inventory.action(levelmanager, messager, event, self.z)
             self.Inventory.show()
 
     def handle_charging(self, levelmanager, animator, messager, menumanager, statemachine, event):
@@ -415,7 +419,7 @@ class Entity:
         # Inventory
         elif (hasattr(self, 'Inventory') and
             len(event) > 1 and
-            (event[0] == 'e' or event[0] == 'u')):
+            (event[0] == 'e' or event[0] == 'u' or event[0] == 'a')):
             self.handle_inventory(levelmanager, messager, event)
         # Throw
         elif event[0] == 't' and len(event) > 1:

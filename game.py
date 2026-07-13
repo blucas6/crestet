@@ -1,4 +1,5 @@
 import state
+import component
 import generator
 import traceback
 import engine
@@ -369,9 +370,10 @@ class Game:
 
     def motion_event(self, event):
         '''Handles events that are part of a motion'''
-        self.StateMachine.new_state('done')
         # Throwing/Charge Action
+        logger.Logger.log(f'Motion: {self.previousevent} {event}')
         if self.previousevent == 't' or self.previousevent == '5' or self.previousevent == 'F':
+            self.StateMachine.new_state('done')
             # expects a direction
             if not event.isdigit() or event == '5':
                 self.Messager.add_message('Invalid direction!')
@@ -383,17 +385,41 @@ class Game:
             return state.Event.EVENT,self.previousevent+event
         # Inventory Action
         elif self.previousevent == 'e' or self.previousevent == 'u':
+            self.StateMachine.new_state('done')
+            return state.Event.EVENT,self.previousevent+event
+        elif self.previousevent == 'a':
+            applyinfo = None
+            try:
+                applyinfo = self.LevelManager.Player.Inventory.get_apply_info(event)
+            except Exception as e:
+                self.Messager.add_message('Invalid inventory key!')
+                self.StateMachine.new_state('done')
+                return state.Event.CLEAR,event
+
+            logger.Logger.log(f'Apply info: {applyinfo}')
+            if applyinfo == component.ApplyInfo.DIRECTION:
+                self.Messager.add_message('Direction?')
+                self.previousevent += event
+                return state.Event.CLEAR,event
+
+            self.StateMachine.new_state('done')
+            return state.Event.EVENT,self.previousevent+event
+        elif self.previousevent[0] == 'a':
+            self.StateMachine.new_state('done')
             return state.Event.EVENT,self.previousevent+event
         return state.Event.CLEAR,event
 
     def player_event(self, event):
         '''Process all events that are player actions'''
         # Multi key action
-        if event == 't' or event == '5' or event == 'e' or event == 'u' or event == 'F':
+        multi_key_list = ['t', '5', 'e', 'u', 'F', 'a']
+        if event in multi_key_list:
             if event == 'e':
                 self.Messager.add_message('Equip what?')
             elif event == 'u':
                 self.Messager.add_message('Unequip what?')
+            elif event == 'a':
+                self.Messager.add_message('Apply what?')
             else:
                 self.Messager.add_message('Direction?')
             self.StateMachine.new_state('motion')

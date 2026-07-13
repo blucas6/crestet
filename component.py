@@ -59,6 +59,9 @@ class Edible:
             messager.add_eat_message(entity_eater, self.parent_entity)
             levelmanager.remove_entity(self.parent_entity)
 
+class ApplyInfo(enum.Enum):
+    DIRECTION = 0
+
 class ItemType(enum.Enum):
     '''Inventory needs to know types of items to slot them correctly'''
     QUIVER = 0
@@ -67,6 +70,7 @@ class ItemType(enum.Enum):
     FEET = 3
     HAND = 4
     ABILITY = 5
+    RUNE = 6
 
 class Inventory:
     '''
@@ -103,8 +107,9 @@ class Inventory:
     def autopickup(self, levelmanager, entitylist):
         '''Check entity list for any items to pick up'''
         for ent in entitylist:
-            if ent.name in self.autopickuplist:
-                self.pick_up(levelmanager, ent)
+            for name in self.autopickuplist:
+                if name in ent.name:
+                    self.pick_up(levelmanager, ent)
 
     def show(self):
         '''Print the inventory to logger'''
@@ -245,26 +250,59 @@ class Inventory:
         '''Place an entity to the ground'''
         pass
 
-    def action(self, levelmanager, messager, event):
+    def action(self, levelmanager, messager, event, z):
         '''Handle an inventory action'''
         action = event[0]
         key = event[1]
+        cmd = event[2:]
+        entity,valid = self.get_entity_from_key(key)
+        if entity is None or not valid:
+            messager.add_message('Invalid inventory key!')
+            return
         # Equip
         if action == 'e':
-            entity,valid = self.get_entity_from_key(key)
             logger.Logger.log(f'Equipping: {entity}')
-            if entity:
-                self.equip(entity)
-            elif not valid:
-                messager.add_message('Invalid inventory key!')
+            self.equip(entity)
         # Unequip
         elif action == 'u':
-            entity,valid = self.get_entity_from_key(key)
             logger.Logger.log(f'Unequipping: {entity}')
-            if entity:
-                self.unequip(entity)
-            elif not valid:
-                messager.add_message('Invalid inventory key!')
+            self.unequip(entity)
+        # Apply
+        elif action == 'a':
+            logger.Logger.log(f'Applying: {entity}')
+            self.apply(entity, cmd, levelmanager, messager, z)
+
+    def apply(self, entity, cmd, levelmanager, messager, z):
+        result = entity.on_apply(cmd, levelmanager, messager, z)
+        if not result:
+            self.add_to_bag(entity)
+
+    def get_apply_info(self, char):
+        entity = None
+        if char == 'Q':
+            entity = self.quiver
+        elif char == 'M':
+            entity = self.mainHand
+        elif char == 'O':
+            entity = self.offHand
+        elif char == 'H':
+            entity = self.head
+        elif char == 'B':
+            entity = self.body
+        elif char == 'F':
+            entity = self.feet
+        elif char == 'A':
+            entity = self.ability
+        else:
+            key = ord(char) - 97
+            logger.Logger.log(f'Inventory key: {key} {char}')
+            if key < len(self.contents):
+                entity = self.contents[key]
+            else:
+                raise
+        if hasattr(entity, 'ApplyInfo'):
+            return entity.ApplyInfo
+        return None
 
 class Stackable:
     '''
