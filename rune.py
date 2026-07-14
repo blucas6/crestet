@@ -1,6 +1,11 @@
 import entity
+import config
+import animation
 import component
 import color
+import utility
+import algo
+import logger
 
 class EmberRune(entity.Entity):
     def __init__(self):
@@ -13,26 +18,26 @@ class EmberRune(entity.Entity):
         self.ItemType = component.ItemType.RUNE
         self.ApplyInfo = component.ApplyInfo.DIRECTION
 
-    def on_apply(self, cmd, levelmanager, messager, z):
+    def on_apply(self, cmd, levelmanager, messager, animator, z):
         messager.add_message('Flames shoot out!')
         direction = utility.ONE_LAYER_CIRCLE[int(cmd[1])-1]
         objr = self.row
         objc = self.col
-        entitylayer = levelmanager.Levels[self.z].EntityLayer
+        entitylayer = levelmanager.Levels[z].EntityLayer
 
         while True:
             r,c = objr + direction[0], objc + direction[1]
             if entitylayer:
                 maxlayer = max([x.layer for x in entitylayer[r][c]])
-                if maxlayer == Layer.MONST_LAYER or maxlayer == Layer.BARREL_LAYER:
+                if maxlayer == entity.Layer.MONST_LAYER or maxlayer == entity.Layer.BARREL_LAYER:
                     objr, objc = r, c
                     break
-                elif maxlayer == Layer.WALL_LAYER:
+                elif maxlayer == entity.Layer.WALL_LAYER:
                     break
             objr, objc = r, c
 
         # construct a grid of [0-1] (makes sure path to end point is valid)
-        grid = [[1 if max([int(x.layer) for x in elist]) > Layer.BARREL_LAYER else 0
+        grid = [[1 if max([int(x.layer) for x in elist]) > entity.Layer.BARREL_LAYER else 0
                 for elist in row]
                 for row in entitylayer]
         returncode, pts = algo.astar(grid, (self.row,self.col), (objr,objc))
@@ -54,7 +59,3 @@ class EmberRune(entity.Entity):
         dmg = 3
         for ent in entitylayer[objr][objc]:
             self.attack(levelmanager, animator, messager, ent, dmg)
-
-
-
-

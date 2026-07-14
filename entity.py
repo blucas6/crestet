@@ -380,12 +380,12 @@ class Entity:
         else:
             messager.add_message("Can't go down here")
 
-    def handle_inventory(self, levelmanager, messager, event):
+    def handle_inventory(self, levelmanager, messager, animator, event):
         '''Talks to the inventory component'''
         self.Inventory.show()
         if self.energy >= self.Inventory.cost:
             self.energy -= self.Inventory.cost
-            self.Inventory.action(levelmanager, messager, event, self.z)
+            self.Inventory.action(levelmanager, messager, event, animator, self.z)
             self.Inventory.show()
 
     def handle_charging(self, levelmanager, animator, messager, menumanager, statemachine, event):
@@ -465,7 +465,7 @@ class Entity:
         elif (hasattr(self, 'Inventory') and
             len(event) > 1 and
             (event[0] == 'e' or event[0] == 'u' or event[0] == 'a')):
-            self.handle_inventory(levelmanager, messager, event)
+            self.handle_inventory(levelmanager, messager, animator, event)
         # Throw
         elif event[0] == 't' and len(event) > 1:
             self.fire(levelmanager, animator, messager, event)

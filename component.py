@@ -246,7 +246,7 @@ class Inventory:
         '''Place an entity to the ground'''
         pass
 
-    def action(self, levelmanager, messager, event, z):
+    def action(self, levelmanager, messager, event, animator, z):
         '''Handle an inventory action'''
         action = event[0]
         key = event[1]
@@ -266,10 +266,10 @@ class Inventory:
         # Apply
         elif action == 'a':
             logger.Logger.log(f'Applying: {entity}')
-            self.apply(entity, cmd, levelmanager, messager, z)
+            self.apply(entity, cmd, levelmanager, messager, animator, z)
 
-    def apply(self, entity, cmd, levelmanager, messager, z):
-        result = entity.on_apply(cmd, levelmanager, messager, z)
+    def apply(self, entity, cmd, levelmanager, messager, animator, z):
+        result = entity.on_apply(cmd, levelmanager, messager, animator, z)
         if not result:
             self.add_to_bag(entity)
 
