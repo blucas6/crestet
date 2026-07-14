@@ -23,7 +23,8 @@ class Game:
     '''
     Game class controls the entire game execution from start to finish
     '''
-    def __init__(self, seed=None, msgblocking=True, usedisplay=True, timing=False):
+    def __init__(self, seed=None, msgblocking=True, usedisplay=True, timing=False,
+                 logging=True):
         # Properties
         self.running = False
         '''If the game is running'''
@@ -61,7 +62,12 @@ class Game:
 
         # Timing
         tt.Timing.allowTiming = timing
-        logger.Logger.logging = not timing
+
+        # Logging
+        if timing:
+            logger.Logger.logging = False
+        else:
+            logger.Logger.logging = logging
 
 
     def start(self):
