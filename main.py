@@ -11,11 +11,14 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--timing', action='store_true',
                         help='Turn on timing measurements\n'\
                              'Timing is on by default for profiling')
-    parser.add_argument('-d', '--display', action='store_true', help='Turns the display on\n'\
-                                                        'Display is on by default when playing\n'\
-                                                        'Display is off by default for agents')
+    parser.add_argument('-d', '--display', action='store_true',
+                        help='Turns the display on\n'\
+                                'Display is on by default when playing\n'\
+                                'Display is off by default for agents')
     parser.add_argument('-p', '--profiling', action='store_true',
                         help='Runs random games to get a timing analysis')
+    parser.add_argument('-r', '--release', action='store_true',
+                        help='Runs the game in Release mode (debug log off)')
     args = parser.parse_args()
 
     if args.agent:
@@ -27,6 +30,6 @@ if __name__ == '__main__':
         profiling.start()
         profiling.run()
     else:
-        g = game.Game(seed=args.seed, timing=args.timing)
+        g = game.Game(seed=args.seed, timing=args.timing, logging=not args.release)
         g.start()
         g.main()
