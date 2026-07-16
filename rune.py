@@ -24,14 +24,7 @@ class EmberRune(entity.Entity):
         entitylayer = levelmanager.Levels[z].EntityLayer
         objr,objc = utility.find_last_position(cmd[0], row, col, entitylayer)
 
-        # construct a grid of [0-1] (makes sure path to end point is valid)
-        grid = [[1 if max([int(x.layer) for x in elist]) > entity.Layer.BARREL_LAYER else 0
-                for elist in row]
-                for row in entitylayer]
-        returncode, pts = algo.astar(grid, (row,col), (objr,objc))
-        if returncode != 1:
-            logger.Logger.log(f'Error: rune failed -> {returncode}')
-            return
+        grid,pts = utility.get_path_pts(entitylayer, row, col, objr, objc)
 
         # create the animation
         pts = pts[1:]

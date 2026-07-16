@@ -1,4 +1,5 @@
 import logger
+import algo
 import entity
 
 ONE_LAYER_CIRCLE = [(1,-1),(1,0),(1,1),(0,-1),(0,0),(0,1),(-1,-1),(-1,0),(-1,1)]
@@ -32,10 +33,23 @@ def find_last_position(direction_key, start_row, start_col, entitylayer):
         r,c = objr + direction[0], objc + direction[1]
         if entitylayer:
             maxlayer = max([x.layer for x in entitylayer[r][c]])
-            if maxlayer == entity.Layer.MONST_LAYER or maxlayer == entity.Layer.BARREL_LAYER:
+            if (maxlayer == entity.Layer.MONST_LAYER or
+                maxlayer == entity.Layer.BARREL_LAYER):
                 objr, objc = r, c
                 break
             elif maxlayer == entity.Layer.WALL_LAYER:
                 break
         objr, objc = r, c
     return objr,objc
+
+def get_path_pts(entitylayer, start_row, start_col, end_row, end_col):
+    # construct a grid of [0-1] (makes sure path to end point is valid)
+    grid = [[1 if max([int(x.layer) for x in elist]) > entity.Layer.BARREL_LAYER
+             else 0
+            for elist in row]
+            for row in entitylayer]
+    returncode, pts = algo.astar(grid, (start_row,start_col), (end_row,end_col))
+    if returncode != 1:
+        logger.Logger.log(f'Error: failed to find path -> {returncode}')
+        return grid, []
+    return grid, pts

@@ -289,14 +289,7 @@ class Entity:
 
         levelmanager.place_entity(self.z, entity, (objr,objc))
 
-        # construct a grid of [0-1] (makes sure path to end point is valid)
-        grid = [[1 if max([int(x.layer) for x in elist]) > Layer.BARREL_LAYER else 0
-                for elist in row]
-                for row in entitylayer]
-        returncode, pts = algo.astar(grid, (self.row,self.col), (objr,objc))
-        if returncode != 1:
-            logger.Logger.log(f'Error: failed to throw -> {returncode}')
-            return
+        grid,pts = utility.get_path_pts(entitylayer, self.row, self.col, objr, objc)
 
         # create the animation
         frames = {}
