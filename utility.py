@@ -1,4 +1,5 @@
 import logger
+import entity
 
 ONE_LAYER_CIRCLE = [(1,-1),(1,0),(1,1),(0,-1),(0,0),(0,1),(-1,-1),(-1,0),(-1,1)]
 
@@ -21,3 +22,20 @@ def get_max_layer(entitylist):
 def get_new_pos(currpos, key):
     '''Pass a position and a direction key to get a new position'''
     return currpos[0] + ONE_LAYER_CIRCLE[key-1][0],currpos[1] + ONE_LAYER_CIRCLE[key-1][1]
+
+def find_last_position(direction_key, start_row, start_col, entitylayer):
+    direction = ONE_LAYER_CIRCLE[int(direction_key)-1]
+    objr = start_row
+    objc = start_col
+
+    while True:
+        r,c = objr + direction[0], objc + direction[1]
+        if entitylayer:
+            maxlayer = max([x.layer for x in entitylayer[r][c]])
+            if maxlayer == entity.Layer.MONST_LAYER or maxlayer == entity.Layer.BARREL_LAYER:
+                objr, objc = r, c
+                break
+            elif maxlayer == entity.Layer.WALL_LAYER:
+                break
+        objr, objc = r, c
+    return objr,objc

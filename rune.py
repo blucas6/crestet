@@ -20,21 +20,9 @@ class EmberRune(entity.Entity):
 
     def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
         messager.add_message('Flames shoot out!')
-        direction = utility.ONE_LAYER_CIRCLE[int(cmd[0])-1]
-        objr = row
-        objc = col
-        entitylayer = levelmanager.Levels[z].EntityLayer
 
-        while True:
-            r,c = objr + direction[0], objc + direction[1]
-            if entitylayer:
-                maxlayer = max([x.layer for x in entitylayer[r][c]])
-                if maxlayer == entity.Layer.MONST_LAYER or maxlayer == entity.Layer.BARREL_LAYER:
-                    objr, objc = r, c
-                    break
-                elif maxlayer == entity.Layer.WALL_LAYER:
-                    break
-            objr, objc = r, c
+        entitylayer = levelmanager.Levels[z].EntityLayer
+        objr,objc = utility.find_last_position(cmd[0], row, col, entitylayer)
 
         # construct a grid of [0-1] (makes sure path to end point is valid)
         grid = [[1 if max([int(x.layer) for x in elist]) > entity.Layer.BARREL_LAYER else 0

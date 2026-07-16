@@ -247,7 +247,7 @@ class Entity:
             return
         if event[1].isdigit():
             # get the direction
-            direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
+            #direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
             if self.energy < self.speed:
                 logger.Logger.log(f'[{self.name}|{self.id}]: Firing not enough energy')
                 return
@@ -260,14 +260,14 @@ class Entity:
                               animator,
                               messager,
                               fired_entity,
-                              direction)
+                              event[1])
     
     def death(self, levelmanager, *_):
         '''Entities can add to this method to trigger on death actions'''
         logger.Logger.log(f'Death trigger: {self}')
         levelmanager.remove_entity(self)
 
-    def throw(self, levelmanager, animator, messager, entity, direction: tuple=(), target: tuple=()):
+    def throw(self, levelmanager, animator, messager, entity, direction_key, target: tuple=()):
         '''
         If direction is included, the entity will be thrown in that direction
         until it hits a wall layer
@@ -283,34 +283,11 @@ class Entity:
             logger.Logger.log(f'[{self.name}|{self.id}]: throwing not enough energy')
             return
 
-        objr = self.row
-        objc = self.col
         entitylayer = levelmanager.Levels[self.z].EntityLayer
-        if direction: 
-            # find the final position for the thrown object
-            # start object from entity position
-            while True:
-                r,c = objr + direction[0], objc + direction[1]
-                if entitylayer:
-                    maxlayer = max([x.layer for x in entitylayer[r][c]])
-                    # set final position at the monster
-                    if maxlayer == Layer.MONST_LAYER or maxlayer == Layer.BARREL_LAYER:
-                        objr, objc = r, c
-                        break
-                    # set final position before wall
-                    elif maxlayer == Layer.WALL_LAYER:
-                        break
-                objr, objc = r, c
-            levelmanager.place_entity(self.z, entity, (objr,objc))
-        elif target:
-            # set to the target position
-            levelmanager.place_entity(self.z,
-                                      entity, (target[0],target[1]))
-            objr = entity.row
-            objc = entity.col
-        else:
-            logger.Logger.log(f'Error: invalid throw')
-            return
+
+        objr,objc = utility.find_last_position(direction_key, self.row, self.col, entitylayer)
+
+        levelmanager.place_entity(self.z, entity, (objr,objc))
 
         # construct a grid of [0-1] (makes sure path to end point is valid)
         grid = [[1 if max([int(x.layer) for x in elist]) > Layer.BARREL_LAYER else 0
