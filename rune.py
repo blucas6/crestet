@@ -18,7 +18,7 @@ class EmberRune(entity.Entity):
         self.ItemType = component.ItemType.RUNE
         self.ApplyInfo = component.ApplyInfo.DIRECTION
 
-    def on_apply(self, cmd, levelmanager, messager, animator, row, col, z):
+    def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
         messager.add_message('Flames shoot out!')
         direction = utility.ONE_LAYER_CIRCLE[int(cmd[0])-1]
         objr = row
@@ -60,4 +60,4 @@ class EmberRune(entity.Entity):
         # deal damage
         dmg = 3
         for ent in entitylayer[objr][objc]:
-            self.attack(levelmanager, animator, messager, ent, dmg)
+            parent.attack(levelmanager, animator, messager, ent, dmg)
