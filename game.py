@@ -453,7 +453,7 @@ class Game:
     def player_event(self, event):
         '''Process all events that are player actions'''
         # Multi key action
-        multikey_list = ['t', '5', 'e', 'u', 'F']
+        multikey_list = ['t', '5', 'e', 'u', 'F', 'a']
         if event in multikey_list:
             # throw
             if event == 't':
