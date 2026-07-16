@@ -154,7 +154,6 @@ class Entity:
 
     def on_apply(self, cmd, parent, levelmanager, messager, *_):
         messager.add_message('Nothing happens')
-        return False
 
     def update_state(self, *_):
         '''Gets called after initialization'''

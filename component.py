@@ -70,7 +70,7 @@ class ItemType(enum.Enum):
     FEET = 3
     HAND = 4
     ABILITY = 5
-    RUNE = 6
+    NOEQUIP = 6
 
 class Inventory:
     '''
@@ -135,31 +135,23 @@ class Inventory:
         try:
             if char == 'Q':
                 entity = self.quiver
-                self.quiver = None
             elif char == 'M':
                 entity = self.mainHand
-                self.mainHand = None
             elif char == 'O':
                 entity = self.offHand
-                self.offHand = None
             elif char == 'H':
                 entity = self.head
-                self.head = None
             elif char == 'B':
                 entity = self.body
-                self.body = None
             elif char == 'F':
                 entity = self.feet
-                self.feet = None
             elif char == 'A':
                 entity = self.ability
-                self.ability = None
             else:
                 key = ord(char) - 97
                 logger.Logger.log(f'Inventory key: {key} {char}')
                 if key < len(self.contents):
                     entity = self.contents[key]
-                    del self.contents[key]
                 else:
                     raise
         except Exception:
@@ -167,37 +159,74 @@ class Inventory:
         return entity, True
 
     def equip(self, entity):
-        '''Pass in an entity to place it in the correct slot'''
+        '''
+        Pass in an entity to place it in the correct slot
+        '''
+
         if not hasattr(entity, 'ItemType'):
             return
+        
+        if entity.ItemType == ItemType.NOEQUIP:
+            return
+        
+        # delete an entity if it came from the bag, it will be placed
+        for ix,ent in enumerate(self.contents):
+            if ent.id == entity.id:
+                del self.contents[ix]
+                break
         # QUIVER
-        if entity.ItemType == ItemType.QUIVER:
+        if entity.ItemType == ItemType.QUIVER and (not self.quiver or self.quiver.id != entity.id):
             if self.quiver:
                 self.add_to_bag(self.quiver)
             self.quiver = entity
         # WEARABLE
-        elif entity.ItemType == ItemType.HEAD:
+        elif entity.ItemType == ItemType.HEAD and (not self.head or self.head.id != entity.id):
             if self.head:
                 self.add_to_bag(self.head)
             self.head = entity
-        elif entity.ItemType == ItemType.BODY:
+        elif entity.ItemType == ItemType.BODY and (not self.body or self.body.id != entity.id):
             if self.body:
                 self.add_to_bag(self.body)
             self.body = entity
-        elif entity.ItemType == ItemType.FEET:
+        elif entity.ItemType == ItemType.FEET and (not self.feet or self.feet.id != entity.id):
             if self.feet:
                 self.add_to_bag(self.feet)
             self.feet = entity
         # MAIN / OFF HAND
         elif entity.ItemType == ItemType.HAND:
-            if self.offHand:
-                self.add_to_bag(self.offHand)
-            if self.mainHand:
-                self.offHand = self.mainHand
-            self.mainHand = entity
+            if self.offHand and self.offHand.id == entity.id:
+                if self.mainHand:
+                    self.add_to_bag(self.mainHand)
+                self.mainHand = entity
+                self.offHand = None
+            elif not self.mainHand or self.mainHand.id != entity.id:
+                if self.offHand:
+                    self.add_to_bag(self.offHand)
+                if self.mainHand:
+                    self.offHand = self.mainHand
+                self.mainHand = entity
         # ABILITY
-        elif entity.ItemType == ItemType.ABILITY:
+        elif entity.ItemType == ItemType.ABILITY and (not self.ability or self.ability != entity.id):
             self.ability = entity
+    
+    def unequip(self, entity):
+        '''
+        Pass in an entity and set the corresponding slot to empty and place
+        the entity into the bag
+        '''
+        if self.quiver and self.quiver.id == entity.id:
+            self.quiver = None
+        elif self.head and self.head.id == entity.id:
+            self.head = None
+        elif self.body and self.body.id == entity.id:
+            self.body = None
+        elif self.feet and self.feet.id == entity.id:
+            self.feet = None
+        elif self.mainHand and self.mainHand.id == entity.id:
+            self.mainHand = None
+        elif self.offHand and self.offHand.id == entity.id:
+            self.offHand = None
+        self.add_to_bag(entity) 
 
     def collect(self, entity):
         '''Entrance for items being added into the inventory'''
@@ -269,9 +298,7 @@ class Inventory:
             self.apply(entity, cmd, parent, levelmanager, messager, animator, row, col, z)
 
     def apply(self, entity, cmd, parent, levelmanager, messager, animator, row, col, z):
-        result = entity.on_apply(cmd, parent, levelmanager, messager, animator, row, col, z)
-        if not result:
-            self.add_to_bag(entity)
+        entity.on_apply(cmd, parent, levelmanager, messager, animator, row, col, z)
 
     def get_apply_info(self, char):
         entity = None

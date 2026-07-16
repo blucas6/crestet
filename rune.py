@@ -15,7 +15,7 @@ class EmberRune(entity.Entity):
                          color=color.Color().red,
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.VERY_SMALL)
-        self.ItemType = component.ItemType.RUNE
+        self.ItemType = component.ItemType.NOEQUIP
         self.ApplyInfo = component.ApplyInfo.DIRECTION
 
     def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
