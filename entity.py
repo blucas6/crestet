@@ -5,6 +5,17 @@ import utility
 import algo
 import logger
 import enum
+import color
+
+class StatusEffect(enum.Enum):
+    NONE = 0
+    FROZEN = 1
+
+    def status_lookup(self):
+        if self == StatusEffect.NONE:
+            return 0
+        elif self == StatusEffect.FROZEN:
+            return 8
 
 class AttackType(enum.Enum):
     '''Possible attack options'''
@@ -100,6 +111,7 @@ class Entity:
         '''Size enum for the entity'''
         self.energy = 0
         '''Energy bank'''
+        self.status = {}
         #logger.Logger.log(f'Creating new entity: {self} {self.pos()}')
 
     def __repr__(self):
@@ -155,6 +167,28 @@ class Entity:
     def on_apply(self, cmd, parent, levelmanager, messager, *_):
         messager.add_message('Nothing happens')
 
+    def apply_status(self, messager, status_effect):
+        messager.add_status_message(self, status_effect)
+        if self.color == color.Color().yellow:
+            self.color = color.Color().yellow_cyan
+        elif self.color == color.Color().green:
+            self.color = color.Color().green_cyan
+        self.status[status_effect] = status_effect.status_lookup()
+
+    def unapply_status(self, status):
+        if self.color == color.Color().yellow_cyan:
+            self.color = color.Color().yellow
+        elif self.color == color.Color().green_cyan:
+            self.color = color.Color().green
+
+    def update_status(self):
+        if self.status.keys():
+            for status in self.status.keys():
+                self.status[status] -= 1
+                if self.status[status] <= 0:
+                    self.unapply_status(self.status[status])
+            self.status = {status: timer for status,timer in self.status.items() if timer > 0}
+
     def update_state(self, *_):
         '''Gets called after initialization'''
         pass
@@ -179,24 +213,30 @@ class Entity:
         '''
         # find next position
         row,col = utility.get_new_pos((self.row,self.col), key)
+
         # check energy cost
         if self.energy < self.speed:
-            logger.Logger.log(f'[{self.name}|{self.id}]: movement not enough energy')
+            logger.Logger.log(f'[{self.name}|{self.id}]: movement no energy')
             return MoveAction.NOENERGY
+
         # check validity
         if not levelmanager.within_level((row,col), self.z):
             return MoveAction.INVALID
+
         # if the entity is able to attack
         # check if there is an entity to attack
         entitylayer = levelmanager.Levels[self.z].EntityLayer
         _,entity = utility.get_max_layer(entitylayer[row][col])
+
         # anything on the monster layer should be able to be attacked
         if entity.layer == Layer.MONST_LAYER:
+
             # check for interactions
             if self.name == 'Player' and hasattr(entity, 'Interact'):
                 self.energy -= 1
                 entity.Interact.talk(statemachine, menumanager)
                 return MoveAction.INTERACT
+
             # must attack
             else:
                 self.energy -= self.speed
@@ -204,6 +244,7 @@ class Entity:
                 damage = self.get_damage()
                 self.attack(levelmanager, animator, messager, entity, damage)
                 return MoveAction.ATTACKED
+
         # anything on the barrel layer should be pushed
         elif entity.layer == Layer.BARREL_LAYER:
             # check if entity can be pushed
@@ -214,6 +255,7 @@ class Entity:
                 return MoveAction.PUSHED
             else:
                 return MoveAction.INVALID
+
         # otherwise just move normally
         return self.move(levelmanager, (row,col))
 
@@ -392,12 +434,18 @@ class Entity:
             self.attack(levelmanager, animator, messager, entity, damage)
             return MoveAction.ATTACKED
         return MoveAction.INVALID
-
+    
     def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event):
         '''Pass an event for the entity to preform a certain action'''
         logger.Logger.log(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
 
         if not isinstance(event, str):
+            return
+
+        # check for status effects
+        if StatusEffect.FROZEN in self.status:
+            logger.Logger.log(f'[{self.name}|{self.id}]: FROZEN')
+            self.energy = 0
             return
 
         # Run

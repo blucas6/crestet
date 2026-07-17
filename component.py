@@ -4,6 +4,10 @@ import level
 import logger
 import enum
 
+class StatusEffect(enum.Enum):
+    NONE = 0
+    FROZEN = 1
+
 class Leveling:
     '''Leveling component, if an entity can level up'''
     def __init__(self):

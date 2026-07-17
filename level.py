@@ -161,6 +161,8 @@ class LevelManager:
             done_turn = True
             for row in level.EntityLayer:
                 for entitylist in row:
+                    # create a manually loop since entities might be removed
+                    # during an update loop
                     index = 0
                     currlistsize = len(entitylist)
                     while index < currlistsize:
@@ -225,6 +227,7 @@ class LevelManager:
         if entity.turn >= currentturn:
             return True
         energystart = entity.energy
+        entity.update_status()
         entity.take_turn(self, animator, messager, menumanager, statemachine) 
         energyend = entity.energy
         if entity.energy == 0 or energystart == energyend:

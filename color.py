@@ -59,6 +59,8 @@ class Color:
         curses.init_pair(14, 13, curses.COLOR_BLACK)
         curses.init_pair(15, 14, curses.COLOR_BLACK)
         curses.init_pair(16, 15, curses.COLOR_BLACK)
+        curses.init_pair(17, 3, curses.COLOR_CYAN)
+        curses.init_pair(18, 2, curses.COLOR_CYAN)
         self.black = curses.color_pair(1)
         self.red = curses.color_pair(2)
         self.green = curses.color_pair(3)
@@ -75,6 +77,8 @@ class Color:
         self.bright_pink = curses.color_pair(14)
         self.bright_cyan = curses.color_pair(15)
         self.bright_white = curses.color_pair(16)
+        self.yellow_cyan = curses.color_pair(17)
+        self.green_cyan = curses.color_pair(18)
 
 def show_colors(stdscr):
     curses.start_color()

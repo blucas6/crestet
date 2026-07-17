@@ -265,7 +265,6 @@ class Generator:
             if levelmanager.place_entity(currlevel.z, new_item, (r,c)):
                 item_amount -= 1
 
-
     def generate_runes(self, levelmanager: level.LevelManager, currlevel: level.Level, rune_amount):
         attempt = 0
         while rune_amount > 0 and attempt < config.MAX_RETRIES:
@@ -275,6 +274,8 @@ class Generator:
             n = self.RNG.randint(0, 1)
             if n == 0:
                 new_rune = rune.EmberRune()
+            elif n == 1:
+                new_rune = rune.SnowRune()
             if new_rune:
                 if levelmanager.place_entity(currlevel.z, new_rune, (r,c)):
                     rune_amount -= 1

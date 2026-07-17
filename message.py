@@ -1,3 +1,4 @@
+import entity
 
 class Messager:
     '''
@@ -12,6 +13,21 @@ class Messager:
         Clears the msg queue
         '''
         self.MsgQueue = []
+
+    def pop_message(self, blocking=True):
+        '''
+        If messages are in the queue, get the messages by FIFO
+        '''
+        if self.MsgQueue:
+            msg = self.MsgQueue[0]
+            # if blocking, delete only the message popped
+            if blocking:
+                del self.MsgQueue[0]
+            # otherwise dump the remaining queue
+            else:
+                self.MsgQueue = []
+            return msg
+        return ''
 
     def add_message(self, msg):
         '''
@@ -51,23 +67,17 @@ class Messager:
         else:
             self.MsgQueue.append(f'The {entitya.name} eats the {entityb.name}')
 
-    def add_level_up_message(self, entity):
-        if entity.name == 'Player':
+    def add_level_up_message(self, entitya):
+        if entitya.name == 'Player':
             self.MsgQueue.append(f'You level up!')
         else:
-            self.MsgQueue.append(f'The {entity.name} levels up!')
+            self.MsgQueue.append(f'The {entitya.name} levels up!')
 
-    def pop_message(self, blocking=True):
-        '''
-        If messages are in the queue, get the messages by FIFO
-        '''
-        if self.MsgQueue:
-            msg = self.MsgQueue[0]
-            # if blocking, delete only the message popped
-            if blocking:
-                del self.MsgQueue[0]
-            # otherwise dump the remaining queue
+    def add_status_message(self, entitya, status):
+        if status == entity.StatusEffect.FROZEN:
+            if entitya.name == 'Player':
+                self.MsgQueue.append(f'You freeze!')
             else:
-                self.MsgQueue = []
-            return msg
-        return ''
+                self.MsgQueue.append(f'The {entitya.name} freezes!')
+
+
