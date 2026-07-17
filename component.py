@@ -4,10 +4,6 @@ import level
 import logger
 import enum
 
-class StatusEffect(enum.Enum):
-    NONE = 0
-    FROZEN = 1
-
 class Leveling:
     '''Leveling component, if an entity can level up'''
     def __init__(self):
@@ -110,10 +106,17 @@ class Inventory:
 
     def autopickup(self, levelmanager, entitylist):
         '''Check entity list for any items to pick up'''
-        for ent in entitylist:
+        idx = 0
+        while idx < len(entitylist):
+            ent = entitylist[idx]
+            # check if any names match
             for name in self.autopickuplist:
                 if name in ent.name:
-                    self.pick_up(levelmanager, ent)
+                    self.collect(ent)
+                    # this modifies the entity list size
+                    levelmanager.remove_entity(entitylist[idx])
+                    idx -= 1
+            idx += 1
 
     def show(self):
         '''Print the inventory to logger'''
@@ -257,7 +260,6 @@ class Inventory:
 
         # default is add to bag
         self.contents.append(entity)
-        entity.idx = len(self.contents)-1
 
     def get_damage(self):
         '''Based on the slot information calculate the damage'''
@@ -270,11 +272,6 @@ class Inventory:
             damage += self.ability.Attack.damage
         return damage
     
-    def pick_up(self, levelmanager, entity):
-        '''Pass in an entity to add it to the inventory'''
-        ent = levelmanager.remove_entity(entity)
-        self.collect(ent)
-
     def drop(self):
         '''Place an entity to the ground'''
         pass
