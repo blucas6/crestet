@@ -8,10 +8,12 @@ import enum
 import color
 
 class StatusEffect(enum.Enum):
+    '''Entity status effects'''
     NONE = 0
     FROZEN = 1
 
     def status_lookup(self):
+        '''Returns the turn cooldown for status effects'''
         if self == StatusEffect.NONE:
             return 0
         elif self == StatusEffect.FROZEN:
@@ -112,6 +114,7 @@ class Entity:
         self.energy = 0
         '''Energy bank'''
         self.status = {}
+        '''Map of current status effects and their respective cooldowns counters'''
         #logger.Logger.log(f'Creating new entity: {self} {self.pos()}')
 
     def __repr__(self):
@@ -165,17 +168,21 @@ class Entity:
         pass
 
     def on_apply(self, cmd, parent, levelmanager, messager, *_):
+        '''Default attempt to apply an entity'''
         messager.add_message('Nothing happens')
 
     def apply_status(self, messager, status_effect):
+        '''Add a status effect to the entity'''
         messager.add_status_message(self, status_effect)
         self.status[status_effect] = status_effect.status_lookup()
         self.color = color.Color().toggle_bg(self.color)
 
     def unapply_status(self, status):
+        '''Remove a status effect from an entity'''
         self.color = color.Color().toggle_bg(self.color)
 
     def update_status(self):
+        '''Triggers every turn, updates each status effect'''
         if self.status.keys():
             for status in self.status.keys():
                 self.status[status] -= 1
@@ -283,7 +290,6 @@ class Entity:
             return
         if event[1].isdigit():
             # get the direction
-            #direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
             if self.energy < self.speed:
                 logger.Logger.log(f'[{self.name}|{self.id}]: Firing not enough energy')
                 return
@@ -303,7 +309,7 @@ class Entity:
         logger.Logger.log(f'Death trigger: {self}')
         levelmanager.remove_entity(self)
 
-    def throw(self, levelmanager, animator, messager, entity, direction_key, target: tuple=()):
+    def throw(self, levelmanager, animator, messager, entity, direction_key):
         '''
         If direction is included, the entity will be thrown in that direction
         until it hits a wall layer

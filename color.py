@@ -14,6 +14,7 @@ class Color:
         return cls._instance
 
     def toggle_bg(self, curr_color, bg=None):
+        '''Enables or disables a specific background color'''
         # apply
         if curr_color == Color().yellow:
             return Color().yellow_cyan

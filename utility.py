@@ -25,6 +25,11 @@ def get_new_pos(currpos, key):
     return currpos[0] + ONE_LAYER_CIRCLE[key-1][0],currpos[1] + ONE_LAYER_CIRCLE[key-1][1]
 
 def find_last_position(direction_key, start_row, start_col, entitylayer):
+    '''
+    Returns the final position of an object traveling in a direction
+    It will stop inside a monster or barrel
+    It will stop before a wall
+    '''
     direction = ONE_LAYER_CIRCLE[int(direction_key)-1]
     objr = start_row
     objc = start_col

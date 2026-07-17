@@ -292,7 +292,10 @@ class LevelManager:
         return True
 
     def remove_entity(self, entity):
-        '''Deletes an entity from the current position and returns it'''
+        '''
+        Deletes an entity from the current position and returns it
+        Uses entity position data to identify the entity
+        '''
         r = entity.row
         c = entity.col
         idx = entity.idx

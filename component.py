@@ -60,10 +60,18 @@ class Edible:
             levelmanager.remove_entity(self.parent_entity)
 
 class ApplyInfo(enum.Enum):
-    DIRECTION = 0
+    '''
+    Used to request more information for applying a certain item
+    Necessary to get user input for the player
+    '''
+    NONE = 0
+    DIRECTION = 1
 
 class ItemType(enum.Enum):
-    '''Inventory needs to know types of items to slot them correctly'''
+    '''
+    Inventory needs to know types of items to slot them correctly
+    No equip sends straight to the bag
+    '''
     QUIVER = 0
     HEAD = 1
     BODY = 2
@@ -105,7 +113,9 @@ class Inventory:
                 self.feet, self.ability] + self.contents
 
     def autopickup(self, levelmanager, entitylist):
-        '''Check entity list for any items to pick up'''
+        '''
+        Check entity list for any items to pick up
+        '''
         idx = 0
         while idx < len(entitylist):
             ent = entitylist[idx]
@@ -201,11 +211,16 @@ class Inventory:
             self.feet = entity
         # MAIN / OFF HAND
         elif entity.ItemType == ItemType.HAND:
+            # equipping the main hand does nothing
+            # equipping the off hand, send it to the main hand
+            # send the main hand to the bag
             if self.offHand and self.offHand.id == entity.id:
                 if self.mainHand:
                     self.add_to_bag(self.mainHand)
                 self.mainHand = entity
                 self.offHand = None
+            # equipping from the bag, send it to the main hand
+            # send the main hand to the off hand
             elif not self.mainHand or self.mainHand.id != entity.id:
                 if self.offHand:
                     self.add_to_bag(self.offHand)
@@ -299,6 +314,7 @@ class Inventory:
             self.apply(entity, cmd, parent, levelmanager, messager, animator, row, col, z)
 
     def apply(self, entity, cmd, parent, levelmanager, messager, animator, row, col, z):
+        '''Trigger the apply on an entity'''
         entity.on_apply(cmd, parent, levelmanager, messager, animator, row, col, z)
 
     def get_apply_info(self, char):

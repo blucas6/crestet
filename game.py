@@ -436,6 +436,7 @@ class Game:
             self.StateMachine.new_state('done')
             return state.Event.EVENT,self.previousevent+event
         elif self.previousevent == 'a':
+            # check to see if additional user input is required
             applyinfo = None
             try:
                 applyinfo = self.LevelManager.Player.Inventory.get_apply_info(event)
@@ -444,15 +445,17 @@ class Game:
                 self.StateMachine.new_state('done')
                 return state.Event.CLEAR,event
 
-            logger.Logger.log(f'Apply info: {applyinfo}')
+            # direction request
             if applyinfo == component.ApplyInfo.DIRECTION:
                 self.Messager.add_message('Direction?')
                 self.previousevent += event
                 return state.Event.CLEAR,event
 
+            # no additional info
             self.StateMachine.new_state('done')
             return state.Event.EVENT,self.previousevent+event
         elif self.previousevent[0] == 'a':
+            # additional info event from apply received
             self.StateMachine.new_state('done')
             return state.Event.EVENT,self.previousevent+event
         return state.Event.CLEAR,event
