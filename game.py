@@ -23,8 +23,8 @@ class Game:
     '''
     Game class controls the entire game execution from start to finish
     '''
-    def __init__(self, seed=None, msgblocking=True, usedisplay=True, timing=False,
-                 logging=True):
+    def __init__(self, seed=None, msgblocking=True, usedisplay=True,
+                 timing=False, logging=True):
         # Properties
         self.running = False
         '''If the game is running'''
@@ -176,8 +176,17 @@ class Game:
             self.MenuManager.MessageMenu.clear()
             self.messages()
         elif eventtype == state.Event.EVENT:
+            # event was valid, save it
+            self.previousevent = event
+
+            # update the player
+            energy = self.player_action(event)
+
+            # render player move
+            self.render()
+
             # update the game
-            self.loop(event)
+            self.loop(energy)
         # output screen buffer to terminal
         if eventtype != state.Event.NA:
             logger.Logger.log(f'RENDER')
@@ -213,7 +222,12 @@ class Game:
         # clear viewing level 
         self.viewing_level = -1
 
-    def loop(self, event):
+    def player_action(self, event):
+        return self.LevelManager.update_player(
+                self.Animator, self.Messager, self.MenuManager,
+                self.StateMachine, event)
+
+    def loop(self, energy):
         '''
         Execute one loop in the game loop
         '''
@@ -223,18 +237,14 @@ class Game:
         # increment the turn
         self.turn += 1
 
-        # event was valid, save it
-        self.previousevent = event
-
         # clear current message
         self.MenuManager.MessageMenu.clear()
-
 
         if self.StateMachine.GameState == state.GameState.INTERACTING and self.StateMachine.callback:
             self.StateMachine.callback(self.StateMachine, self.MenuManager, event)
         else:
             # update all entities
-            self.LevelManager.update_all(self.Animator, self.Messager, self.MenuManager, self.StateMachine, event)
+            self.LevelManager.update_all(self.Animator, self.Messager, self.MenuManager, self.StateMachine, energy)
 
             # end the player charge, get back into playing mode
             if (self.StateMachine.GameState == state.GameState.RUNNING and
