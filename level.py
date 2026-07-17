@@ -193,13 +193,8 @@ class LevelManager:
                     if entity.name == 'Light':
                         entity.update_state(self)
 
-    def update_all(self, animator, messager, menumanager, statemachine, event):
-        '''Go through all entities and update them'''
-
-        timing.Timing.start('Game Loop')
-
-        logger.Logger.log('----------TURN UPDATE-----------')
-
+    def update_player(self, animator, messager, menumanager, statemachine, event):
+        '''Updates the player and returns the energy used'''
         self.Player.energy = 100
         self.Player.do_action(self, animator, messager, menumanager, statemachine, event)
         self.Player.turn += 1
@@ -209,6 +204,14 @@ class LevelManager:
         if energy == 100:
             # player rested
             energy = self.Player.speed
+        return energy
+
+    def update_all(self, animator, messager, menumanager, statemachine, energy):
+        '''Go through all entities and update them'''
+
+        timing.Timing.start('Game Loop')
+
+        logger.Logger.log('----------TURN UPDATE-----------')
 
         # update the level the player is on
         self.currentz = self.Player.z
