@@ -169,17 +169,11 @@ class Entity:
 
     def apply_status(self, messager, status_effect):
         messager.add_status_message(self, status_effect)
-        if self.color == color.Color().yellow:
-            self.color = color.Color().yellow_cyan
-        elif self.color == color.Color().green:
-            self.color = color.Color().green_cyan
         self.status[status_effect] = status_effect.status_lookup()
+        self.color = color.Color().toggle_bg(self.color)
 
     def unapply_status(self, status):
-        if self.color == color.Color().yellow_cyan:
-            self.color = color.Color().yellow
-        elif self.color == color.Color().green_cyan:
-            self.color = color.Color().green
+        self.color = color.Color().toggle_bg(self.color)
 
     def update_status(self):
         if self.status.keys():

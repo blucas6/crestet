@@ -31,8 +31,8 @@
       "min_walls": 20,
       "lights": true,
       "mons": 3,
-      "items": 5,
-      "runes": 1
+      "items": 3,
+      "runes": 5
    },
    "1": {
       "floor": true,
@@ -42,7 +42,7 @@
       "min_walls": 50,
       "lights": true,
       "mons": 5,
-      "items": 5,
-      "runes": 1
+      "items": 3,
+      "runes": 5
    }
 }
