@@ -5,6 +5,19 @@ import utility
 import algo
 import logger
 import enum
+import color
+
+class StatusEffect(enum.Enum):
+    '''Entity status effects'''
+    NONE = 0
+    FROZEN = 1
+
+    def status_lookup(self):
+        '''Returns the turn cooldown for status effects'''
+        if self == StatusEffect.NONE:
+            return 0
+        elif self == StatusEffect.FROZEN:
+            return 8
 
 class AttackType(enum.Enum):
     '''Possible attack options'''
@@ -100,6 +113,8 @@ class Entity:
         '''Size enum for the entity'''
         self.energy = 0
         '''Energy bank'''
+        self.status = {}
+        '''Map of current status effects and their respective cooldowns counters'''
         #logger.Logger.log(f'Creating new entity: {self} {self.pos()}')
 
     def __repr__(self):
@@ -152,6 +167,29 @@ class Entity:
         '''Hook gets called when the entity changes z levels'''
         pass
 
+    def on_apply(self, cmd, parent, levelmanager, messager, *_):
+        '''Default attempt to apply an entity'''
+        messager.add_message('Nothing happens')
+
+    def apply_status(self, messager, status_effect):
+        '''Add a status effect to the entity'''
+        messager.add_status_message(self, status_effect)
+        self.status[status_effect] = status_effect.status_lookup()
+        self.color = color.Color().toggle_bg(self.color)
+
+    def unapply_status(self, status):
+        '''Remove a status effect from an entity'''
+        self.color = color.Color().toggle_bg(self.color)
+
+    def update_status(self):
+        '''Triggers every turn, updates each status effect'''
+        if self.status.keys():
+            for status in self.status.keys():
+                self.status[status] -= 1
+                if self.status[status] <= 0:
+                    self.unapply_status(self.status[status])
+            self.status = {status: timer for status,timer in self.status.items() if timer > 0}
+
     def update_state(self, *_):
         '''Gets called after initialization'''
         pass
@@ -176,24 +214,30 @@ class Entity:
         '''
         # find next position
         row,col = utility.get_new_pos((self.row,self.col), key)
+
         # check energy cost
         if self.energy < self.speed:
-            logger.Logger.log(f'[{self.name}|{self.id}]: movement not enough energy')
+            logger.Logger.log(f'[{self.name}|{self.id}]: movement no energy')
             return MoveAction.NOENERGY
+
         # check validity
         if not levelmanager.within_level((row,col), self.z):
             return MoveAction.INVALID
+
         # if the entity is able to attack
         # check if there is an entity to attack
         entitylayer = levelmanager.Levels[self.z].EntityLayer
         _,entity = utility.get_max_layer(entitylayer[row][col])
+
         # anything on the monster layer should be able to be attacked
         if entity.layer == Layer.MONST_LAYER:
+
             # check for interactions
             if self.name == 'Player' and hasattr(entity, 'Interact'):
                 self.energy -= 1
                 entity.Interact.talk(statemachine, menumanager)
                 return MoveAction.INTERACT
+
             # must attack
             else:
                 self.energy -= self.speed
@@ -201,6 +245,7 @@ class Entity:
                 damage = self.get_damage()
                 self.attack(levelmanager, animator, messager, entity, damage)
                 return MoveAction.ATTACKED
+
         # anything on the barrel layer should be pushed
         elif entity.layer == Layer.BARREL_LAYER:
             # check if entity can be pushed
@@ -211,6 +256,7 @@ class Entity:
                 return MoveAction.PUSHED
             else:
                 return MoveAction.INVALID
+
         # otherwise just move normally
         return self.move(levelmanager, (row,col))
 
@@ -244,7 +290,6 @@ class Entity:
             return
         if event[1].isdigit():
             # get the direction
-            direction = utility.ONE_LAYER_CIRCLE[int(event[1])-1]
             if self.energy < self.speed:
                 logger.Logger.log(f'[{self.name}|{self.id}]: Firing not enough energy')
                 return
@@ -257,14 +302,14 @@ class Entity:
                               animator,
                               messager,
                               fired_entity,
-                              direction)
+                              event[1])
     
     def death(self, levelmanager, *_):
         '''Entities can add to this method to trigger on death actions'''
         logger.Logger.log(f'Death trigger: {self}')
         levelmanager.remove_entity(self)
 
-    def throw(self, levelmanager, animator, messager, entity, direction: tuple=(), target: tuple=()):
+    def throw(self, levelmanager, animator, messager, entity, direction_key):
         '''
         If direction is included, the entity will be thrown in that direction
         until it hits a wall layer
@@ -280,43 +325,13 @@ class Entity:
             logger.Logger.log(f'[{self.name}|{self.id}]: throwing not enough energy')
             return
 
-        objr = self.row
-        objc = self.col
         entitylayer = levelmanager.Levels[self.z].EntityLayer
-        if direction: 
-            # find the final position for the thrown object
-            # start object from entity position
-            while True:
-                r,c = objr + direction[0], objc + direction[1]
-                if entitylayer:
-                    maxlayer = max([x.layer for x in entitylayer[r][c]])
-                    # set final position at the monster
-                    if maxlayer == Layer.MONST_LAYER or maxlayer == Layer.BARREL_LAYER:
-                        objr, objc = r, c
-                        break
-                    # set final position before wall
-                    elif maxlayer == Layer.WALL_LAYER:
-                        break
-                objr, objc = r, c
-            levelmanager.place_entity(self.z, entity, (objr,objc))
-        elif target:
-            # set to the target position
-            levelmanager.place_entity(self.z,
-                                      entity, (target[0],target[1]))
-            objr = entity.row
-            objc = entity.col
-        else:
-            logger.Logger.log(f'Error: invalid throw')
-            return
 
-        # construct a grid of [0-1] (makes sure path to end point is valid)
-        grid = [[1 if max([int(x.layer) for x in elist]) > Layer.BARREL_LAYER else 0
-                for elist in row]
-                for row in entitylayer]
-        returncode, pts = algo.astar(grid, (self.row,self.col), (objr,objc))
-        if returncode != 1:
-            logger.Logger.log(f'Error: failed to throw -> {returncode}')
-            return
+        objr,objc = utility.find_last_position(direction_key, self.row, self.col, entitylayer)
+
+        levelmanager.place_entity(self.z, entity, (objr,objc))
+
+        grid,pts = utility.get_path_pts(entitylayer, self.row, self.col, objr, objc)
 
         # create the animation
         frames = {}
@@ -376,12 +391,12 @@ class Entity:
         else:
             messager.add_message("Can't go down here")
 
-    def handle_inventory(self, levelmanager, messager, event):
+    def handle_inventory(self, levelmanager, messager, animator, event):
         '''Talks to the inventory component'''
         self.Inventory.show()
         if self.energy >= self.Inventory.cost:
             self.energy -= self.Inventory.cost
-            self.Inventory.action(levelmanager, messager, event)
+            self.Inventory.action(self, levelmanager, messager, event, animator, self.row, self.col, self.z)
             self.Inventory.show()
 
     def handle_charging(self, levelmanager, animator, messager, menumanager, statemachine, event):
@@ -419,12 +434,18 @@ class Entity:
             self.attack(levelmanager, animator, messager, entity, damage)
             return MoveAction.ATTACKED
         return MoveAction.INVALID
-
+    
     def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event):
         '''Pass an event for the entity to preform a certain action'''
         logger.Logger.log(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
 
         if not isinstance(event, str):
+            return
+
+        # check for status effects
+        if StatusEffect.FROZEN in self.status:
+            logger.Logger.log(f'[{self.name}|{self.id}]: FROZEN')
+            self.energy = 0
             return
 
         # Run
@@ -460,8 +481,8 @@ class Entity:
         # Inventory
         elif (hasattr(self, 'Inventory') and
             len(event) > 1 and
-            (event[0] == 'e' or event[0] == 'u')):
-            self.handle_inventory(levelmanager, messager, event)
+            (event[0] == 'e' or event[0] == 'u' or event[0] == 'a')):
+            self.handle_inventory(levelmanager, messager, animator, event)
         # Throw
         elif event[0] == 't' and len(event) > 1:
             self.fire(levelmanager, animator, messager, event)

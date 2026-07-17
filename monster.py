@@ -24,7 +24,7 @@ class Goblin(e.Entity):
                                      attacks=[e.AttackType.THROW,
                                               e.AttackType.MELEE])
         self.Inventory = component.Inventory(
-                autopickuplist=['Dart', 'Dart Stack']
+                autopickuplist=['Dart']
                 )
         self.speed = e.Speed.SLOW
         self.xp = config.GOBLIN_XP

@@ -1,6 +1,8 @@
 import color as clr
+import utility
 import tower
 import logger
+import entity
 
 class Display:
     '''Utility class to display screens with an engine class'''
@@ -50,7 +52,7 @@ class Display:
         self.render_entitylayer(entitylayer)
 
         # go through light layer
-        self.render_lightlayer(lightlayer)
+        self.render_lightlayer(entitylayer, lightlayer)
         
         # add menus
         self.render_menus(menumanager)
@@ -68,14 +70,17 @@ class Display:
                         self.screenbuffer[rw][cl] = ch
                         self.colorbuffer[rw][cl] = clr.Color().white
 
-    def render_lightlayer(self, lightlayer):
+    def render_lightlayer(self, entitylayer, lightlayer):
         '''Add light highlighting to the screen'''
         color = clr.Color().bright_yellow
         for r,row in enumerate(lightlayer):
             for c,_ in enumerate(row):
-                rw, cl = self.level_to_screen_pos(r,c)
                 if lightlayer[r][c]:
-                    self.colorbuffer[rw][cl] = color
+                    idx,ent = utility.get_max_layer(entitylayer[r][c])
+                    rw, cl = self.level_to_screen_pos(r,c)
+                    # only make non monsters glow
+                    if ent.layer < entity.Layer.MONST_LAYER:
+                        self.colorbuffer[rw][cl] = color
 
     def render_entitylayer(self, entitylayer):
         '''Go through the entity layer and add it to the screen'''

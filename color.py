@@ -12,6 +12,26 @@ class Color:
             cls._instance = super().__new__(cls)
             cls._instance._initialized = False
         return cls._instance
+
+    def toggle_bg(self, curr_color, bg=None):
+        '''Enables or disables a specific background color'''
+        # apply
+        if curr_color == Color().yellow:
+            return Color().yellow_cyan
+        elif curr_color == Color().green:
+            return Color().green_cyan
+        elif curr_color == Color().blue:
+            return Color().blue_cyan
+        # unapply
+        elif curr_color == Color().yellow_cyan:
+            return Color().yellow
+        elif curr_color == Color().green_cyan:
+            return Color().green
+        elif curr_color == Color().blue_cyan:
+            return Color().blue
+        else:
+            logger.Logger.log(f'No support for color: {curr_color}')
+            return curr_color
     
     def __init__(self, display=True):
         '''
@@ -59,6 +79,9 @@ class Color:
         curses.init_pair(14, 13, curses.COLOR_BLACK)
         curses.init_pair(15, 14, curses.COLOR_BLACK)
         curses.init_pair(16, 15, curses.COLOR_BLACK)
+        curses.init_pair(17, 3, curses.COLOR_CYAN)
+        curses.init_pair(18, 2, curses.COLOR_CYAN)
+        curses.init_pair(19, 4, curses.COLOR_CYAN)
         self.black = curses.color_pair(1)
         self.red = curses.color_pair(2)
         self.green = curses.color_pair(3)
@@ -75,6 +98,9 @@ class Color:
         self.bright_pink = curses.color_pair(14)
         self.bright_cyan = curses.color_pair(15)
         self.bright_white = curses.color_pair(16)
+        self.yellow_cyan = curses.color_pair(17)
+        self.green_cyan = curses.color_pair(18)
+        self.blue_cyan = curses.color_pair(18)
 
 def show_colors(stdscr):
     curses.start_color()

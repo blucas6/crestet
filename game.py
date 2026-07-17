@@ -1,4 +1,5 @@
 import state
+import component
 import generator
 import traceback
 import engine
@@ -417,9 +418,10 @@ class Game:
     
     def motion_event(self, event):
         '''Handles events that are part of a motion'''
-        self.StateMachine.new_state('done')
         # Throwing/Charge Action
+        logger.Logger.log(f'Motion: {self.previousevent} {event}')
         if self.previousevent == 't' or self.previousevent == '5' or self.previousevent == 'F':
+            self.StateMachine.new_state('done')
             # expects a direction
             if not event.isdigit() or event == '5':
                 self.Messager.add_message('Invalid direction!')
@@ -431,13 +433,38 @@ class Game:
             return state.Event.EVENT,self.previousevent+event
         # Inventory Action
         elif self.previousevent == 'e' or self.previousevent == 'u':
+            self.StateMachine.new_state('done')
+            return state.Event.EVENT,self.previousevent+event
+        elif self.previousevent == 'a':
+            # check to see if additional user input is required
+            applyinfo = None
+            try:
+                applyinfo = self.LevelManager.Player.Inventory.get_apply_info(event)
+            except Exception as e:
+                self.Messager.add_message('Invalid inventory key!')
+                self.StateMachine.new_state('done')
+                return state.Event.CLEAR,event
+
+            # direction request
+            if applyinfo == component.ApplyInfo.DIRECTION:
+                self.Messager.add_message('Direction?')
+                self.previousevent += event
+                return state.Event.CLEAR,event
+
+            # no additional info
+            self.StateMachine.new_state('done')
+            return state.Event.EVENT,self.previousevent+event
+        elif self.previousevent[0] == 'a':
+            # additional info event from apply received
+            self.StateMachine.new_state('done')
             return state.Event.EVENT,self.previousevent+event
         return state.Event.CLEAR,event
 
     def player_event(self, event):
         '''Process all events that are player actions'''
         # Multi key action
-        if event == 't' or event == '5' or event == 'e' or event == 'u' or event == 'F':
+        multikey_list = ['t', '5', 'e', 'u', 'F', 'a']
+        if event in multikey_list:
             # throw
             if event == 't':
                 if not self.LevelManager.Player.Inventory.has_ammo():
@@ -451,6 +478,9 @@ class Game:
             # unequip
             elif event == 'u':
                 self.Messager.add_message('Unequip what?')
+            # apply
+            elif event == 'a':
+                self.Messager.add_message('Apply what?')
             else:
                 self.Messager.add_message('Direction?')
             self.StateMachine.new_state('motion')
@@ -494,6 +524,11 @@ class Game:
             # TOGGLE FOV
             self.playerFOV = not self.playerFOV
             return state.Event.BLANK,event
+        elif event == ' ' or event == chr(curses.ascii.ESC):
+            # DO NOTHING - clears msg queue and previous event
+            self.previousevent = ''
+            self.StateMachine.new_state('done')
+            return state.Event.CLEAR,event
         elif event == 'o':
             # START OBSERVATION TOOL
             self.StateMachine.new_state('looking')
@@ -510,11 +545,6 @@ class Game:
                 self.Messager.add_message('-- View Mode --')
                 self.viewing_level = self.LevelManager.Player.z
             return state.Event.BLANK,event
-        elif event == ' ' or event == chr(curses.ascii.ESC):
-            # DO NOTHING - clears msg queue and previous event
-            self.previousevent = ''
-            self.StateMachine.new_state('done')
-            return state.Event.CLEAR,event
         elif self.StateMachine.GameState == state.GameState.MOTION:
             # MOTION
             return self.motion_event(event)

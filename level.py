@@ -66,6 +66,10 @@ class LevelManager:
     def place_entity(self, z, entity, pos, overwrite=False):
         '''Place an entity into the level'''
 
+        if not entity:
+            logger.Logger.log(f'Error: cannot place null entity')
+            return False
+
         if z < 0 or z >= len(self.Levels):
             return False
 
@@ -104,7 +108,7 @@ class LevelManager:
             for ent in level.EntityLayer[r][c]:
                 if ent.id != entity.id:
                     ent.on_top(entity, self)
-        logger.Logger.log(f'Entity {entity.name} placed at {entity.pos()}')
+        logger.Logger.log(f'Entity {entity} placed at {level.EntityLayer[r][c]}')
         return True
 
     def is_entity_pos_valid(self, level, entity, pos, overwrite=False):
@@ -157,6 +161,8 @@ class LevelManager:
             done_turn = True
             for row in level.EntityLayer:
                 for entitylist in row:
+                    # create a manually loop since entities might be removed
+                    # during an update loop
                     index = 0
                     currlistsize = len(entitylist)
                     while index < currlistsize:
@@ -221,6 +227,7 @@ class LevelManager:
         if entity.turn >= currentturn:
             return True
         energystart = entity.energy
+        entity.update_status()
         entity.take_turn(self, animator, messager, menumanager, statemachine) 
         energyend = entity.energy
         if entity.energy == 0 or energystart == energyend:
@@ -285,7 +292,10 @@ class LevelManager:
         return True
 
     def remove_entity(self, entity):
-        '''Deletes an entity from the current position and returns it'''
+        '''
+        Deletes an entity from the current position and returns it
+        Uses entity position data to identify the entity
+        '''
         r = entity.row
         c = entity.col
         idx = entity.idx
