@@ -294,7 +294,8 @@ class Game:
             currlevel = self.LevelManager.get_curr_level()
 
         # get the either the entire level or the FOV
-        if self.playerFOV:
+        if (self.StateMachine.GameState != state.GameState.VIEWING and
+            self.playerFOV):
             entitylayer = self.LevelManager.Player.mentalmap
         elif currlevel:
             entitylayer = currlevel.EntityLayer
