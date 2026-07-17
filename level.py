@@ -190,6 +190,7 @@ class LevelManager:
                         entity.update_state(self)
 
     def update_player(self, animator, messager, menumanager, statemachine, event):
+        '''Updates the player and returns the energy used'''
         self.Player.energy = 100
         self.Player.do_action(self, animator, messager, menumanager, statemachine, event)
         self.Player.turn += 1

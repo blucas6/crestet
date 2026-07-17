@@ -179,8 +179,9 @@ class Game:
             # event was valid, save it
             self.previousevent = event
 
-            # update the player
-            energy = self.player_action(event)
+            # update the player before the rest of the game
+            energy = self.LevelManager.update_player(self.Animator,
+                    self.Messager, self.MenuManager, self.StateMachine, event)
 
             # render player move
             self.render()
@@ -221,11 +222,6 @@ class Game:
             self.Display.cursor_on = False
         # clear viewing level 
         self.viewing_level = -1
-
-    def player_action(self, event):
-        return self.LevelManager.update_player(
-                self.Animator, self.Messager, self.MenuManager,
-                self.StateMachine, event)
 
     def loop(self, energy):
         '''
