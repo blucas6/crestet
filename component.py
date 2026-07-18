@@ -1,8 +1,10 @@
 import algo
+import config
 import entity
 import level
 import logger
 import enum
+import utility
 
 class Leveling:
     '''Leveling component, if an entity can level up'''
@@ -478,6 +480,10 @@ class Health:
             return True
         return False
 
+class BrainState(enum.Enum):
+    IDLE = 0
+    MOVE = 1
+
 class Brain:
     '''
     Brain component, if an entity needs to make decisions
@@ -489,11 +495,18 @@ class Brain:
         '''Highest level (exclusive) FOV will see through'''
         self.attacks = attacks
         '''List of AttackType enums'''
+        self.state = BrainState.IDLE
 
-    def get_action(self, currlevel, mypos, energy, inventory=None):
+    def get_action(self, currlevel, mypos, energy, rng, speed, inventory=None):
         '''Returns an action'''
+
+        # not enough energy
+        if energy < speed:
+            return '5'
+
         pts = self.getFOV(currlevel, mypos)
         playerpos = self.find_player(currlevel, pts)
+
         # if the player is near, try to attack
         if playerpos:
             # go through possible attacks
@@ -503,7 +516,26 @@ class Brain:
                     return self.throw_attack(mypos, playerpos)
                 elif attack == entity.AttackType.MELEE:
                     return self.find_path(currlevel.EntityLayer, mypos, playerpos)
+
+        # move around
+        if self.state == BrainState.MOVE:
+            rows = len(currlevel.EntityLayer)
+            cols = len(currlevel.EntityLayer[0])
+            actions = ['1', '2', '3', '4', '6', '7', '8', '9']
+            possible_actions = []
+            for key in actions:
+                direction = utility.key_to_direction(key)
+                r,c = mypos[0] + direction[0], mypos[1] + direction[1]
+                if utility.get_max_layer(currlevel.EntityLayer[r][c]) < entity.Layer.MONST_LAYER:
+                    possible_actions.append(key)
+            move = possible_actions[rng.randint(0, len(possible_actions)-1)]
+            if rng.randint(*config.MONS_IDLE) == 0:
+                self.state = BrainState.IDLE
+            return move
+
         # rest if not able to do anything
+        if rng.randint(*config.MONS_IDLE) == 0:
+            self.state = BrainState.MOVE
         return '.'
 
     def throw_attack_possible(self, mypos, playerpos, inventory):

@@ -55,8 +55,8 @@ class Layer(enum.IntEnum):
     '''
     FLOOR_LAYER = 0
     OBJECT_LAYER = 1
-    MONST_LAYER = 2
-    BARREL_LAYER = 3
+    BARREL_LAYER = 2
+    MONST_LAYER = 3
     WALL_LAYER = 4
 
 class Size(enum.IntEnum):
@@ -227,7 +227,7 @@ class Entity:
         # if the entity is able to attack
         # check if there is an entity to attack
         entitylayer = levelmanager.Levels[self.z].EntityLayer
-        _,entity = utility.get_max_layer(entitylayer[row][col])
+        _,entity = utility.get_max_entity(entitylayer[row][col])
 
         # anything on the monster layer should be able to be attacked
         if entity.layer == Layer.MONST_LAYER:
@@ -338,6 +338,7 @@ class Entity:
         for idx,pt in enumerate(pts):
             frames[str(idx)] = [['' for _ in row] for row in grid]
             frames[str(idx)][pt[0]][pt[1]] = entity.glyph
+        logger.Logger.log(f'adding animation: {frames}')
         origin = [0,0]
         delay = config.THROW_ANIM_DELAY
         anim = animation.Animation(origin, frames, entity.color, delay=delay)
@@ -370,7 +371,7 @@ class Entity:
                     return
                 # check if there are monsters on the next level
                 entitylayer = levelmanager.Levels[newz].EntityLayer
-                _,an_entity = utility.get_max_layer(entitylayer[self.row][self.col])
+                _,an_entity = utility.get_max_entity(entitylayer[self.row][self.col])
                 if an_entity.layer == Layer.MONST_LAYER:
                     # auto fight the entity
                     self.energy -= self.speed
@@ -425,7 +426,7 @@ class Entity:
         # find next position
         row,col = utility.get_new_pos((self.row,self.col), int(event[1]))
         entitylayer = levelmanager.Levels[self.z].EntityLayer
-        eidx,entity = utility.get_max_layer(entitylayer[row][col])
+        eidx,entity = utility.get_max_entity(entitylayer[row][col])
         # monsters or barrels can be damaged
         if entity.layer == Layer.MONST_LAYER or entity.layer == Layer.BARREL_LAYER:
             self.energy -= self.speed

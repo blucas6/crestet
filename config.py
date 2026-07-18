@@ -16,9 +16,9 @@ EXPLOSION_ANIM_DELAY = 0.05
 ### LEVEL
 LEVELORIGIN = (2,2)
 '''Where the levels are displayed on the screen'''
-LEVELROWS = 10
+LEVELROWS = 13
 '''Amount of rows in the level grid'''
-LEVELCOLS = 20
+LEVELCOLS = 30
 '''Amount of columns in the level grid'''
 MAX_RETRIES = 1000
 '''Amount of retries during generation for randomness'''
@@ -35,6 +35,8 @@ PLAYERFOV = 20
 PLAYERHEALTH = 20
 '''Player health amount'''
 
+MONS_IDLE = [0,4]
+
 ## NEWT
 NEWT_HEALTH = 5
 NEWT_SIGHTRANGE = 5
@@ -49,7 +51,6 @@ JELLY_XP = 2
 GOBLIN_HEALTH = 4
 GOBLIN_SIGHTRANGE = 5
 GOBLIN_XP = 1
-
 
 ### MENUS
 STATUSMENU_ORIGIN = (18,20)

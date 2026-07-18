@@ -33,7 +33,7 @@ class Goblin(e.Entity):
         for _ in range(5):
             self.Inventory.collect(item.Dart())
 
-    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine):
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
         '''Uses brain to select an action'''
         logger.Logger.log(f'Goblin: {self.Inventory.quiver}')
         if self.Inventory.has_ammo():
@@ -48,6 +48,8 @@ class Goblin(e.Entity):
                 levelmanager.Levels[self.z],
                 [self.row,self.col],
                 self.energy,
+                rng,
+                self.speed,
                 self.Inventory
             )
         )
@@ -85,7 +87,7 @@ class Newt(e.Entity):
         self.xp = config.NEWT_XP
         self.Inventory.equip(item.Bite())
 
-    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine):
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
         '''Uses brain to select an action'''
         self.do_action(
             levelmanager,
@@ -96,7 +98,9 @@ class Newt(e.Entity):
             self.Brain.get_action(
                 levelmanager.Levels[self.z],
                 [self.row,self.col],
-                self.energy
+                self.energy,
+                rng,
+                self.speed
             )
         )
 
