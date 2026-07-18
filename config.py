@@ -35,7 +35,9 @@ PLAYERFOV = 20
 PLAYERHEALTH = 20
 '''Player health amount'''
 
+
 MONS_IDLE = [0,4]
+'''Likeliness of brain transition'''
 
 ## NEWT
 NEWT_HEALTH = 5

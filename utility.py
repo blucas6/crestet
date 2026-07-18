@@ -17,6 +17,7 @@ def get_one_layer_pts(pos, rows, cols):
     return pts
 
 def key_to_direction(key):
+    '''Send a key (1, 2, ...) and get result (dx,dy)'''
     return ONE_LAYER_CIRCLE[int(key)-1]
 
 def get_max_entity(entitylist):
@@ -54,6 +55,7 @@ def get_max_layer(entitylist):
     return max([int(x.layer) for x in entitylist])
 
 def get_path_pts(entitylayer, start_row, start_col, end_row, end_col):
+    '''Return a boolean grid and a pts list for the path from start to end'''
     # construct a grid of [0-1] (makes sure path to end point is valid)
     grid = [[1 if get_max_layer(elist) > entity.Layer.MONST_LAYER
              else 0
@@ -64,3 +66,4 @@ def get_path_pts(entitylayer, start_row, start_col, end_row, end_col):
         logger.Logger.log(f'Error: failed to find path -> {returncode}')
         return grid, []
     return grid, pts
+

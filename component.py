@@ -481,8 +481,11 @@ class Health:
         return False
 
 class BrainState(enum.Enum):
+    '''Used to keep track of what state the brain is in'''
     IDLE = 0
+    '''Do nothing'''
     MOVE = 1
+    '''Move around randomly'''
 
 class Brain:
     '''
@@ -519,15 +522,17 @@ class Brain:
 
         # move around
         if self.state == BrainState.MOVE:
+            actions = ['1', '2', '3', '4', '6', '7', '8', '9']
             rows = len(currlevel.EntityLayer)
             cols = len(currlevel.EntityLayer[0])
-            actions = ['1', '2', '3', '4', '6', '7', '8', '9']
+            # get which moves are legal
             possible_actions = []
             for key in actions:
                 direction = utility.key_to_direction(key)
                 r,c = mypos[0] + direction[0], mypos[1] + direction[1]
                 if utility.get_max_layer(currlevel.EntityLayer[r][c]) < entity.Layer.MONST_LAYER:
                     possible_actions.append(key)
+            # pick a random move
             move = possible_actions[rng.randint(0, len(possible_actions)-1)]
             if rng.randint(*config.MONS_IDLE) == 0:
                 self.state = BrainState.IDLE
