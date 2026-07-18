@@ -75,7 +75,7 @@ class Display:
         color = clr.Color().bright_yellow
         for r,row in enumerate(lightlayer):
             for c,_ in enumerate(row):
-                if lightlayer[r][c]:
+                if lightlayer[r][c] and entitylayer[r][c]:
                     idx,ent = utility.get_max_layer(entitylayer[r][c])
                     rw, cl = self.level_to_screen_pos(r,c)
                     # only make non monsters glow

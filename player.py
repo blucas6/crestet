@@ -35,7 +35,7 @@ class Player(e.Entity):
         '''Columns for mental map'''
         self.fovpoints = []
         '''Used for simple FOV'''
-        self.fovmemory = FOVMemory.EVERYTHING
+        self.fovmemory = FOVMemory.OBJECTS
         '''Decides the type of FOV the player gets'''
         self.sightrange = config.PLAYERFOV
         '''How far the FOV will check'''
@@ -79,11 +79,10 @@ class Player(e.Entity):
             # always clear previous points
             self.mentalmap = [[[] for _ in range(len(level.EntityLayer[row]))]
                                     for row in range(len(level.EntityLayer))]
-        elif self.fovmemory == FOVMemory.EVERYTHING:
-            # just add new seen points
             for pt in pts:
                 self.mentalmap[pt[0]][pt[1]] = level.EntityLayer[pt[0]][pt[1]]
         elif self.fovmemory == FOVMemory.OBJECTS:
+            # remember everything but monsters
             for r,row in enumerate(level.EntityLayer):
                 for c,col in enumerate(row):
                     if (r,c) in pts:
@@ -97,6 +96,10 @@ class Player(e.Entity):
                                 entity.layer == e.Layer.BARREL_LAYER or
                                 entity.layer == e.Layer.WALL_LAYER):
                                 self.mentalmap[r][c].append(entity)
+        elif self.fovmemory == FOVMemory.EVERYTHING:
+            # just add new seen points
+            for pt in pts:
+                self.mentalmap[pt[0]][pt[1]] = level.EntityLayer[pt[0]][pt[1]]
 
         # add light layer to FOV
         for r,row in enumerate(level.LightLayer):

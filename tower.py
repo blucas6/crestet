@@ -48,7 +48,7 @@ class StairUp(entity.Entity):
                          name='Upstair',
                          glyph='<',
                          color=color.Color().white,
-                         layer=entity.Layer.FLOOR_LAYER,
+                         layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.VERY_LARGE)
 
 class StairDown(entity.Entity):
@@ -58,7 +58,7 @@ class StairDown(entity.Entity):
                          name='Downstair',
                          glyph='>',
                          color=color.Color().white,
-                         layer=entity.Layer.FLOOR_LAYER,
+                         layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.VERY_LARGE)
 
 class Light(entity.Entity):
