@@ -212,7 +212,7 @@ class Generator:
         for _ in range(self.light_amount):
             r = self.RNG.randint(1,self.levelrows-2)
             c = self.RNG.randint(1,self.levelcols-2)
-            _,myentity  = utility.get_max_layer(currlevel.EntityLayer[r][c])
+            _,myentity  = utility.get_max_entity(currlevel.EntityLayer[r][c])
             valid = all([False if type(ent) == tower.Light else True for ent in currlevel.EntityLayer[r][c]])
             if myentity.layer < entity.Layer.WALL_LAYER and valid:
                 light = tower.Light()

@@ -378,7 +378,7 @@ class Game:
                 screenbuffer = self.Display.get_new_buffer(original_screenbuffer)
                 colorbuffer = self.Display.get_new_buffer(original_colorbuffer) 
                 self.Display.add_animation_frame(screenbuffer, colorbuffer,
-                                                 anim, list(anim.frames.keys())[-1])
+                                             anim, list(anim.frames.keys())[-1])
         # done with all animations
         self.Animator.clearQueue()
 

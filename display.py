@@ -76,7 +76,7 @@ class Display:
         for r,row in enumerate(lightlayer):
             for c,_ in enumerate(row):
                 if lightlayer[r][c] and entitylayer[r][c]:
-                    idx,ent = utility.get_max_layer(entitylayer[r][c])
+                    idx,ent = utility.get_max_entity(entitylayer[r][c])
                     rw, cl = self.level_to_screen_pos(r,c)
                     # only make non monsters glow
                     if ent.layer < entity.Layer.MONST_LAYER:

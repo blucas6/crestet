@@ -228,7 +228,7 @@ class LevelManager:
             return True
         energystart = entity.energy
         entity.update_status()
-        entity.take_turn(self, animator, messager, menumanager, statemachine) 
+        entity.take_turn(self, animator, messager, menumanager, statemachine, self.RNG) 
         energyend = entity.energy
         if entity.energy == 0 or energystart == energyend:
             entity.turn += 1

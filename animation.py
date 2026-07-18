@@ -1,4 +1,5 @@
 import color
+import logger
 
 class Animation:
     '''
@@ -13,7 +14,7 @@ class Animation:
         '''Color of the animation'''
         self.delay = delay
         '''Delay between frames (engine will sleep)'''
-        self.finalframe = True
+        self.finalframe = False
         '''Animation will stay on its final frame at the end of the sequence'''
 
 class Animator:
