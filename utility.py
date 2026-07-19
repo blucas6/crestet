@@ -67,3 +67,10 @@ def get_path_pts(entitylayer, start_row, start_col, end_row, end_col):
         return grid, []
     return grid, pts
 
+def get_pts(rows, cols):
+    pts = []
+    for r in range(rows):
+        for c in range(cols): 
+            pts.append((r,c)) 
+    return pts
+

@@ -44,7 +44,7 @@ class Engine:
         curses.cbreak()
         self.stdscr.keypad(True)
         curses.start_color()
-        self.Color = color.Color()
+        #curses.use_default_colors()
         self.termrows, self.termcols = self.stdscr.getmaxyx()
         curses.curs_set(0)
         self.stdscr.nodelay(True)
@@ -85,10 +85,10 @@ class Engine:
             for r,row in enumerate(screenchars):
                 for c,chr in enumerate(row):
                     if r < len(screencolors) and c < len(screencolors[r]):
-                        color = screencolors[r][c]
+                        thecolor = screencolors[r][c]
                     else:
-                        color = self.Colors.white
-                    self.stdscr.addch(r, c, chr, color)
+                        thecolor = color.Color().magenta
+                    self.stdscr.addch(r, c, chr, thecolor)
             self.stdscr.refresh()
         except Exception as e:
             self.log_event(f'Display ERROR: [{c},{r}]: {e}')

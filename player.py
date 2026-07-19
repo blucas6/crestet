@@ -17,7 +17,8 @@ class FOVMemory(enum.Enum):
     '''
     NOTHING = 0,
     OBJECTS = 1,
-    EVERYTHING = 2
+    OBJECTS_BARRELS = 2
+    EVERYTHING = 3
 
 class Player(e.Entity):
     def __init__(self):
@@ -83,6 +84,19 @@ class Player(e.Entity):
                 self.mentalmap[pt[0]][pt[1]] = level.EntityLayer[pt[0]][pt[1]]
         elif self.fovmemory == FOVMemory.OBJECTS:
             # remember everything but monsters
+            for r,row in enumerate(level.EntityLayer):
+                for c,col in enumerate(row):
+                    if (r,c) in pts:
+                        self.mentalmap[r][c] = level.EntityLayer[r][c]
+                    elif self.mentalmap[r][c]:
+                        # seen before, but not in current FOV
+                        # only add the object layer
+                        self.mentalmap[r][c] = []
+                        for entity in level.EntityLayer[r][c]:
+                            if (entity.layer == e.Layer.OBJECT_LAYER or
+                                entity.layer == e.Layer.WALL_LAYER):
+                                self.mentalmap[r][c].append(entity)
+        elif self.fovmemory == FOVMemory.OBJECTS_BARRELS:
             for r,row in enumerate(level.EntityLayer):
                 for c,col in enumerate(row):
                     if (r,c) in pts:

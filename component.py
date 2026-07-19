@@ -530,8 +530,10 @@ class Brain:
             for key in actions:
                 direction = utility.key_to_direction(key)
                 r,c = mypos[0] + direction[0], mypos[1] + direction[1]
-                if utility.get_max_layer(currlevel.EntityLayer[r][c]) < entity.Layer.MONST_LAYER:
-                    possible_actions.append(key)
+                if (r < len(currlevel.EntityLayer) and r >= 0 and
+                    c < len(currlevel.EntityLayer[r]) and c >= 0):
+                    if utility.get_max_layer(currlevel.EntityLayer[r][c]) < entity.Layer.MONST_LAYER:
+                        possible_actions.append(key)
             # pick a random move
             move = possible_actions[rng.randint(0, len(possible_actions)-1)]
             if rng.randint(*config.MONS_IDLE) == 0:
