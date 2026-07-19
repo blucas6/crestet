@@ -57,6 +57,8 @@ class Color:
             self.yellow_cyan    = None
             self.green_cyan     = None
             self.blue_cyan      = None
+            self.white_grey     = None
+            self.grey_white     = None
 
             self._initialized = True
             if display:

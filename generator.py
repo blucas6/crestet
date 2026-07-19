@@ -309,6 +309,7 @@ class Generator:
                     rune_amount -= 1
 
     def get_wall_piece(self):
+        '''Return a random wall'''
         walls = [tower.Sandstone, tower.Limestone, tower.Quarrystone,
                  tower.Rubble]
         return walls[self.RNG.randint(0, len(walls)-1)]()

@@ -68,6 +68,7 @@ def get_path_pts(entitylayer, start_row, start_col, end_row, end_col):
     return grid, pts
 
 def get_pts(rows, cols):
+    '''Get all points within a length and width'''
     pts = []
     for r in range(rows):
         for c in range(cols): 
