@@ -25,6 +25,8 @@ class LevelLayout:
     '''Generate a downstairs'''
     min_walls: int
     '''Minimum amount of walls to place inside'''
+    min_barrels: int
+    '''Minimum amount of barrels on the level'''
     lights: bool
     '''Generate lights'''
     mons: int
@@ -117,6 +119,8 @@ class Generator:
                     logger.Logger.log(f'Clearing path for player')
                     # make path for player to upstair
                     self.generate_clear_path(levelmanager, currlevel, config.PLAYERPOS, upstair_pos)
+            if level_layout.min_barrels > 0:
+                self.generate_barrels(levelmanager, currlevel, level_layout.min_barrels)
             if level_layout.lights:
                 self.generate_lights(levelmanager, currlevel)
             if upstair_pos and downstair_pos:
@@ -143,12 +147,13 @@ class Generator:
         for r in range(self.levelrows):
             for c in range(self.levelcols):
                 if r == 0 or c == 0 or r == self.levelrows-1 or c == self.levelcols-1:
-                    levelmanager.place_entity(currlevel.z, tower.Wall(), [r,c], overwrite=True)
+                    wall_piece = self.get_wall_piece()
+                    levelmanager.place_entity(currlevel.z, wall_piece, [r,c], overwrite=True)
 
     def generate_upstair(self, levelmanager: level.LevelManager, currlevel: level.Level):
         '''Places an upstairs in a random spot, returns the placement'''
-        r = self.RNG.randint(1,self.levelrows-2)
-        c = self.RNG.randint(1,self.levelcols-2)
+        r = self.RNG.randint(1,self.levelrows-1)
+        c = self.RNG.randint(1,self.levelcols-1)
         levelmanager.place_entity(currlevel.z, tower.StairUp(), [r,c], overwrite=True)
         logger.Logger.log(f'Placed UPSTAIR z:{currlevel.z}: {(r,c)}')
         return (r,c)
@@ -188,30 +193,57 @@ class Generator:
         wallsplaced = 0
         attempt = 0
         # go through until minimum wall amount was reached or max tries
+        pts = utility.get_pts(self.levelrows, self.levelcols)
         while wallsplaced < minwalls and attempt < config.MAX_RETRIES:
             attempt += 1
-            for r in range(self.levelrows):
-                for c in range(self.levelcols): 
-                    if self.RNG.randint(1,100) < 10:
-                        # grab a shape and rotate it
-                        shape = self.wall_shapes[self.RNG.randint(0,len(self.wall_shapes)-1)]
-                        times = self.RNG.randint(0,3)
-                        for _ in range(times):
-                            shape = [list(row) for row in zip(*shape[::-1])]
-                        for sr,srows in enumerate(shape):
-                            for sc,scols in enumerate(srows):
-                                if scols:
-                                    pt = [r+sr,c+sc]
-                                    if levelmanager.place_entity(currlevel.z, tower.Wall(), pt):
-                                        wallsplaced += 1
-                                        if wallsplaced >= minwalls:
-                                            return
+            idx = self.RNG.randint(0,len(pts)-1)
+            pt = pts.pop(idx)
+            # grab a shape and rotate it
+            shape = self.wall_shapes[self.RNG.randint(0,len(self.wall_shapes)-1)]
+            times = self.RNG.randint(0,3)
+            for _ in range(times):
+                shape = [list(row) for row in zip(*shape[::-1])]
+            for sr,srows in enumerate(shape):
+                for sc,scols in enumerate(srows):
+                    if not scols:
+                        continue
+                    place_at = [pt[0]+sr,pt[1]+sc]
+                    wall_piece = self.get_wall_piece()
+                    if levelmanager.place_entity(currlevel.z, wall_piece, place_at):
+                        wallsplaced += 1
+                        if wallsplaced >= minwalls:
+                            logger.Logger.log(f'WALL GEN: {wallsplaced}')
+                            return
+        logger.Logger.log(f'WALL GEN MAX RETRIES')
+
+    def generate_barrels(self, levelmanager, currlevel, min_barrels):
+        '''Add barrels to the level'''
+        barrels_placed = 0
+        attempt = 0
+        pts = utility.get_pts(self.levelrows, self.levelcols)
+        while barrels_placed < min_barrels and attempt < config.MAX_RETRIES:
+            attempt += 1
+            idx = self.RNG.randint(0,len(pts)-1)
+            pt = pts.pop(idx)
+            shape = self.wall_shapes[self.RNG.randint(0,len(self.wall_shapes)-1)]
+            times = self.RNG.randint(0,3)
+            for _ in range(times):
+                shape = [list(row) for row in zip(*shape[::-1])]
+            for sr,srows in enumerate(shape):
+                for sc,scols in enumerate(srows):
+                    if not scols:
+                        continue
+                    place_at = [pt[0]+sr, pt[1]+sc]
+                    if levelmanager.place_entity(currlevel.z, tower.Barrel(), place_at):
+                        barrels_placed += 1
+            if barrels_placed >= min_barrels:
+                return
 
     def generate_lights(self, levelmanager:level.LevelManager, currlevel:level.Level):
         '''Add lights to the level'''
         for _ in range(self.light_amount):
-            r = self.RNG.randint(1,self.levelrows-2)
-            c = self.RNG.randint(1,self.levelcols-2)
+            r = self.RNG.randint(0,self.levelrows-1)
+            c = self.RNG.randint(0,self.levelcols-1)
             _,myentity  = utility.get_max_entity(currlevel.EntityLayer[r][c])
             valid = all([False if type(ent) == tower.Light else True for ent in currlevel.EntityLayer[r][c]])
             if myentity.layer < entity.Layer.WALL_LAYER and valid:
@@ -225,23 +257,21 @@ class Generator:
         while mon_amount > 0 and attempt < config.MAX_RETRIES:
             attempt += 1
             num = self.RNG.randint(0, 2)
-            r = self.RNG.randint(1,self.levelrows-2)
-            c = self.RNG.randint(1,self.levelcols-2)
-            if [r,c] == config.PLAYERPOS:
-                continue
+            r = self.RNG.randint(0,self.levelrows-1)
+            c = self.RNG.randint(0,self.levelcols-1)
+            new_mon = None
             if num == 0:
-                if levelmanager.place_entity(currlevel.z, monster.Jelly(), (r,c)):
-                    mon_amount -= 1
+                new_mon = monster.Jelly()
             elif num == 1:
-                if levelmanager.place_entity(currlevel.z, monster.Goblin(), (r,c)):
-                    mon_amount -= 1
+                new_mon = monster.Goblin()
             else:
-                if levelmanager.place_entity(currlevel.z, monster.Newt(), (r,c)):
-                    mon_amount -= 1
+                new_mon = monster.Newt()
+            if levelmanager.place_entity(currlevel.z, new_mon, (r,c)):
+                mon_amount -= 1
         '''
         for _ in range(1):
-            r = self.RNG.randint(1,self.levelrows-2)
-            c = self.RNG.randint(1,self.levelcols-2)
+            r = self.RNG.randint(1,self.levelrows-1)
+            c = self.RNG.randint(1,self.levelcols-1)
             levelmanager.place_entity(currlevel.z, monster.Human(), (r,c))
         '''
 
@@ -249,18 +279,16 @@ class Generator:
         '''Add items to the level'''
         attempt = 0
         while item_amount > 0 and attempt < config.MAX_RETRIES:
-            r = self.RNG.randint(1,self.levelrows-2)
-            c = self.RNG.randint(1,self.levelcols-2)
+            r = self.RNG.randint(0,self.levelrows-1)
+            c = self.RNG.randint(0,self.levelcols-1)
             new_item = None
-            n = self.RNG.randint(0, 3)
+            n = self.RNG.randint(0, 2)
             if n == 0:
-                new_item = tower.Barrel()
+                new_item = item.Dart()
             elif n == 1:
                 new_item = item.Fruit()
             elif n == 2:
                 new_item = item.Arrow()
-            else:
-                new_item = item.Dart()
 
             if levelmanager.place_entity(currlevel.z, new_item, (r,c)):
                 item_amount -= 1
@@ -268,8 +296,8 @@ class Generator:
     def generate_runes(self, levelmanager: level.LevelManager, currlevel: level.Level, rune_amount):
         attempt = 0
         while rune_amount > 0 and attempt < config.MAX_RETRIES:
-            r = self.RNG.randint(1,self.levelrows-2)
-            c = self.RNG.randint(1,self.levelcols-2)
+            r = self.RNG.randint(0,self.levelrows-1)
+            c = self.RNG.randint(0,self.levelcols-1)
             new_rune = None
             n = self.RNG.randint(0, 1)
             if n == 0:
@@ -280,3 +308,8 @@ class Generator:
                 if levelmanager.place_entity(currlevel.z, new_rune, (r,c)):
                     rune_amount -= 1
 
+    def get_wall_piece(self):
+        '''Return a random wall'''
+        walls = [tower.Sandstone, tower.Limestone, tower.Quarrystone,
+                 tower.Rubble]
+        return walls[self.RNG.randint(0, len(walls)-1)]()
