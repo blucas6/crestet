@@ -47,7 +47,7 @@ class Quarrystone(entity.Entity):
         super().__init__(typeid=22,
                          name='Quarrystone',
                          glyph='#',
-                         color=color.Color().white,
+                         color=color.Color().grey,
                          layer=entity.Layer.WALL_LAYER,
                          size=entity.Size.VERY_LARGE)
 

@@ -26,7 +26,7 @@ class LevelLayout:
     min_walls: int
     '''Minimum amount of walls to place inside'''
     min_barrels: int
-
+    '''Minimum amount of barrels on the level'''
     lights: bool
     '''Generate lights'''
     mons: int
@@ -217,6 +217,7 @@ class Generator:
         logger.Logger.log(f'WALL GEN MAX RETRIES')
 
     def generate_barrels(self, levelmanager, currlevel, min_barrels):
+        '''Add barrels to the level'''
         barrels_placed = 0
         attempt = 0
         pts = utility.get_pts(self.levelrows, self.levelcols)
