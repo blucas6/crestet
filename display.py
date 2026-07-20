@@ -78,7 +78,7 @@ class Display:
                     idx,ent = utility.get_max_entity(entitylayer[r][c])
                     rw, cl = self.level_to_screen_pos(r,c)
                     # only make non monsters glow
-                    if ent.layer < entity.Layer.MONST_LAYER:
+                    if ent.layer != entity.Layer.MONST_LAYER:
                         self.colorbuffer[rw][cl] = color
 
     def render_entitylayer(self, entitylayer):
