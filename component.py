@@ -9,12 +9,20 @@ import logging
 Logger = logging.getLogger(__name__)
 
 class Breakable:
+    '''Objects that can break (instead of dying)'''
     def __init__(self, max_dmg):
         self.max_dmg = max_dmg
+        '''Max amount of damage before breaking'''
         self.current_dmg = 0
+        '''Current damage taken'''
         self.broken = False
+        '''Is it broken'''
     
     def change_dmg(self, dmg):
+        '''
+        Pass in a damage to add it to the current damage toll
+        Returns true if damage causes it to break
+        '''
         self.current_dmg += dmg
         if self.current_dmg < 0:
             self.current_dmg = 0

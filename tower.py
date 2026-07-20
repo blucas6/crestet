@@ -10,7 +10,6 @@ Logger = logging.getLogger(__name__)
 class Barrel(entity.Entity):
     '''Barrel entity'''
     def __init__(self):
-        #self.Health = component.Health(health=1)
         self.Breakable = component.Breakable(max_dmg=1)
         super().__init__(typeid=16,
                          name='Barrel',
