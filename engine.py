@@ -13,7 +13,7 @@ class Engine:
     Pass any 2D character buffer and display it with colors
     '''
     def __init__(self):
-        self.inputtimeout = 1
+        self.inputtimeout = 0
         '''Optional ms between engine display'''
         self.stdscr: curses.window = None
         '''Curses.window'''
