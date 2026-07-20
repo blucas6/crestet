@@ -405,7 +405,7 @@ class Game:
         elif event == '>':
             if self.viewing_level - 1 >= 0:
                 self.viewing_level -= 1
-        self.Messager.add_message(f'Viewing Level: {self.viewing_level}')
+        self.Messager.add_message(f'Viewing Level: {self.viewing_level+1}')
         return state.Event.BLANK, event
     
     def motion_event(self, event):
@@ -460,7 +460,7 @@ class Game:
             # throw
             if event == 't':
                 if not self.LevelManager.Player.Inventory.has_ammo():
-                    self.Messager.add_message('No ammo')
+                    self.Messager.add_message('No ammo.')
                     return state.Event.CLEAR,event
                 else:
                     self.Messager.add_message('Direction?')

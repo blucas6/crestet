@@ -70,10 +70,17 @@ class MessageMenu(Menu):
         '''Get the latest message'''
         super().update()
         if not self.msg:
-            self.msg = self.Messager.pop_message(self.blocking)
-            self.text[0] = self.msg
+            msgtext = ''
+            # get the length of the next message and try to add it
+            while (self.Messager.MsgQueue and
+                len(msgtext) + len(self.Messager.MsgQueue[0]) + 1 < self.cols):
+
+                self.msg = self.Messager.pop_message(self.blocking)
+                msgtext += self.msg + ' '
+                Logger.info(f'{msgtext} {self.Messager.MsgQueue}')
             if self.Messager.MsgQueue:
-                self.text[0] += ' --more--'
+                msgtext += '--more--'
+            self.text[0] = msgtext
 
     def clear(self):
         self.msg = ''

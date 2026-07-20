@@ -171,7 +171,7 @@ class Entity:
 
     def on_apply(self, cmd, parent, levelmanager, messager, *_):
         '''Default attempt to apply an entity'''
-        messager.add_message('Nothing happens')
+        messager.add_message('Nothing happens.')
 
     def apply_status(self, messager, status_effect):
         '''Add a status effect to the entity'''
@@ -364,10 +364,10 @@ class Entity:
             if ent.name == 'Upstair' or ent.name == 'Downstair':
                 # make sure there is a level to go to
                 if newz >= len(levelmanager.Levels):
-                    messager.add_message("There is nothing above you")
+                    messager.add_message("There is nothing above you.")
                     return
                 elif newz < 0:
-                    messager.add_message("There is nothing below you")
+                    messager.add_message("There is nothing below you.")
                     return
                 # check if there are monsters on the next level
                 entitylayer = levelmanager.Levels[newz].EntityLayer
@@ -381,16 +381,16 @@ class Entity:
                 else:
                     if levelmanager.move_entity_z(self, newz, [self.row,self.col]):
                         if ent.name == 'Upstair':
-                            messager.add_message('You walk up the stairs')
+                            messager.add_message('You walk up the stairs.')
                         else:
-                            messager.add_message('You walk down the stairs')
+                            messager.add_message('You walk down the stairs.')
                         self.energy -= self.speed
                         return
         # stairwell not on this space
         if incrementz > 0:
-            messager.add_message("Can't go up here")
+            messager.add_message("Can't go up here.")
         else:
-            messager.add_message("Can't go down here")
+            messager.add_message("Can't go down here.")
 
     def handle_inventory(self, levelmanager, messager, animator, event):
         '''Talks to the inventory component'''

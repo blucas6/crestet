@@ -37,11 +37,11 @@ class Messager:
     
     def add_damage_message(self, attackentity, defendentity):
         if attackentity.name == 'Player':
-            self.MsgQueue.append(f'You hit the {defendentity.name}')
+            self.MsgQueue.append(f'You hit the {defendentity.name}.')
         elif defendentity.name == 'Player':
-            self.MsgQueue.append(f'The {attackentity.name} hits you')
+            self.MsgQueue.append(f'The {attackentity.name} hits you.')
         else:
-            self.MsgQueue.append(f'The {attackentity.name} hits the {defendentity.name}')
+            self.MsgQueue.append(f'The {attackentity.name} hits the {defendentity.name}.')
     
     def add_kill_message(self, attackentity, defendentity):
         if attackentity.name == 'Player':
@@ -57,15 +57,15 @@ class Messager:
         elif defendentity.name == 'Player':
             self.MsgQueue.append(f'The {attackentity.name} charges you!')
         else:
-            self.MsgQueue.append(f'The {attackentity.name} charges the {defendentity.name}')
+            self.MsgQueue.append(f'The {attackentity.name} charges the {defendentity.name}.')
 
     def add_eat_message(self, entitya, entityb):
         if entitya.name == 'Player':
-            self.MsgQueue.append(f'You eat the {entityb.name}')
+            self.MsgQueue.append(f'You eat the {entityb.name}.')
         elif entityb.name == 'Player':
-            self.MsgQueue.append(f'The {entitya.name} eats you')
+            self.MsgQueue.append(f'The {entitya.name} eats you.')
         else:
-            self.MsgQueue.append(f'The {entitya.name} eats the {entityb.name}')
+            self.MsgQueue.append(f'The {entitya.name} eats the {entityb.name}.')
 
     def add_level_up_message(self, entitya):
         if entitya.name == 'Player':
