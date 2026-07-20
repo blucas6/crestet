@@ -45,10 +45,10 @@
       "outer_walls": true,
       "upstair": true,
       "downstair": true,
-      "min_walls": 0,
+      "min_walls": 80,
       "min_barrels": 20,
       "lights": true,
-      "mons": 0,
+      "mons": 5,
       "items": 5,
       "runes": 1
    }

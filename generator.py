@@ -108,6 +108,10 @@ class Generator:
                 self.generate_outer_walls(levelmanager, currlevel)
             if level_layout.min_walls > 0:
                 self.generate_walls(levelmanager, currlevel, level_layout.min_walls)
+            if level_layout.min_barrels > 0:
+                self.generate_barrels(levelmanager, currlevel, level_layout.min_barrels)
+            if level_layout.lights:
+                self.generate_lights(levelmanager, currlevel)
             if level_layout.upstair:
                 # save the upstairs position to the following level's downstairs position
                 upstair_pos = self.generate_upstair(levelmanager, currlevel)
@@ -121,10 +125,6 @@ class Generator:
                     Logger.info(f'Clearing path for player')
                     # make path for player to upstair
                     self.generate_clear_path(levelmanager, currlevel, config.PLAYERPOS, upstair_pos)
-            if level_layout.min_barrels > 0:
-                self.generate_barrels(levelmanager, currlevel, level_layout.min_barrels)
-            if level_layout.lights:
-                self.generate_lights(levelmanager, currlevel)
             if upstair_pos and downstair_pos:
                 self.generate_clear_path(levelmanager, currlevel, upstair_pos, downstair_pos)
             if level_layout.mons > 0:
