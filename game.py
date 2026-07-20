@@ -181,7 +181,7 @@ class Game:
             self.render()
 
             # update the game
-            self.loop(energy)
+            self.loop(energy, event)
         # output screen buffer to terminal
         if eventtype != state.Event.NA:
             self.render()
@@ -216,7 +216,7 @@ class Game:
         # clear viewing level 
         self.viewing_level = -1
 
-    def loop(self, energy):
+    def loop(self, energy, event):
         '''
         Execute one loop in the game loop
         '''
