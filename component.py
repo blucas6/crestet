@@ -8,6 +8,21 @@ import logging
 
 Logger = logging.getLogger(__name__)
 
+class Breakable:
+    def __init__(self, max_dmg):
+        self.max_dmg = max_dmg
+        self.current_dmg = 0
+        self.broken = False
+    
+    def change_dmg(self, dmg):
+        self.current_dmg += dmg
+        if self.current_dmg < 0:
+            self.current_dmg = 0
+        if self.current_dmg >= self.max_dmg:
+            self.broken = True
+            return True
+        return False
+
 class Leveling:
     '''Leveling component, if an entity can level up'''
     def __init__(self):
@@ -537,6 +552,10 @@ class Brain:
                     if utility.get_max_layer(currlevel.EntityLayer[r][c]) < entity.Layer.MONST_LAYER:
                         possible_actions.append(key)
             # pick a random move
+            if not possible_actions:
+                return '.'
+            if len(possible_actions) == 1:
+                return possible_actions[0]
             move = possible_actions[rng.randint(0, len(possible_actions)-1)]
             if rng.randint(*config.MONS_IDLE) == 0:
                 self.state = BrainState.IDLE
@@ -656,5 +675,3 @@ class Charge:
         dmg = self.distance
         self.distance = 0
         return dmg
-
-
