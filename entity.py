@@ -250,6 +250,12 @@ class Entity:
 
         # anything on the barrel layer should be pushed
         elif entity.layer == Layer.BARREL_LAYER:
+            # if charging, break the barrel
+            if hasattr(self, 'Charge') and self.Charge.charging:
+                if not self.fight(levelmanager, animator, messager, key):
+                    Logger.error('Invalid charge?')
+                self.Charge.end()
+                return MoveAction.ATTACKED
             # check if entity can be pushed
             nrow,ncol = utility.get_new_pos((row,col), key)
             if levelmanager.move_entity(entity, (nrow,ncol)):
@@ -264,6 +270,8 @@ class Entity:
 
     def attack(self, levelmanager, animator, messager, entity, damage):
         '''Attack the entity passed in - does NOT check energy usage'''
+        if damage == 0:
+            return
         if hasattr(entity, 'Health'):
             Logger.info(f'{self} dealing damage to {entity}: {damage} ')
             messager.add_damage_message(self, entity)
@@ -273,6 +281,11 @@ class Entity:
                 # gain xp
                 if hasattr(self, 'Leveling') and hasattr(entity, 'xp'):
                     self.Leveling.gain_xp(entity.xp, self, messager)
+        elif hasattr(entity, 'Breakable'):
+            Logger.info(f'{self} hitting {entity} : {damage}')
+            messager.add_damage_message(self, entity)
+            if self.deal_damage(levelmanager, animator, messager, entity, damage):
+                messager.add_break_message(self, entity)
 
     def deal_damage(self, levelmanager, animator, messager, entity, damage):
         '''
@@ -280,7 +293,8 @@ class Entity:
         
         Returns True if the damage caused death
         '''
-        if hasattr(entity, 'Health') and entity.Health.change_health(-damage):
+        if ((hasattr(entity, 'Health') and entity.Health.change_health(-damage)) or 
+            (hasattr(entity, 'Breakable') and entity.Breakable.change_dmg(damage))):
             entity.death(levelmanager, animator, messager)
             return True
         return False
@@ -419,12 +433,10 @@ class Entity:
             return self.Inventory.get_damage()
         return 0
 
-    def fight(self, levelmanager, animator, messager, event):
+    def fight(self, levelmanager, animator, messager, key):
         '''Purposely attack in a direction'''
-        if not event[1].isdigit():
-            return
         # find next position
-        row,col = utility.get_new_pos((self.row,self.col), int(event[1]))
+        row,col = utility.get_new_pos((self.row,self.col), key)
         entitylayer = levelmanager.Levels[self.z].EntityLayer
         eidx,entity = utility.get_max_entity(entitylayer[row][col])
         # monsters or barrels can be damaged
@@ -488,8 +500,8 @@ class Entity:
         elif event[0] == 't' and len(event) > 1:
             self.fire(levelmanager, animator, messager, event)
         # Fight
-        elif event[0] == 'F' and len(event) > 1:
-            self.fight(levelmanager, animator, messager, event)
+        elif event[0] == 'F' and len(event) > 1 and event[1].isdigit():
+            self.fight(levelmanager, animator, messager, int(event[1]))
         # Rest
         elif event == '.':
             self.energy = 0

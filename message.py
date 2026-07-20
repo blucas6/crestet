@@ -79,5 +79,14 @@ class Messager:
                 self.MsgQueue.append(f'You freeze!')
             else:
                 self.MsgQueue.append(f'The {entitya.name} freezes!')
+    
+    def add_break_message(self, entitya, entityb):
+        if entitya.name == 'Player':
+            self.MsgQueue.append(f'You break the {entityb.name}.')
+        elif entityb.name == 'Player':
+            self.MsgQueue.append(f'The {entitya.name} breaks you!')
+        else:
+            self.MsgQueue.append(f'The {entitya.name} breaks the {entityb.name}.')
+
 
 
