@@ -1,9 +1,11 @@
 import entity
 import item
-import logger
 import utility
 import color
 import component
+import logging
+
+Logger = logging.getLogger(__name__)
 
 class Barrel(entity.Entity):
     '''Barrel entity'''
@@ -114,6 +116,6 @@ class Light(entity.Entity):
     def on_top(self, entity, levelmanager):
         '''Trigger the light on or off'''
         self.light = not self.light
-        logger.Logger.log(f'{self} ACTIVATED {self.light}!')
+        Logger.info(f'{self} ACTIVATED {self.light}!')
         self.update_state(levelmanager)
     

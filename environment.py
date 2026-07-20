@@ -1,5 +1,4 @@
 import numpy as np
-import logger
 import game
 import config
 import heapq

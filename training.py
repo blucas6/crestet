@@ -4,7 +4,6 @@ import environment
 import agent 
 import time
 import numpy as np
-import logger
 
 class Training:
     def __init__(self, seed=None, display=False, timing=False):
@@ -15,7 +14,6 @@ class Training:
         self.avg_q_values = []
         self.display = display
         self.environment = environment.Environment(seed, display, timing)
-        logger.Logger.logging = False
         self.agent = agent.Agent(self.environment.obs_size, self.environment.action_size)
         self.turn_delay_secs = 1
         self.seed = seed

@@ -1,6 +1,8 @@
-import logger
 import algo
 import entity
+import logging
+
+Logger = logging.getLogger(__name__)
 
 ONE_LAYER_CIRCLE = [(1,-1),(1,0),(1,1),(0,-1),(0,0),(0,1),(-1,-1),(-1,0),(-1,1)]
 
@@ -63,7 +65,7 @@ def get_path_pts(entitylayer, start_row, start_col, end_row, end_col):
             for row in entitylayer]
     returncode, pts = algo.astar(grid, (start_row,start_col), (end_row,end_col))
     if returncode != 1:
-        logger.Logger.log(f'Error: failed to find path -> {returncode}')
+        Logger.error(f'Error: failed to find path -> {returncode}')
         return grid, []
     return grid, pts
 

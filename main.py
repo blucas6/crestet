@@ -3,6 +3,7 @@ import argparse
 import timing
 import game
 import training
+import logging
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Crestet Game Options')
@@ -20,6 +21,13 @@ if __name__ == '__main__':
     parser.add_argument('-r', '--release', action='store_true',
                         help='Runs the game in Release mode (debug log off)')
     args = parser.parse_args()
+
+    logging.basicConfig(
+        level = logging.INFO,
+        filename = 'app.log',
+        filemode = 'w',
+        format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
 
     if args.agent:
         training = training.Training(seed=args.seed, display=args.display, timing=args.timing) 

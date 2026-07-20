@@ -2,9 +2,11 @@ import algo
 import config
 import entity
 import level
-import logger
 import enum
 import utility
+import logging
+
+Logger = logging.getLogger(__name__)
 
 class Leveling:
     '''Leveling component, if an entity can level up'''
@@ -44,7 +46,7 @@ class Interact:
         statemachine.callback = self.on_choice
 
     def on_choice(self, statemachine, menumanager, event):
-        logger.Logger.log(f'GOT MY ANSWER: {event}')
+        Logger.info(f'GOT MY ANSWER: {event}')
         menumanager.showinteract = False
         statemachine.new_state('doneinteract')
 
@@ -132,17 +134,17 @@ class Inventory:
 
     def show(self):
         '''Print the inventory to logger'''
-        logger.Logger.log('Inventory')
-        logger.Logger.log(f' Quiver: {self.quiver}')
-        logger.Logger.log(f' Main Hand: {self.mainHand}')
-        logger.Logger.log(f' Off Hand: {self.offHand}')
-        logger.Logger.log(f' Head: {self.head}')
-        logger.Logger.log(f' Body: {self.body}')
-        logger.Logger.log(f' Feet: {self.feet}')
-        logger.Logger.log(f' Bag:')
+        Logger.info('Inventory')
+        Logger.info(f' Quiver: {self.quiver}')
+        Logger.info(f' Main Hand: {self.mainHand}')
+        Logger.info(f' Off Hand: {self.offHand}')
+        Logger.info(f' Head: {self.head}')
+        Logger.info(f' Body: {self.body}')
+        Logger.info(f' Feet: {self.feet}')
+        Logger.info(f' Bag:')
         for ent in self.contents:
-            logger.Logger.log(f'  {ent.name}')
-        logger.Logger.log(f'Inventory end')
+            Logger.info(f'  {ent.name}')
+        Logger.info(f'Inventory end')
     
     def get_entity_from_key(self, char):
         '''
@@ -168,7 +170,7 @@ class Inventory:
                 entity = self.ability
             else:
                 key = ord(char) - 97
-                logger.Logger.log(f'Inventory key: {key} {char}')
+                Logger.info(f'Inventory key: {key} {char}')
                 if key < len(self.contents):
                     entity = self.contents[key]
                 else:
@@ -254,7 +256,7 @@ class Inventory:
 
     def collect(self, entity):
         '''Entrance for items being added into the inventory'''
-        logger.Logger.log(f'Collecting: {entity}')
+        Logger.info(f'Collecting: {entity}')
 
         # try to add it to the quiver
         if hasattr(entity, 'ItemType') and entity.ItemType == ItemType.QUIVER:
@@ -272,7 +274,7 @@ class Inventory:
             for ent in self.contents:
                 if hasattr(ent, 'Group'):
                     if ent.Group.group_up(entity):
-                        logger.Logger.log(f'Inventory grouped: {ent} {entity}')
+                        Logger.info(f'Inventory grouped: {ent} {entity}')
                         return
 
         # default is add to bag
@@ -304,15 +306,15 @@ class Inventory:
             return
         # Equip
         if action == 'e':
-            logger.Logger.log(f'Equipping: {entity}')
+            Logger.info(f'Equipping: {entity}')
             self.equip(entity)
         # Unequip
         elif action == 'u':
-            logger.Logger.log(f'Unequipping: {entity}')
+            Logger.info(f'Unequipping: {entity}')
             self.unequip(entity)
         # Apply
         elif action == 'a':
-            logger.Logger.log(f'Applying: {entity}')
+            Logger.info(f'Applying: {entity}')
             self.apply(entity, cmd, parent, levelmanager, messager, animator, row, col, z)
 
     def apply(self, entity, cmd, parent, levelmanager, messager, animator, row, col, z):
@@ -337,7 +339,7 @@ class Inventory:
             entity = self.ability
         else:
             key = ord(char) - 97
-            logger.Logger.log(f'Inventory key: {key} {char}')
+            Logger.info(f'Inventory key: {key} {char}')
             if key < len(self.contents):
                 entity = self.contents[key]
             else:
@@ -580,7 +582,7 @@ class Brain:
         # call A* to get a set of pts
         returncode, pts = algo.astar(grid, mypos, playerpos)
         if returncode != 1:
-            logger.Logger.log(f'Error: brain failed to find path -> {returncode}')
+            Logger.error(f'Error: brain failed to find path -> {returncode}')
             return '.'
         return self.move_towards_pt(mypos, pts[1])
     

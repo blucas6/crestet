@@ -1,5 +1,7 @@
 import enum
-import logger
+import logging
+
+Logger = logging.getLogger(__name__)
 
 class Event(enum.Enum):
     '''
@@ -76,6 +78,6 @@ class StateMachine:
         elif newstate == 'viewing' and self.GameState == GameState.PLAYING:
             self.GameState = GameState.VIEWING
 
-        logger.Logger.log(f'NEW STATE: {newstate} RESULT: {self.GameState}')
+        Logger.info(f'NEW STATE: {newstate} RESULT: {self.GameState}')
 
 

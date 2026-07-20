@@ -1,5 +1,4 @@
 import color
-import logger
 
 class Animation:
     '''

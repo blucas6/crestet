@@ -5,7 +5,9 @@ import component
 import color
 import utility
 import algo
-import logger
+import logging
+
+Logger = logging.getLogger(__name__)
 
 class SnowRune(entity.Entity):
     def __init__(self):

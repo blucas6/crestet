@@ -3,9 +3,11 @@ import animation
 import config
 import utility
 import algo
-import logger
 import enum
 import color
+import logging
+
+Logger = logging.getLogger(__name__)
 
 class StatusEffect(enum.Enum):
     '''Entity status effects'''
@@ -115,7 +117,7 @@ class Entity:
         '''Energy bank'''
         self.status = {}
         '''Map of current status effects and their respective cooldowns counters'''
-        #logger.Logger.log(f'Creating new entity: {self} {self.pos()}')
+        Logger.debug(f'Creating new entity: {self} {self.pos()}')
 
     def __repr__(self):
         return f'[{self.name}|{self.id}|({self.row},{self.col},{self.z},{self.idx})]'
@@ -217,7 +219,7 @@ class Entity:
 
         # check energy cost
         if self.energy < self.speed:
-            logger.Logger.log(f'[{self.name}|{self.id}]: movement no energy')
+            Logger.info(f'[{self.name}|{self.id}]: movement no energy')
             return MoveAction.NOENERGY
 
         # check validity
@@ -263,7 +265,7 @@ class Entity:
     def attack(self, levelmanager, animator, messager, entity, damage):
         '''Attack the entity passed in - does NOT check energy usage'''
         if hasattr(entity, 'Health'):
-            logger.Logger.log(f'{self} dealing damage to {entity}: {damage} ')
+            Logger.info(f'{self} dealing damage to {entity}: {damage} ')
             messager.add_damage_message(self, entity)
             # check for kill
             if self.deal_damage(levelmanager, animator, messager, entity, damage):
@@ -291,7 +293,7 @@ class Entity:
         if event[1].isdigit():
             # get the direction
             if self.energy < self.speed:
-                logger.Logger.log(f'[{self.name}|{self.id}]: Firing not enough energy')
+                Logger.info(f'[{self.name}|{self.id}]: Firing not enough energy')
                 return
             # get the ammo entity
             fired_entity = self.Inventory.fire_quiver()
@@ -306,7 +308,6 @@ class Entity:
     
     def death(self, levelmanager, *_):
         '''Entities can add to this method to trigger on death actions'''
-        logger.Logger.log(f'Death trigger: {self}')
         levelmanager.remove_entity(self)
 
     def throw(self, levelmanager, animator, messager, entity, direction_key):
@@ -319,10 +320,10 @@ class Entity:
         '''
         # make sure there is enough energy to throw
         if not hasattr(self, 'speed'):
-            logger.Logger.log(f'Speed component missing')
+            Logger.warning(f'Speed component missing')
             return
         if self.energy < self.speed:
-            logger.Logger.log(f'[{self.name}|{self.id}]: throwing not enough energy')
+            Logger.info(f'[{self.name}|{self.id}]: throwing not enough energy')
             return
 
         entitylayer = levelmanager.Levels[self.z].EntityLayer
@@ -338,7 +339,6 @@ class Entity:
         for idx,pt in enumerate(pts):
             frames[str(idx)] = [['' for _ in row] for row in grid]
             frames[str(idx)][pt[0]][pt[1]] = entity.glyph
-        logger.Logger.log(f'adding animation: {frames}')
         origin = [0,0]
         delay = config.THROW_ANIM_DELAY
         anim = animation.Animation(origin, frames, entity.color, delay=delay)
@@ -352,7 +352,7 @@ class Entity:
         # subtract energy
         self.energy -= self.speed
 
-        logger.Logger.log(f'throwing object')
+        Logger.info(f'throwing object')
 
     def moveZ(self, levelmanager, animator, messager, incrementz):
         '''Move an to another z level'''
@@ -438,14 +438,14 @@ class Entity:
     
     def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event):
         '''Pass an event for the entity to preform a certain action'''
-        logger.Logger.log(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
+        Logger.info(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
 
         if not isinstance(event, str):
             return
 
         # check for status effects
         if StatusEffect.FROZEN in self.status:
-            logger.Logger.log(f'[{self.name}|{self.id}]: FROZEN')
+            Logger.info(f'[{self.name}|{self.id}]: FROZEN')
             self.energy = 0
             return
 

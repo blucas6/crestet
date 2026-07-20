@@ -3,27 +3,26 @@ import sys
 import color
 import time
 import os
+import logging
+
+Logger = logging.getLogger(__name__)
 
 class Engine:
     '''
     Engine class provides a curses interface displayer
     Pass any 2D character buffer and display it with colors
     '''
-    def __init__(self, debug=False):
+    def __init__(self):
         self.inputtimeout = 1
         '''Optional ms between engine display'''
         self.stdscr: curses.window = None
         '''Curses.window'''
-        self.eventlog = 'EventLog.log'
-        '''Where to dump events'''
         self.framedelay = 0
         '''Optional delay between frames'''
         self.frames = 0
         '''Current frame counter'''
         self.initialized = False
         '''Keeps track of object initialization of the curses module'''
-        self.debug = debug
-        '''Logs more messages if true'''
 
     def frame_ready(self):
         '''
@@ -55,14 +54,11 @@ class Engine:
             os.environ['ESCDELAY'] = '25'
         else:
             curses.set_escdelay(25)
-        # clear log
-        with open(self.eventlog, 'w+') as el:
-            el.write('')
         self.initialized = True
-        self.log_event(f'Engine initialized {(self.termrows,self.termcols)}')
-        self.log_event(f'  Frame Delay: {self.framedelay}')
-        self.log_event(f'  Baudrate:    {curses.baudrate()} (bit/sec)')
-        self.log_event(f'  Long Name:   {curses.longname()}')
+        Logger.info(f'Engine initialized {(self.termrows,self.termcols)}')
+        Logger.info(f'  Frame Delay: {self.framedelay}')
+        Logger.info(f'  Baudrate:    {curses.baudrate()} (bit/sec)')
+        Logger.info(f'  Long Name:   {curses.longname()}')
 
     def end(self):
         '''End the curses module correctly'''
@@ -70,7 +66,7 @@ class Engine:
         self.stdscr.keypad(False)
         curses.echo()
         curses.endwin()
-        self.log_event('--Engine Shutdown--')
+        Logger.info('--Engine Shutdown--')
 
     def output(self, screenchars: list=[], screencolors: list=[]):
         '''
@@ -78,7 +74,7 @@ class Engine:
         color pair buffer to the terminal
         '''
         if not self.initialized:
-            self.log_event('Engine output() called before initialization!')
+            Logger.error('Engine output() called before initialization!')
             return
         try:
             self.stdscr.erase()
@@ -91,7 +87,7 @@ class Engine:
                     self.stdscr.addch(r, c, chr, thecolor)
             self.stdscr.refresh()
         except Exception as e:
-            self.log_event(f'Display ERROR: [{c},{r}]: {e}')
+            Logger.error(f'Display ERROR: [{c},{r}]: {e}')
 
     def read_input(self):
         '''
@@ -102,19 +98,10 @@ class Engine:
         try:
             event = self.stdscr.getch()
             if event != curses.ERR:
-                if self.debug:
-                    self.log_event(f'"{chr(event)}" ({event})')
                 return chr(event)
         except Exception as e:
-            self.log_event(f'Read input ERROR: {event}')
+            Logger.error(f'Read input ERROR: {event}')
 
-    def log_event(self, msg):
-        '''
-        Logs an event to the event log
-        '''
-        with open(self.eventlog, 'a+') as lf:
-            lf.write(f'{msg}\n')
-    
     def get_cursor(self):
         '''Returns the current position of the cursor on screen'''
         if not self.initialized:
@@ -143,12 +130,11 @@ class Engine:
             return
         if pos[0] < self.termrows and pos[1] < self.termcols:
             try:
-                self.log_event(f'Moving cursor {pos}')
                 self.stdscr.move(pos[0], pos[1])
             except Exception as e:
-                self.log_event(f'Failed to move cursor: {e}')
+                Logger.error(f'Failed to move cursor: {e}')
         else:
-            self.log_event(f'Invalid cursor position {pos}')
+            Logger.error(f'Invalid cursor position {pos}')
 
     def pause(self, t: float=1):
         '''

@@ -1,5 +1,4 @@
 import color
-import logger
 import item
 import utility
 import config
@@ -7,6 +6,9 @@ import copy
 import enum
 import component
 import entity as e
+import logging
+
+Logger = logging.getLogger(__name__)
 
 class FOVMemory(enum.Enum):
     '''

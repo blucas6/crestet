@@ -1,5 +1,7 @@
 import curses
-import logger
+import logging
+
+Logger = logging.getLogger(__name__)
 
 class Color:
     '''
@@ -30,7 +32,7 @@ class Color:
         elif curr_color == Color().blue_cyan:
             return Color().blue
         else:
-            logger.Logger.log(f'No support for color: {curr_color}')
+            Logger.warning(f'No support for color: {curr_color}')
             return curr_color
     
     def __init__(self, display=True):

@@ -1,9 +1,11 @@
-import logger
 import config
 import message
 import timing
 import player
 import entity as e
+import logging
+
+Logger = logging.getLogger(__name__)
 
 class Level:
     def __init__(self, rows, cols, z, rng):
@@ -67,7 +69,7 @@ class LevelManager:
         '''Place an entity into the level'''
 
         if not entity:
-            logger.Logger.log(f'Error: cannot place null entity')
+            Logger.error(f'Error: cannot place null entity')
             return False
 
         if z < 0 or z >= len(self.Levels):
@@ -76,7 +78,7 @@ class LevelManager:
         level = self.Levels[z]
 
         if not self.is_entity_pos_valid(level, entity, pos, overwrite=overwrite):
-            logger.Logger.log(f'Error: Entity {entity.name} cannot be placed: {pos} z:{z}')
+            Logger.error(f'Error: Entity {entity.name} cannot be placed: {pos} z:{z}')
             return False
         
         r = pos[0]
@@ -94,7 +96,7 @@ class LevelManager:
             while entity_amount+1 > config.LEVELMAX_ENTITIES:
                 check_ent = level.EntityLayer[r][c][deleteidx]
                 if check_ent.layer == e.Layer.OBJECT_LAYER:
-                    logger.Logger.log(f'CULLING: {check_ent}')
+                    Logger.warning(f'CULLING: {check_ent}')
                     self.remove_entity(check_ent)
                 entity_amount = len(level.EntityLayer[r][c])
                 deleteidx += 1
@@ -108,7 +110,7 @@ class LevelManager:
             for ent in level.EntityLayer[r][c]:
                 if ent.id != entity.id:
                     ent.on_top(entity, self)
-        #logger.Logger.log(f'Entity {entity} placed at {level.EntityLayer[r][c]}')
+        Logger.debug(f'Entity {entity} placed at {level.EntityLayer[r][c]}')
         return True
 
     def is_entity_pos_valid(self, level, entity, pos, overwrite=False):
@@ -169,8 +171,8 @@ class LevelManager:
                         try:
                             entity = entitylist[index]
                         except:
-                            logger.Logger.log(f'ERROR: {entitylist}')
-                            logger.Logger.log(f'ERROR: idx:{index}')
+                            Logger.error(f'ERROR: {entitylist}')
+                            Logger.error(f'ERROR: idx:{index}')
                             break
                         currlistsize = len(entitylist)
                         done = self.update_entity(animator,
@@ -197,6 +199,7 @@ class LevelManager:
 
     def update_player(self, animator, messager, menumanager, statemachine, event):
         '''Updates the player and returns the energy used'''
+        Logger.info(f'-------- TURN UPDATE ({self.Player.turn + 1}) ---------')
         self.Player.energy = 100
         self.Player.do_action(self, animator, messager, menumanager, statemachine, event)
         self.Player.turn += 1
@@ -213,7 +216,6 @@ class LevelManager:
 
         timing.Timing.start('Game Loop')
 
-        logger.Logger.log('----------TURN UPDATE-----------')
 
         # update the level the player is on
         self.currentz = self.Player.z
@@ -247,15 +249,10 @@ class LevelManager:
     def move_entity(self, entity, pos):
         '''Moves an entity from one place to a new position if valid'''
 
-        #logger.Logger.log(f'Moving entity: {entity.name}|{entity.id}')
         level = self.Levels[entity.z]
 
         if not self.is_entity_pos_valid(level, entity, pos):
-            logger.Logger.log(f'Moving entity failed: invalid {entity.name}|{entity.id}')
-            return False
-
-        if not self.within_level(pos, entity.z):
-            logger.Logger.log(f'Moving entity failed: invalid {entity.name}|{entity.id}')
+            Logger.error(f'Moving entity failed: invalid {entity.name}|{entity.id}')
             return False
 
         # move is valid - delete old entity
@@ -270,17 +267,13 @@ class LevelManager:
         '''Moves an entity to a new z level'''
 
         if newz >= len(self.Levels) or newz < 0:
-            logger.Logger.log(f'Error: {entity} cannot go past last level!')
+            Logger.error(f'Error: {entity} cannot go past last level!')
             return
 
         level = self.Levels[newz]
 
         if not self.is_entity_pos_valid(level, entity, newpos):
-            logger.Logger.log(f'Error: {entity} moving to z:{newz} is invalid!')
-            return False
-
-        if not self.within_level(newpos, newz):
-            logger.Logger.log(f'Error: {entity} moving to z:{newz} is invalid!')
+            Logger.error(f'Error: {entity} moving to z:{newz} is invalid!')
             return False
 
         entity = self.remove_entity(entity)

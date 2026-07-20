@@ -1,7 +1,6 @@
 import color as clr
 import utility
 import tower
-import logger
 import entity
 
 class Display:

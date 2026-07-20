@@ -1,5 +1,7 @@
-import logger
 import config
+import logging
+
+Logger = logging.getLogger(__name__)
 
 class Menu:
     '''

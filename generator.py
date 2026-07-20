@@ -7,10 +7,12 @@ import copy
 import entity
 import algo
 import tower
-import logger
 import json
 import level
 from dataclasses import dataclass
+import logging
+
+Logger = logging.getLogger(__name__)
 
 @dataclass
 class LevelLayout:
@@ -84,7 +86,7 @@ class Generator:
                 self.level_layouts.append(copy.deepcopy(levelgen))
             
         except Exception as ex:
-            logger.Logger.log(f'Generator parsing error: {ex}')
+            Logger.error(f'Generator parsing error: {ex}')
             raise
 
     def generate_levels(self, levelmanager: level.LevelManager):
@@ -116,7 +118,7 @@ class Generator:
             # clear path before any items are placed
             if z == config.PLAYERZ:
                 if level_layout.upstair:
-                    logger.Logger.log(f'Clearing path for player')
+                    Logger.info(f'Clearing path for player')
                     # make path for player to upstair
                     self.generate_clear_path(levelmanager, currlevel, config.PLAYERPOS, upstair_pos)
             if level_layout.min_barrels > 0:
@@ -134,7 +136,7 @@ class Generator:
             # make sure player can be placed, even after placing all items down
             if z == config.PLAYERZ:
                 levelmanager.place_entity(currlevel.z, tower.Floor(), config.PLAYERPOS, overwrite=True)
-        logger.Logger.log(f'----- FINISHED LEVEL GENERATION -----')
+        Logger.info(f'----- FINISHED LEVEL GENERATION -----')
 
     def generate_floor(self, levelmanager: level.LevelManager, currlevel: level.Level):
         '''Adds floors to the entity array'''
@@ -155,14 +157,14 @@ class Generator:
         r = self.RNG.randint(1,self.levelrows-1)
         c = self.RNG.randint(1,self.levelcols-1)
         levelmanager.place_entity(currlevel.z, tower.StairUp(), [r,c], overwrite=True)
-        logger.Logger.log(f'Placed UPSTAIR z:{currlevel.z}: {(r,c)}')
+        Logger.info(f'Placed UPSTAIR z:{currlevel.z}: {(r,c)}')
         return (r,c)
     
     def generate_downstair(self, levelmanager: level.LevelManager, currlevel: level.Level,
                            levellayout: LevelLayout):
         '''Places the downstairs at the designated spot, returns the placement'''
         if not levellayout.downstair_pos:
-            logger.Logger.log(f'ERROR: downstair position is empty! z:{currlevel.z}')
+            Logger.error(f'ERROR: downstair position is empty! z:{currlevel.z}')
             return ()
         levelmanager.place_entity(currlevel.z,
                                   tower.StairDown(),
@@ -173,12 +175,12 @@ class Generator:
     def generate_clear_path(self, levelmanager:level.LevelManager, currlevel:level.Level, a, b):
         '''Creates a floor path between points a -> b'''
         if not a or not b:
-            logger.Logger.log(f'Error: Clearing a path between {a}->{b} cannot be None!')
+            Logger.error(f'Error: Clearing a path between {a}->{b} cannot be None!')
             return
         grid = [[max([ent.layer for ent in elist]) for elist in row]
                     for row in currlevel.EntityLayer]
         pts = algo.dijkstra(grid, tuple(a), tuple(b), diagonals=False)
-        logger.Logger.log(f'Clear Path ({currlevel.z}): {a} -> {b}\n{pts}')
+        Logger.info(f'Clear Path ({currlevel.z}): {a} -> {b}\n{pts}')
         if pts:
             for pt in pts:
                 maxlayer = max([x.layer for x in currlevel.EntityLayer[pt[0]][pt[1]]])
@@ -212,9 +214,8 @@ class Generator:
                     if levelmanager.place_entity(currlevel.z, wall_piece, place_at):
                         wallsplaced += 1
                         if wallsplaced >= minwalls:
-                            logger.Logger.log(f'WALL GEN: {wallsplaced}')
                             return
-        logger.Logger.log(f'WALL GEN MAX RETRIES')
+        Logger.warning(f'WALL GEN MAX RETRIES')
 
     def generate_barrels(self, levelmanager, currlevel, min_barrels):
         '''Add barrels to the level'''

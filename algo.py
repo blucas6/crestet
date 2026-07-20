@@ -1,11 +1,13 @@
 import heapq
 import heapq
-import logger
+import logging
+
+Logger = logging.getLogger(__name__)
 
 def debugGrid(grid, pts):
     for row in grid:
-        logger.Logger.log(row)
-    logger.Logger.log('-------------------')
+        Logger.debug(row)
+    Logger.debug('-------------------')
     for r,row in enumerate(grid):
         line = '['
         for c,col in enumerate(row):
@@ -16,8 +18,8 @@ def debugGrid(grid, pts):
             if not c == len(row)-1:
                 line += ', '
         line += ']'
-        logger.Logger.log(line)
-    logger.Logger.log('==========')
+        Logger.debug(line)
+    Logger.debug('==========')
 
 class Cell:
     '''A* cell object'''
@@ -224,8 +226,7 @@ def testAStar():
 
 def dijkstra(grid: list, start: tuple, end: tuple, diagonals=True, debug=False):
     if debug:
-        logger.Logger.log(f'Dijkstra: {start} -> {end}')
-        #logger.Logger.log(f'Dijkstra: {grid}')
+        Logger.debug(f'Dijkstra: {start} -> {end}')
     rows, cols = len(grid), len(grid[0])
     heap = []
 
@@ -241,7 +242,7 @@ def dijkstra(grid: list, start: tuple, end: tuple, diagonals=True, debug=False):
     while heap:
         cost, (x, y), path = heapq.heappop(heap)
         if debug:
-            logger.Logger.log(f'Dijkstra: path {path} visiting: {(x,y)} -> {end}')
+            Logger.debug(f'Dijkstra: path {path} visiting: {(x,y)} -> {end}')
 
         if (x, y) == end:
             return path

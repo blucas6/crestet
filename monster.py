@@ -1,11 +1,13 @@
 import entity as e
-import logger
 import animation
 import config
 import color
 import component
 import utility
 import item
+import logging
+
+Logger = logging.getLogger(__name__)
 
 class Goblin(e.Entity):
     '''
@@ -35,9 +37,9 @@ class Goblin(e.Entity):
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
         '''Uses brain to select an action'''
-        logger.Logger.log(f'Goblin: {self.Inventory.quiver}')
+        Logger.info(f'Goblin: {self.Inventory.quiver}')
         if self.Inventory.has_ammo():
-            logger.Logger.log(f'Goblin Ammo: {self.Inventory.quiver.Group.amount}')
+            Logger.info(f'Goblin Ammo: {self.Inventory.quiver.Group.amount}')
         self.do_action(
             levelmanager,
             animator,

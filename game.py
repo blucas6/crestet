@@ -9,7 +9,6 @@ import copy
 import config
 import level
 import display
-import logger 
 import curses.ascii
 import random
 import secrets
@@ -19,6 +18,9 @@ import enum
 import menu
 import animation
 import utility
+import logging
+
+Logger = logging.getLogger(__name__)
 
 class Game:
     '''
@@ -48,7 +50,7 @@ class Game:
         '''Controls the state of the game'''
         self.Display = display.Display()
         '''Utility class to organize displaying to the engine'''
-        self.Engine = engine.Engine(debug=True)
+        self.Engine = engine.Engine()
         '''Connection to for displaying and events'''
         self.LevelManager = level.LevelManager()
         '''Handles the levels'''
@@ -64,20 +66,11 @@ class Game:
         # Timing
         tt.Timing.allowTiming = timing
 
-        # Logging
-        if timing:
-            logger.Logger.logging = False
-        else:
-            logger.Logger.logging = logging
-
-
     def start(self):
         '''
         Entry point for the game to start, will call the main loop after
         full initialization
         '''
-        logger.Logger.init()
-
         self.display_setup()
         self.game_setup()
 
@@ -113,15 +106,15 @@ class Game:
                 self.seed = secrets.randbits(64)
             self.RNG = random.Random(self.seed)
 
-            logger.Logger.log(f'Game Settings:')
-            logger.Logger.log(f'  Running: {self.running}')
-            logger.Logger.log(f'  Seed: {self.seed}')
-            logger.Logger.log(f'  Messages Will Block: {self.messageblocking}')
-            logger.Logger.log(f'  Display: {self.usedisplay}')
-            logger.Logger.log(f'  Turn: {self.turn}')
-            logger.Logger.log(f'  Player FOV: {self.playerFOV}')
-            logger.Logger.log(f'  Timing: {tt.Timing.allowTiming}')
-            logger.Logger.log(f'  Total Levels: {self.LevelManager.totallevels}')
+            Logger.info(f'Game Settings:')
+            Logger.info(f'  Running: {self.running}')
+            Logger.info(f'  Seed: {self.seed}')
+            Logger.info(f'  Messages Will Block: {self.messageblocking}')
+            Logger.info(f'  Display: {self.usedisplay}')
+            Logger.info(f'  Turn: {self.turn}')
+            Logger.info(f'  Player FOV: {self.playerFOV}')
+            Logger.info(f'  Timing: {tt.Timing.allowTiming}')
+            Logger.info(f'  Total Levels: {self.LevelManager.totallevels}')
 
             # level manager
             self.LevelManager.init(self.Messager,
@@ -191,7 +184,6 @@ class Game:
             self.loop(energy)
         # output screen buffer to terminal
         if eventtype != state.Event.NA:
-            logger.Logger.log(f'RENDER')
             self.render()
 
     def process_events(self, event):
@@ -229,7 +221,7 @@ class Game:
         Execute one loop in the game loop
         '''
 
-        logger.Logger.log(f'GAMESTATE: {self.StateMachine.GameState}')
+        Logger.info(f'GAMESTATE: {self.StateMachine.GameState}')
 
         # increment the turn
         self.turn += 1
@@ -342,7 +334,7 @@ class Game:
         tt.Timing.show()
         if errorex:
             error_str = f'\n**Critical Failure**\n{type(errorex).__name__}: {errorex}\n\n{stack}' 
-            logger.Logger.log(error_str)
+            Logger.info(error_str)
             print(error_str)
 
     def messages(self):
@@ -419,7 +411,7 @@ class Game:
     def motion_event(self, event):
         '''Handles events that are part of a motion'''
         # Throwing/Charge Action
-        logger.Logger.log(f'Motion: {self.previousevent} {event}')
+        Logger.info(f'Motion: {self.previousevent} {event}')
         if self.previousevent == 't' or self.previousevent == '5' or self.previousevent == 'F':
             self.StateMachine.new_state('done')
             # expects a direction
