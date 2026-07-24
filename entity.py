@@ -243,7 +243,7 @@ class Entity:
             # must attack
             else:
                 self.energy -= self.speed
-                self.attack(levelmanager, animator, messager, entity, rng)
+                self.attack_melee(levelmanager, animator, messager, entity, rng)
                 return MoveAction.ATTACKED
 
         # anything on the barrel layer should be pushed
@@ -296,7 +296,7 @@ class Entity:
                 messager.add_break_message(self, entity)
         
 
-    def attack(self, levelmanager, animator, messager, entity, rng):
+    def attack_melee(self, levelmanager, animator, messager, entity, rng):
         '''Attack the entity passed in - does NOT check energy usage'''
         damage = self.get_damage(rng)
 
@@ -422,10 +422,11 @@ class Entity:
                 # check if there are monsters on the next level
                 entitylayer = levelmanager.Levels[newz].EntityLayer
                 _,an_entity = utility.get_max_entity(entitylayer[self.row][self.col])
-                if an_entity.layer == Layer.MONST_LAYER:
+                if (an_entity.layer == Layer.MONST_LAYER or
+                    an_entity.layer == Layer.BARREL_LAYER):
                     # auto fight the entity
                     self.energy -= self.speed
-                    self.attack(levelmanager, animator, messager, an_entity, rng)
+                    self.attack_melee(levelmanager, animator, messager, an_entity, rng)
                     return
                 else:
                     if levelmanager.move_entity_z(self, newz, [self.row,self.col]):
@@ -479,7 +480,7 @@ class Entity:
         # monsters or barrels can be damaged
         if entity.layer == Layer.MONST_LAYER or entity.layer == Layer.BARREL_LAYER:
             self.energy -= self.speed
-            self.attack(levelmanager, animator, messager, entity, rng)
+            self.attack_melee(levelmanager, animator, messager, entity, rng)
             return MoveAction.ATTACKED
         return MoveAction.INVALID
     
