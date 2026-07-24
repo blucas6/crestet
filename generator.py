@@ -63,8 +63,11 @@ class Generator:
         self.monster_classes = []
         '''Collection of monster classes'''
         self.wall_classes = []
+        '''Collection of wall classes'''
         self.item_classes = []
+        '''Collection of item classes'''
         self.rune_classes = []
+        '''Collection of rune classes'''
 
     def load_classes(self):
         '''Gather all object classes from files'''
