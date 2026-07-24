@@ -62,7 +62,6 @@ class Player(e.Entity):
         self.levelrows = levelrows
         self.levelcols = levelcols
         self.clear_memory()
-        self.Inventory.equip(item.Sword())
 
     def clear_memory(self):
         '''Resets the mental map of the player'''

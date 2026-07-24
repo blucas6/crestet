@@ -10,6 +10,6 @@ class Bite(entity.Entity):
                          color=color.Color().magenta,
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.VERY_SMALL)
-        self.Attack = component.Attack(name='Bite', damage=1)
+        self.Attack = component.Attack(name='Bite', damage=3)
         self.ItemType = component.ItemType.ABILITY
 

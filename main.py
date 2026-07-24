@@ -20,6 +20,8 @@ if __name__ == '__main__':
                         help='Runs random games to get a timing analysis')
     parser.add_argument('-r', '--release', action='store_true',
                         help='Runs the game in Release mode (debug log off)')
+    parser.add_argument('-c', '--combat', action='store_true',
+                        help='Runs a combat analysis test')
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -37,6 +39,10 @@ if __name__ == '__main__':
         profiling = timing.Profiling(seed=args.seed, display=args.display, timing=True)
         profiling.start()
         profiling.run()
+    elif args.combat:
+        combat = timing.CombatTest(seed=args.seed, display=args.display, timing=False)
+        combat.start()
+        combat.run()
     else:
         g = game.Game(seed=args.seed, timing=args.timing, logging=not args.release)
         g.start()

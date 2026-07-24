@@ -1,4 +1,5 @@
 import config
+import item
 import message
 import timing
 import player
@@ -55,6 +56,7 @@ class LevelManager:
         self.Levels = []
         self.Player = player.Player()
         self.Player.init(self.levelrows, self.levelcols)
+        self.Player.Inventory.equip(item.Sword())
 
     def place_player(self, playerpos, playerz):
         '''

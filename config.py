@@ -32,7 +32,7 @@ PLAYERZ = 0
 '''Starting player z index'''
 PLAYERFOV = 20
 '''Player FOV range'''
-PLAYERHEALTH = 20
+PLAYERHEALTH = 8
 '''Player health amount'''
 
 
