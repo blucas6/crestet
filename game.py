@@ -176,8 +176,9 @@ class Game:
             self.previousevent = event
 
             # update the player before the rest of the game
-            energy = self.LevelManager.update_player(self.Animator,
-                    self.Messager, self.MenuManager, self.StateMachine, event)
+            energy = self.LevelManager.update_player(
+                    self.Animator, self.Messager, self.MenuManager,
+                    self.StateMachine, event, self.RNG)
 
             # render player move
             self.render()

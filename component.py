@@ -8,6 +8,46 @@ import logging
 
 Logger = logging.getLogger(__name__)
 
+class Combat:
+    def __init__(self):
+        self.critical = 1
+        self.accuracy = 60
+        self.throw_accuracy = 40
+        self.resistances = {}
+        self.evade = 10
+
+    def get_damage_range(self, rng, throw_obj):
+        dmg = 0
+        if rng.randint(1,100) < self.throw_accuracy:
+            dmg = throw_obj.size * 2
+        return dmg 
+
+    def get_damage(self, rng, inventory):
+        dmg = 0
+        roll = rng.randint(1,100)
+        if roll < self.accuracy:
+            if inventory.mainHand and hasattr(inventory.mainHand, 'Attack'):
+                dmg += inventory.mainHand.Attack.damage
+                if inventory.offHand and hasattr(inventory.offHand, 'Attack'):
+                    dmg += inventory.offHand.Attack.damage
+            elif inventory.ability and hasattr(inventory.ability, 'Attack'):
+                dmg += inventory.ability.Attack.damage
+        Logger.info(f'COMBAT: ({roll}) dmg:{dmg}')
+        return dmg
+
+    def take_damage(self, inventory, damage):
+        reduction = 0
+        if inventory.head and hasattr(inventory.head, 'armor'):
+            reduction += inventory.head.armor
+        if inventory.body and hasattr(inventory.body, 'armor'):
+            reduction += inventory.body.armor
+        if inventory.feet and hasattr(inventory.feet, 'armor'):
+            reduction += inventory.feet.armor
+        damage -= reduction
+        if damage < 0:
+            return 0
+        return damage
+
 class Breakable:
     '''Objects that can break (instead of dying)'''
     def __init__(self, max_dmg):

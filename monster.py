@@ -27,6 +27,7 @@ class Goblin(e.Entity):
                                      blockinglayer=e.Layer.MONST_LAYER,
                                      attacks=[e.AttackType.THROW,
                                               e.AttackType.MELEE])
+        self.Combat = component.Combat()
         self.Inventory = component.Inventory(
                 autopickuplist=['Dart']
                 )
@@ -36,6 +37,7 @@ class Goblin(e.Entity):
         self.Inventory.equip(ability.Bite())
         for _ in range(5):
             self.Inventory.collect(item.Dart())
+
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
         '''Uses brain to select an action'''
@@ -55,7 +57,8 @@ class Goblin(e.Entity):
                 rng,
                 self.speed,
                 self.Inventory
-            )
+            ),
+            rng
         )
         
 class Human(e.Entity):
@@ -90,6 +93,7 @@ class Newt(e.Entity):
         self.Inventory = component.Inventory()
         self.speed = e.Speed.VERY_SLOW
         self.xp = config.NEWT_XP
+        self.Combat = component.Combat()
         self.Inventory.equip(ability.Bite())
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
@@ -106,7 +110,8 @@ class Newt(e.Entity):
                 self.energy,
                 rng,
                 self.speed
-            )
+            ),
+            rng
         )
 
 class Jelly(e.Entity):
@@ -124,6 +129,7 @@ class Jelly(e.Entity):
         self.Health = component.Health(health=config.JELLY_HEALTH)
         self.splashdamage = config.JELLY_SPLASHDMG
         self.xp = 2
+        self.Combat = component.Combat()
 
     def death(self, levelmanager, animator, messager):
         '''

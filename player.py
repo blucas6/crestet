@@ -56,6 +56,7 @@ class Player(e.Entity):
         '''Player can level up'''
         self.Inventory = component.Inventory(autopickuplist=['Dart', 'Arrow', 'Rune'])
         '''Inventory component'''
+        self.Combat = component.Combat()
 
     def init(self, levelrows, levelcols):
         '''Initialize player data'''
@@ -121,13 +122,6 @@ class Player(e.Entity):
             for c,col in enumerate(row):
                 if col:
                     self.mentalmap[r][c] = level.EntityLayer[r][c]
-
-    def get_damage(self):
-        '''Choose damage source'''
-        if self.Charge.charging:
-            return self.Charge.end()
-        else:
-            return self.Inventory.get_damage()
 
     def on_placed(self, levelmanager, messager):
         '''

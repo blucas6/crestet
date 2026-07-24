@@ -43,7 +43,7 @@ class SnowRune(entity.Entity):
 
         # deal damage
         for ent in entitylayer[objr][objc]:
-            parent.attack(levelmanager, animator, messager, ent, self.damage)
+            parent.deal_damage(levelmanager, animator, messager, ent, self.damage)
             ent.apply_status(messager, entity.StatusEffect.FROZEN)
 
 class EmberRune(entity.Entity):
@@ -80,5 +80,5 @@ class EmberRune(entity.Entity):
 
         # deal damage
         for ent in entitylayer[objr][objc]:
-            parent.attack(levelmanager, animator, messager, ent, self.damage)
+            parent.deal_damage(levelmanager, animator, messager, ent, self.damage)
 

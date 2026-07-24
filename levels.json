@@ -1,115 +1,56 @@
 {
-    "total_levels": 2,
-    "light_amount": 5,
-    "wall_shapes": [
-        [
-            [
-                "0",
-                "",
-                ""
-            ],
-            [
-                "0",
-                "",
-                ""
-            ],
-            [
-                "0",
-                "0",
-                "0"
-            ]
-        ],
-        [
-            [
-                "",
-                "0",
-                ""
-            ],
-            [
-                "0",
-                "0",
-                "0"
-            ],
-            [
-                "",
-                "0",
-                ""
-            ]
-        ],
-        [
-            [
-                "",
-                "0",
-                ""
-            ],
-            [
-                "",
-                "0",
-                ""
-            ],
-            [
-                "",
-                "0",
-                ""
-            ]
-        ],
-        [
-            [
-                "",
-                "",
-                ""
-            ],
-            [
-                "0",
-                "",
-                ""
-            ],
-            [
-                "0",
-                "0",
-                ""
-            ]
-        ],
-        [
-            [
-                "0",
-                "0",
-                "0"
-            ],
-            [
-                "0",
-                "",
-                "0"
-            ],
-            [
-                "0",
-                "",
-                "0"
-            ]
-        ]
-    ],
-    "0": {
-        "floor": true,
-        "outer_walls": true,
-        "upstair": false,
-        "downstair": false,
-        "min_walls": 0,
-        "min_barrels": 0,
-        "lights": false,
-        "items": 0,
-        "runes": 0,
-        "mons": false
-    },
-    "1": {
-        "floor": true,
-        "outer_walls": true,
-        "upstair": false,
-        "downstair": false,
-        "min_walls": 0,
-        "min_barrels": 0,
-        "lights": false,
-        "items": 0,
-        "runes": 0,
-        "mons": false
-    }
+   "total_levels": 12,
+   "light_amount": 5,
+   "wall_shapes": [
+      [
+            ["0","",""],
+            ["0","",""],
+            ["0","0","0"]
+      ],
+      [
+            ["","0",""],
+            ["0","0","0"],
+            ["","0",""]
+      ],
+      [
+            ["","0",""],
+            ["","0",""],
+            ["","0",""]
+      ],
+      [
+            ["","",""],
+            ["0","",""],
+            ["0","0",""]
+      ],
+      [
+          ["0", "0", "0"],
+          ["0", "", "0"],
+          ["0", "", "0"]
+      ]
+   ],
+   "0": {
+      "floor": true,
+      "outer_walls": true,
+      "upstair": true,
+      "downstair": false,
+      "min_walls": 80,
+      "min_barrels": 20,
+      "lights": true,
+      "items": 5,
+      "runes": 1,
+      "mons": true
+   },
+   "1": {
+      "floor": true,
+      "outer_walls": true,
+      "upstair": true,
+      "downstair": true,
+      "min_walls": 80,
+      "min_barrels": 20,
+      "lights": true,
+      "items": 5,
+      "runes": 1,
+      "mons": true
+   }
 }
+

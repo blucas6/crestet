@@ -199,11 +199,11 @@ class LevelManager:
                     if entity.name == 'Light':
                         entity.update_state(self)
 
-    def update_player(self, animator, messager, menumanager, statemachine, event):
+    def update_player(self, animator, messager, menumanager, statemachine, event, rng):
         '''Updates the player and returns the energy used'''
         Logger.info(f'-------- TURN UPDATE ({self.Player.turn + 1}) ---------')
         self.Player.energy = 100
-        self.Player.do_action(self, animator, messager, menumanager, statemachine, event)
+        self.Player.do_action(self, animator, messager, menumanager, statemachine, event, rng)
         self.Player.turn += 1
 
         # calculate how much energy the player used
