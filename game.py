@@ -121,6 +121,8 @@ class Game:
                                    rng=self.RNG,
                                    levelrows=config.LEVELROWS,
                                    levelcols=config.LEVELCOLS)
+            # load generator with object classes
+            self.Generator.load_classes()
             # load generator and run the generation
             self.Generator.load_config(config.LEVELROWS, config.LEVELCOLS, self.RNG)
             self.Generator.generate_levels(self.LevelManager)

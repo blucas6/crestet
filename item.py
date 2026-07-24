@@ -3,6 +3,7 @@ import color
 import component
 
 class Arrow(e.Entity):
+    spawn = True
     def __init__(self):
         super().__init__(typeid=18,
                          name='Arrow',
@@ -21,6 +22,7 @@ class Arrow(e.Entity):
 
 
 class Fruit(e.Entity):
+    spawn = True
     def __init__(self):
         super().__init__(typeid=10,
                          name='Fruit',
@@ -41,29 +43,20 @@ class Wood(e.Entity):
         self.Attack = component.Attack(name='Wood', damage=1)
         self.ItemType = component.ItemType.HAND
 
-class Bite(e.Entity):
-    def __init__(self):
-        super().__init__(typeid=12,
-                         name='Bite',
-                         glyph='?',
-                         color=color.Color().magenta,
-                         layer=e.Layer.OBJECT_LAYER,
-                         size=e.Size.VERY_SMALL)
-        self.Attack = component.Attack(name='Bite', damage=1)
-        self.ItemType = component.ItemType.ABILITY
-
 class Sword(e.Entity):
+    spawn = True
     def __init__(self):
         super().__init__(typeid=13,
                          name='Sword',
                          glyph='/',
-                         color=color.Color().blue,
+                         color=color.Color().grey,
                          layer=e.Layer.OBJECT_LAYER,
                          size=e.Size.SMALL)
         self.Attack = component.Attack(name='Sword', damage=2)
         self.ItemType = component.ItemType.HAND
 
 class Dart(e.Entity):
+    spawn = True
     def __init__(self):
         super().__init__(typeid=15,
                          name='Dart',
@@ -78,5 +71,5 @@ class Dart(e.Entity):
                 unstack_glyph = self.glyph,
                 stack_name = self.name + ' Stack',
                 stack_glyph = '≡',
-                )
+            )
 

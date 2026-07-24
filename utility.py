@@ -77,3 +77,8 @@ def get_pts(rows, cols):
             pts.append((r,c)) 
     return pts
 
+def get_random_pt(rng, rows, cols):
+    '''Get a random pt from an array'''
+    return rng.randint(0,rows-1), rng.randint(0,cols-1)
+
+

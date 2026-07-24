@@ -6,6 +6,7 @@ import component
 import utility
 import item
 import logging
+import ability
 
 Logger = logging.getLogger(__name__)
 
@@ -13,6 +14,7 @@ class Goblin(e.Entity):
     '''
     Goblin creature
     '''
+    difficulty = 2
     def __init__(self):
         super().__init__(typeid=17,
                          name='Goblin',
@@ -31,7 +33,7 @@ class Goblin(e.Entity):
         self.speed = e.Speed.SLOW
         self.xp = config.GOBLIN_XP
 
-        self.Inventory.equip(item.Bite())
+        self.Inventory.equip(ability.Bite())
         for _ in range(5):
             self.Inventory.collect(item.Dart())
 
@@ -73,6 +75,7 @@ class Newt(e.Entity):
     '''
     Newt creature
     '''
+    difficulty = 1
     def __init__(self):
         super().__init__(typeid=8,
                          name='Newt',
@@ -87,7 +90,7 @@ class Newt(e.Entity):
         self.Inventory = component.Inventory()
         self.speed = e.Speed.VERY_SLOW
         self.xp = config.NEWT_XP
-        self.Inventory.equip(item.Bite())
+        self.Inventory.equip(ability.Bite())
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
         '''Uses brain to select an action'''
@@ -110,6 +113,7 @@ class Jelly(e.Entity):
     '''
     Floating jelly creature
     '''
+    difficulty = 0
     def __init__(self):
         super().__init__(typeid=9,
                          name='Jelly',

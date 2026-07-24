@@ -1,4 +1,6 @@
 import config
+import wall
+import inspect 
 import rune
 import item
 import monster
@@ -31,12 +33,12 @@ class LevelLayout:
     '''Minimum amount of barrels on the level'''
     lights: bool
     '''Generate lights'''
-    mons: int
-    '''Minimum amount of monsters on the level'''
     items: int
     '''Minimum amount of items on the level'''
     runes: int
     '''Minimum amount of runes on the level'''
+    mons: bool
+    '''If there are monsters on the level'''
 
     upstair_pos: tuple = ()
     '''Location of the upstairs on the level'''
@@ -58,6 +60,33 @@ class Generator:
         '''How many lights to generate in each level'''
         self.wall_shapes = {}
         '''Wall shapes for inner wall generation'''
+        self.monster_classes = []
+        '''Collection of monster classes'''
+        self.wall_classes = []
+        '''Collection of wall classes'''
+        self.item_classes = []
+        '''Collection of item classes'''
+        self.rune_classes = []
+        '''Collection of rune classes'''
+
+    def load_classes(self):
+        '''Gather all object classes from files'''
+        self.monster_classes = [
+            obj for name,obj in inspect.getmembers(monster, inspect.isclass)
+            if obj.__module__ == monster.__name__ and hasattr(obj, 'difficulty')
+        ]
+        self.wall_classes = [
+            obj for name,obj in inspect.getmembers(wall, inspect.isclass)
+            if obj.__module__ == wall.__name__
+        ]
+        self.item_classes = [
+            obj for name,obj in inspect.getmembers(item, inspect.isclass)
+            if obj.__module__ == item.__name__ and hasattr(obj, 'spawn')
+        ]
+        self.rune_classes = [
+            obj for name,obj in inspect.getmembers(rune, inspect.isclass)
+            if obj.__module__ == rune.__name__
+        ]
 
     def load_config(self, levelrows, levelcols, rng):
         '''Read the config file and load the level layout objects'''
@@ -154,8 +183,7 @@ class Generator:
 
     def generate_upstair(self, levelmanager: level.LevelManager, currlevel: level.Level):
         '''Places an upstairs in a random spot, returns the placement'''
-        r = self.RNG.randint(1,self.levelrows-1)
-        c = self.RNG.randint(1,self.levelcols-1)
+        r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
         levelmanager.place_entity(currlevel.z, tower.StairUp(), [r,c], overwrite=True)
         Logger.info(f'Placed UPSTAIR z:{currlevel.z}: {(r,c)}')
         return (r,c)
@@ -243,8 +271,7 @@ class Generator:
     def generate_lights(self, levelmanager:level.LevelManager, currlevel:level.Level):
         '''Add lights to the level'''
         for _ in range(self.light_amount):
-            r = self.RNG.randint(0,self.levelrows-1)
-            c = self.RNG.randint(0,self.levelcols-1)
+            r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
             _,myentity  = utility.get_max_entity(currlevel.EntityLayer[r][c])
             valid = all([False if type(ent) == tower.Light else True for ent in currlevel.EntityLayer[r][c]])
             if myentity.layer < entity.Layer.WALL_LAYER and valid:
@@ -254,21 +281,19 @@ class Generator:
 
     def generate_mons(self, levelmanager: level.LevelManager, currlevel: level.Level, mon_amount):
         '''Add monsters to the level'''
+
+        dlevel = 1 + currlevel.z + currlevel.z/2
+        mons = [m for m in self.monster_classes if m.difficulty <= dlevel]
+
+        difficulty = 0
         attempt = 0
-        while mon_amount > 0 and attempt < config.MAX_RETRIES:
+        while difficulty < dlevel and attempt < config.MAX_RETRIES:
             attempt += 1
-            num = self.RNG.randint(0, 2)
-            r = self.RNG.randint(0,self.levelrows-1)
-            c = self.RNG.randint(0,self.levelcols-1)
-            new_mon = None
-            if num == 0:
-                new_mon = monster.Jelly()
-            elif num == 1:
-                new_mon = monster.Goblin()
-            else:
-                new_mon = monster.Newt()
+            r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
+            n = self.RNG.randint(0, len(mons)-1)
+            new_mon = mons[n]()
             if levelmanager.place_entity(currlevel.z, new_mon, (r,c)):
-                mon_amount -= 1
+                difficulty += new_mon.difficulty
         '''
         for _ in range(1):
             r = self.RNG.randint(1,self.levelrows-1)
@@ -280,37 +305,23 @@ class Generator:
         '''Add items to the level'''
         attempt = 0
         while item_amount > 0 and attempt < config.MAX_RETRIES:
-            r = self.RNG.randint(0,self.levelrows-1)
-            c = self.RNG.randint(0,self.levelcols-1)
+            r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
             new_item = None
-            n = self.RNG.randint(0, 2)
-            if n == 0:
-                new_item = item.Dart()
-            elif n == 1:
-                new_item = item.Fruit()
-            elif n == 2:
-                new_item = item.Arrow()
-
+            n = self.RNG.randint(0, len(self.item_classes)-1)
+            new_item = self.item_classes[n]()
             if levelmanager.place_entity(currlevel.z, new_item, (r,c)):
                 item_amount -= 1
 
     def generate_runes(self, levelmanager: level.LevelManager, currlevel: level.Level, rune_amount):
         attempt = 0
         while rune_amount > 0 and attempt < config.MAX_RETRIES:
-            r = self.RNG.randint(0,self.levelrows-1)
-            c = self.RNG.randint(0,self.levelcols-1)
-            new_rune = None
-            n = self.RNG.randint(0, 1)
-            if n == 0:
-                new_rune = rune.EmberRune()
-            elif n == 1:
-                new_rune = rune.SnowRune()
-            if new_rune:
-                if levelmanager.place_entity(currlevel.z, new_rune, (r,c)):
-                    rune_amount -= 1
+            r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
+            n = self.RNG.randint(0, len(self.rune_classes)-1)
+            new_rune = self.rune_classes[n]()
+            if levelmanager.place_entity(currlevel.z, new_rune, (r,c)):
+                rune_amount -= 1
 
     def get_wall_piece(self):
         '''Return a random wall'''
-        walls = [tower.Sandstone, tower.Limestone, tower.Quarrystone,
-                 tower.Rubble]
-        return walls[self.RNG.randint(0, len(walls)-1)]()
+        return self.wall_classes[self.RNG.randint(0, len(self.wall_classes)-1)]()
+    

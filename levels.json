@@ -1,5 +1,5 @@
 {
-   "total_levels": 2,
+   "total_levels": 12,
    "light_amount": 5,
    "wall_shapes": [
       [
@@ -36,9 +36,9 @@
       "min_walls": 80,
       "min_barrels": 20,
       "lights": true,
-      "mons": 5,
       "items": 5,
-      "runes": 1
+      "runes": 1,
+      "mons": true
    },
    "1": {
       "floor": true,
@@ -48,8 +48,8 @@
       "min_walls": 80,
       "min_barrels": 20,
       "lights": true,
-      "mons": 5,
       "items": 5,
-      "runes": 1
+      "runes": 1,
+      "mons": true
    }
 }
