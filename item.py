@@ -42,6 +42,13 @@ class Wood(e.Entity):
                          size=e.Size.SMALL)
         self.Attack = component.Attack(name='Wood', damage=1)
         self.ItemType = component.ItemType.HAND
+        self.Group = component.Group(
+                parent = self,
+                unstack_name = 'Wood',
+                unstack_glyph = '#',
+                stack_name = 'Wood Stack',
+                stack_glyph = '#',
+            )
 
 class Sword(e.Entity):
     spawn = True

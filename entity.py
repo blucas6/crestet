@@ -418,8 +418,10 @@ class Entity:
             self.moveZ(levelmanager, animator, messager, -1, rng)
         # Inventory
         elif (hasattr(self, 'Inventory') and
-            len(event) > 1 and
-            (event[0] == 'e' or event[0] == 'u' or event[0] == 'a')):
+            ((len(event) > 1 and
+                (event[0] == 'e' or event[0] == 'u' or event[0] == 'a' or event[0] == 'd')
+              ) or
+              event[0] == ',')):
             self.handle_inventory(levelmanager, messager, animator, event)
         # Throw
         elif event[0] == 't' and len(event) > 1:

@@ -427,7 +427,7 @@ class Game:
                 self.StateMachine.new_state('startrun')
             return state.Event.EVENT,self.previousevent+event
         # Inventory Action
-        elif self.previousevent == 'e' or self.previousevent == 'u':
+        elif self.previousevent == 'e' or self.previousevent == 'u' or self.previousevent == 'd':
             self.StateMachine.new_state('done')
             return state.Event.EVENT,self.previousevent+event
         elif self.previousevent == 'a':
@@ -458,7 +458,7 @@ class Game:
     def player_event(self, event):
         '''Process all events that are player actions'''
         # Multi key action
-        multikey_list = ['t', '5', 'e', 'u', 'F', 'a']
+        multikey_list = ['t', '5', 'e', 'u', 'F', 'a', 'd']
         if event in multikey_list:
             # throw
             if event == 't':
@@ -476,6 +476,9 @@ class Game:
             # apply
             elif event == 'a':
                 self.Messager.add_message('Apply what?')
+            # drop 
+            elif event == 'd':
+                self.Messager.add_message('Drop what?')
             else:
                 self.Messager.add_message('Direction?')
             self.StateMachine.new_state('motion')

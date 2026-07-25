@@ -352,6 +352,12 @@ class Inventory:
             return None, False
         return entity, True
 
+    def remove_from_bag(self, entity):
+        for ix,ent in enumerate(self.contents):
+            if ent.id == entity.id:
+                del self.contents[ix]
+                break
+
     def equip(self, entity):
         '''
         Pass in an entity to place it in the correct slot
@@ -364,10 +370,8 @@ class Inventory:
             return
         
         # delete an entity if it came from the bag, it will be placed
-        for ix,ent in enumerate(self.contents):
-            if ent.id == entity.id:
-                del self.contents[ix]
-                break
+        self.remove_from_bag(entity)
+
         # QUIVER
         if entity.ItemType == ItemType.QUIVER and (not self.quiver or self.quiver.id != entity.id):
             if self.quiver:
@@ -453,31 +457,64 @@ class Inventory:
         # default is add to bag
         self.contents.append(entity)
 
-    def drop(self):
+    def drop(self, parent, levelmanager, entity):
         '''Place an entity to the ground'''
-        pass
+        self.remove_from_bag(entity)
+        if self.quiver and self.quiver.id == entity.id:
+            self.quiver = None
+        elif self.head and self.head.id == entity.id:
+            self.head = None
+        elif self.body and self.body.id == entity.id:
+            self.body = None
+        elif self.feet and self.feet.id == entity.id:
+            self.feet = None
+        elif self.mainHand and self.mainHand.id == entity.id:
+            self.mainHand = None
+        elif self.offHand and self.offHand.id == entity.id:
+            self.offHand = None
+
+        levelmanager.place_entity(parent.z, entity, (parent.row,parent.col))
+
+    
+    def pickup(self, parent, levelmanager):
+        entitylist = levelmanager.Levels[parent.z].EntityLayer[parent.row][parent.col]
+        for ent in entitylist:
+            if ent.layer == entity.Layer.OBJECT_LAYER:
+                self.collect(ent)
+                levelmanager.remove_entity(ent)
+                break
 
     def action(self, parent, levelmanager, messager, event, animator, row, col, z):
         '''Handle an inventory action'''
         action = event[0]
-        key = event[1]
-        cmd = event[2:]
-        entity,valid = self.get_entity_from_key(key)
-        if entity is None or not valid:
-            messager.add_message('Invalid inventory key!')
-            return
-        # Equip
-        if action == 'e':
-            Logger.info(f'Equipping: {entity}')
-            self.equip(entity)
-        # Unequip
-        elif action == 'u':
-            Logger.info(f'Unequipping: {entity}')
-            self.unequip(entity)
-        # Apply
-        elif action == 'a':
-            Logger.info(f'Applying: {entity}')
-            self.apply(entity, cmd, parent, levelmanager, messager, animator, row, col, z)
+        if len(event) > 1:
+            key = event[1]
+            cmd = event[2:]
+            entity,valid = self.get_entity_from_key(key)
+            if entity is None or not valid:
+                messager.add_message('Invalid inventory key!')
+                return
+            # Equip
+            if action == 'e':
+                Logger.info(f'Equipping: {entity}')
+                self.equip(entity)
+            # Unequip
+            elif action == 'u':
+                Logger.info(f'Unequipping: {entity}')
+                self.unequip(entity)
+            # Apply
+            elif action == 'a':
+                Logger.info(f'Applying: {entity}')
+                self.apply(entity, cmd, parent, levelmanager, messager, animator, row, col, z)
+            # Drop
+            elif action == 'd':
+                Logger.info(f'Drop: {entity}')
+                self.drop(parent, levelmanager, entity)
+        else:
+            # Pick up
+            if action == ',':
+                Logger.info(f'Pick up')
+                self.pickup(parent, levelmanager)
 
     def apply(self, entity, cmd, parent, levelmanager, messager, animator, row, col, z):
         '''Trigger the apply on an entity'''
