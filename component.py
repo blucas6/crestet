@@ -382,7 +382,9 @@ class Inventory:
 
     def apply(self, entity, cmd, parent, levelmanager, messager, animator, row, col, z):
         '''Trigger the apply on an entity'''
-        entity.on_apply(cmd, parent, levelmanager, messager, animator, row, col, z)
+        remove = entity.on_apply(cmd, parent, levelmanager, messager, animator, row, col, z)
+        if remove:
+            self.contents = [item for item in self.contents if item.id != entity.id]
 
     def get_apply_info(self, char):
         entity = None
