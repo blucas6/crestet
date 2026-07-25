@@ -298,7 +298,14 @@ class Entity:
 
     def attack_melee(self, levelmanager, animator, messager, entity, rng):
         '''Attack the entity passed in - does NOT check energy usage'''
-        damage = self.get_damage(rng)
+
+        damage = 0
+
+        # choose damage source
+        if hasattr(self, 'Charge') and self.Charge.charging:
+            damage = self.Charge.end()
+        elif hasattr(self, 'Combat') and hasattr(self, 'Inventory'):
+            damage = self.Combat.get_damage_melee(rng, self.Inventory)
 
         if hasattr(entity, 'Health'):
             if damage == 0:
@@ -462,14 +469,6 @@ class Entity:
             self.Charge.end()
         elif result == MoveAction.MOVED:
             self.Charge.distance += 1
-
-    def get_damage(self, rng):
-        '''Choose damage source'''
-        if hasattr(self, 'Charge') and self.Charge.charging:
-            return self.Charge.end()
-        elif hasattr(self, 'Combat') and hasattr(self, 'Inventory'):
-            return self.Combat.get_damage(rng, self.Inventory)
-        return 0
 
     def fight(self, levelmanager, animator, messager, key, rng):
         '''Purposely attack in a direction'''

@@ -22,7 +22,7 @@ class Combat:
             dmg = throw_obj.size * 2
         return dmg 
 
-    def get_damage(self, rng, inventory):
+    def get_damage_melee(self, rng, inventory):
         dmg = 0
         roll = rng.randint(1,100)
         if roll < self.accuracy:
@@ -343,17 +343,6 @@ class Inventory:
         # default is add to bag
         self.contents.append(entity)
 
-    def get_damage(self):
-        '''Based on the slot information calculate the damage'''
-        damage = 0
-        if self.mainHand and hasattr(self.mainHand, 'Attack'):
-            damage += self.mainHand.Attack.damage
-        if self.offHand and hasattr(self.offHand, 'Attack'):
-            damage += self.offHand.Attack.damage
-        if self.ability and hasattr(self.ability, 'Attack'):
-            damage += self.ability.Attack.damage
-        return damage
-    
     def drop(self):
         '''Place an entity to the ground'''
         pass
