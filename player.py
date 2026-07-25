@@ -15,7 +15,8 @@ class FOVMemory(enum.Enum):
     Types of FOV Memory:
         0: remember nothing
         1: remember only the object layer
-        2: remember everything
+        2: remmeber only the objects and barrels
+        3: remember everything
     '''
     NOTHING = 0,
     OBJECTS = 1,
@@ -94,9 +95,13 @@ class Player(e.Entity):
                         # seen before, but not in current FOV
                         # only add the object layer
                         self.mentalmap[r][c] = []
+                        maxlayer = utility.get_max_layer(level.EntityLayer[r][c])
                         for entity in level.EntityLayer[r][c]:
-                            if (entity.layer == e.Layer.OBJECT_LAYER or
-                                entity.layer == e.Layer.WALL_LAYER):
+                            # walls get saved
+                            # objects get saved, but not if covered by barrels
+                            if (entity.layer == e.Layer.WALL_LAYER or 
+                                (entity.layer == e.Layer.OBJECT_LAYER and
+                                  maxlayer != e.Layer.BARREL_LAYER)):
                                 self.mentalmap[r][c].append(entity)
         elif self.fovmemory == FOVMemory.OBJECTS_BARRELS:
             for r,row in enumerate(level.EntityLayer):

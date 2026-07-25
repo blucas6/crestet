@@ -64,8 +64,10 @@ class Combat:
         direction = utility.ONE_LAYER_CIRCLE[int(direction_key)-1]
         objr = start_row
         objc = start_col
-        while objr > -1 and objc > -1 and objr < len(entitylayer) and objc < len(entitylayer[0]):
+        while True:
             r,c = objr + direction[0], objc + direction[1]
+            if r < 0 or c < 0 or r >= len(entitylayer) or c >= len(entitylayer[0]):
+                break
             if entitylayer:
                 maxlayer = utility.get_max_layer(entitylayer[r][c])
                 if (maxlayer == entity.Layer.MONST_LAYER or
@@ -192,6 +194,9 @@ class Leveling:
         '''Activates when the entity goes to the next level'''
         self.curr_level += 1
         messager.add_level_up_message(parent_entity)
+        # increase max health
+        if hasattr(parent_entity, 'Health'):
+            parent_entity.Health.maxhealth += self.curr_level
         # health restore
         if hasattr(parent_entity, 'Health'):
             parent_entity.Health.restore_max_health()
