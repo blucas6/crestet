@@ -100,6 +100,7 @@ class Player(e.Entity):
                             # walls get saved
                             # objects get saved, but not if covered by barrels
                             if (entity.layer == e.Layer.WALL_LAYER or 
+                                entity.layer == e.Layer.STAIR_LAYER or
                                 (entity.layer == e.Layer.OBJECT_LAYER and
                                   maxlayer != e.Layer.BARREL_LAYER)):
                                 self.mentalmap[r][c].append(entity)
@@ -113,7 +114,8 @@ class Player(e.Entity):
                         # only add the object layer
                         self.mentalmap[r][c] = []
                         for entity in level.EntityLayer[r][c]:
-                            if (entity.layer == e.Layer.OBJECT_LAYER or
+                            if (entity.layer == e.Layer.STAIR_LAYER or
+                                entity.layer == e.Layer.OBJECT_LAYER or
                                 entity.layer == e.Layer.BARREL_LAYER or
                                 entity.layer == e.Layer.WALL_LAYER):
                                 self.mentalmap[r][c].append(entity)

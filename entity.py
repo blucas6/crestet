@@ -56,10 +56,11 @@ class Layer(enum.IntEnum):
         4: not stackable, FOV cannot see through them
     '''
     FLOOR_LAYER = 0
-    OBJECT_LAYER = 1
-    BARREL_LAYER = 2
-    MONST_LAYER = 3
-    WALL_LAYER = 4
+    STAIR_LAYER = 1
+    OBJECT_LAYER = 2
+    BARREL_LAYER = 3
+    MONST_LAYER = 4
+    WALL_LAYER = 5
 
 class Size(enum.IntEnum):
     '''
@@ -219,7 +220,6 @@ class Entity:
 
         # check energy cost
         if self.energy < self.speed:
-            Logger.info(f'[{self.name}|{self.id}]: movement no energy')
             return MoveAction.NOENERGY
 
         # check validity
@@ -374,7 +374,8 @@ class Entity:
     
     def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event, rng):
         '''Pass an event for the entity to preform a certain action'''
-        Logger.info(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
+        if self.z == levelmanager.currentz:
+            Logger.info(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
 
         if not isinstance(event, str):
             return

@@ -41,9 +41,6 @@ class Goblin(e.Entity):
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
         '''Uses brain to select an action'''
-        Logger.info(f'Goblin: {self.Inventory.quiver}')
-        if self.Inventory.has_ammo():
-            Logger.info(f'Goblin Ammo: {self.Inventory.quiver.Group.amount}')
         self.do_action(
             levelmanager,
             animator,

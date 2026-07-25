@@ -80,7 +80,7 @@ class StairUp(entity.Entity):
                          name='Upstair',
                          glyph='<',
                          color=color.Color().white,
-                         layer=entity.Layer.OBJECT_LAYER,
+                         layer=entity.Layer.STAIR_LAYER,
                          size=entity.Size.VERY_LARGE)
 
 class StairDown(entity.Entity):
@@ -90,7 +90,7 @@ class StairDown(entity.Entity):
                          name='Downstair',
                          glyph='>',
                          color=color.Color().white,
-                         layer=entity.Layer.OBJECT_LAYER,
+                         layer=entity.Layer.STAIR_LAYER,
                          size=entity.Size.VERY_LARGE)
 
 class Light(entity.Entity):
@@ -116,6 +116,5 @@ class Light(entity.Entity):
     def on_top(self, entity, levelmanager):
         '''Trigger the light on or off'''
         self.light = not self.light
-        Logger.info(f'{self} ACTIVATED {self.light}!')
         self.update_state(levelmanager)
     
