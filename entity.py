@@ -241,10 +241,12 @@ class Entity:
                 return MoveAction.INTERACT
 
             # must attack
-            else:
+            elif hasattr(self, 'Combat'):
                 self.energy -= self.speed
-                self.attack_melee(levelmanager, animator, messager, entity, rng)
+                self.Combat.attack_melee(self, levelmanager, animator, messager, entity, rng)
                 return MoveAction.ATTACKED
+            else:
+                return MoveAction.INVALID
 
         # anything on the barrel layer should be pushed
         elif entity.layer == Layer.BARREL_LAYER:
@@ -266,87 +268,10 @@ class Entity:
         # otherwise just move normally
         return self.move(levelmanager, (row,col))
 
-    def attack_range(self, levelmanager, animator, messager, entity, throw_obj, rng):
-        damage = 0
-
-        if hasattr(self, 'Combat'):
-            damage = self.Combat.get_damage_range(rng, throw_obj)
-
-        if hasattr(entity, 'Health'):
-            if damage == 0:
-                messager.add_miss_message(self, entity)
-                return
-
-            Logger.info(f'{self} dealing damage to {entity}: {damage} ')
-            messager.add_damage_message(self, entity)
-            # check for kill
-            if self.deal_damage(levelmanager, animator, messager, entity, damage):
-                messager.add_kill_message(self, entity)
-                # gain xp
-                if hasattr(self, 'Leveling') and hasattr(entity, 'xp'):
-                    self.Leveling.gain_xp(entity.xp, self, messager)
-
-        elif hasattr(entity, 'Breakable'):
-            if damage == 0:
-                messager.add_miss_message(self, entity)
-                return
-            Logger.info(f'{self} hitting {entity} : {damage}')
-            messager.add_damage_message(self, entity)
-            if self.deal_damage(levelmanager, animator, messager, entity, damage):
-                messager.add_break_message(self, entity)
-        
-
-    def attack_melee(self, levelmanager, animator, messager, entity, rng):
-        '''Attack the entity passed in - does NOT check energy usage'''
-
-        damage = 0
-
-        # choose damage source
-        if hasattr(self, 'Charge') and self.Charge.charging:
-            damage = self.Charge.end()
-        elif hasattr(self, 'Combat') and hasattr(self, 'Inventory'):
-            damage = self.Combat.get_damage_melee(rng, self.Inventory)
-
-        if hasattr(entity, 'Health'):
-            if damage == 0:
-                messager.add_miss_message(self, entity)
-                return
-
-            Logger.info(f'{self} dealing damage to {entity}: {damage} ')
-            messager.add_damage_message(self, entity)
-            if hasattr(entity, 'Combat') and hasattr(entity, 'Inventory'):
-                damage = entity.Combat.take_damage(entity.Inventory, damage)
-            # check for kill
-            if self.deal_damage(levelmanager, animator, messager, entity, damage):
-                messager.add_kill_message(self, entity)
-                # gain xp
-                if hasattr(self, 'Leveling') and hasattr(entity, 'xp'):
-                    self.Leveling.gain_xp(entity.xp, self, messager)
-        elif hasattr(entity, 'Breakable'):
-            if damage == 0:
-                messager.add_miss_message(self, entity)
-                return
-            Logger.info(f'{self} hitting {entity} : {damage}')
-            messager.add_damage_message(self, entity)
-            if self.deal_damage(levelmanager, animator, messager, entity, damage):
-                messager.add_break_message(self, entity)
-
-    def deal_damage(self, levelmanager, animator, messager, entity, damage):
-        '''
-        Some types of damage are not from an attack
-        
-        Returns True if the damage caused death
-        '''
-        if ((hasattr(entity, 'Health') and entity.Health.change_health(-damage)) or 
-            (hasattr(entity, 'Breakable') and entity.Breakable.change_dmg(damage))):
-            entity.death(levelmanager, animator, messager)
-            return True
-        return False
-
     def fire(self, levelmanager, animator, messager, event, rng):
         '''Checks the inventory for the quiver item and calls throw()'''
         # need inventory component
-        if not hasattr(self, 'Inventory'):
+        if not hasattr(self, 'Inventory') or not hasattr(self, 'Combat'):
             return
         if event[1].isdigit():
             # get the direction
@@ -358,58 +283,19 @@ class Entity:
             if fired_entity is None:
                 return
             # throw
-            return self.throw(levelmanager,
-                              animator,
-                              messager,
-                              fired_entity,
-                              event[1], rng)
+            return self.Combat.attack_range(
+                            self,
+                            levelmanager,
+                            animator,
+                            messager,
+                            fired_entity,
+                            event[1],
+                            rng,
+                            self.row, self.col, self.z)
     
     def death(self, levelmanager, *_):
         '''Entities can add to this method to trigger on death actions'''
         levelmanager.remove_entity(self)
-
-    def throw(self, levelmanager, animator, messager, entity, direction_key, rng):
-        '''
-        If direction is included, the entity will be thrown in that direction
-        until it hits a wall layer
-
-        If target is included, the entity will be sent directly to that target's
-        position
-        '''
-        # make sure there is enough energy to throw
-        if not hasattr(self, 'speed'):
-            Logger.warning(f'Speed component missing')
-            return
-        if self.energy < self.speed:
-            Logger.info(f'[{self.name}|{self.id}]: throwing not enough energy')
-            return
-
-        entitylayer = levelmanager.Levels[self.z].EntityLayer
-
-        objr,objc = utility.find_last_position(direction_key, self.row, self.col, entitylayer)
-
-        levelmanager.place_entity(self.z, entity, (objr,objc))
-
-        grid,pts = utility.get_path_pts(entitylayer, self.row, self.col, objr, objc)
-
-        # create the animation
-        frames = {}
-        for idx,pt in enumerate(pts):
-            frames[str(idx)] = [['' for _ in row] for row in grid]
-            frames[str(idx)][pt[0]][pt[1]] = entity.glyph
-        origin = [0,0]
-        delay = config.THROW_ANIM_DELAY
-        anim = animation.Animation(origin, frames, entity.color, delay=delay)
-        animator.queueUp(anim)
-
-        # deal damage
-        for ent in entitylayer[objr][objc]:
-            self.attack_range(levelmanager, animator, messager, ent, entity, rng)
-
-        # subtract energy
-        self.energy -= self.speed
-
-        Logger.info(f'throwing object')
 
     def moveZ(self, levelmanager, animator, messager, incrementz, rng):
         '''Move an to another z level'''
@@ -429,11 +315,12 @@ class Entity:
                 # check if there are monsters on the next level
                 entitylayer = levelmanager.Levels[newz].EntityLayer
                 _,an_entity = utility.get_max_entity(entitylayer[self.row][self.col])
-                if (an_entity.layer == Layer.MONST_LAYER or
-                    an_entity.layer == Layer.BARREL_LAYER):
+                if ((an_entity.layer == Layer.MONST_LAYER or
+                    an_entity.layer == Layer.BARREL_LAYER) and
+                    hasattr(self, 'Combat')):
                     # auto fight the entity
                     self.energy -= self.speed
-                    self.attack_melee(levelmanager, animator, messager, an_entity, rng)
+                    self.Combat.attack_melee(self, levelmanager, animator, messager, an_entity, rng)
                     return
                 else:
                     if levelmanager.move_entity_z(self, newz, [self.row,self.col]):
@@ -477,9 +364,11 @@ class Entity:
         entitylayer = levelmanager.Levels[self.z].EntityLayer
         eidx,entity = utility.get_max_entity(entitylayer[row][col])
         # monsters or barrels can be damaged
-        if entity.layer == Layer.MONST_LAYER or entity.layer == Layer.BARREL_LAYER:
+        if ((entity.layer == Layer.MONST_LAYER or
+             entity.layer == Layer.BARREL_LAYER) and
+            hasattr(self, 'Combat')):
             self.energy -= self.speed
-            self.attack_melee(levelmanager, animator, messager, entity, rng)
+            self.Combat.attack_melee(self, levelmanager, animator, messager, entity, rng)
             return MoveAction.ATTACKED
         return MoveAction.INVALID
     

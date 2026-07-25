@@ -1,4 +1,5 @@
 import algo
+import animation
 import config
 import entity
 import level
@@ -47,6 +48,110 @@ class Combat:
         if damage < 0:
             return 0
         return damage
+
+    def throw(self, levelmanager, animator, messager, throw_obj, direction_key, rng, start_row, start_col, z):
+        '''
+        If direction is included, the entity will be thrown in that direction
+        until it hits a wall layer
+
+        If target is included, the entity will be sent directly to that target's
+        position
+        '''
+
+        entitylayer = levelmanager.Levels[z].EntityLayer
+
+
+        direction = utility.ONE_LAYER_CIRCLE[int(direction_key)-1]
+        objr = start_row
+        objc = start_col
+        while objr > -1 and objc > -1 and objr < len(entitylayer) and objc < len(entitylayer[0]):
+            r,c = objr + direction[0], objc + direction[1]
+            if entitylayer:
+                maxlayer = utility.get_max_layer(entitylayer[r][c])
+                if (maxlayer == entity.Layer.MONST_LAYER or
+                    maxlayer == entity.Layer.BARREL_LAYER):
+                    objr, objc = r, c
+                    if rng.randint(1,100) < self.throw_accuracy:
+                        break
+                elif maxlayer == entity.Layer.WALL_LAYER:
+                    break
+            objr, objc = r, c
+
+        levelmanager.place_entity(z, throw_obj, (objr,objc))
+
+        grid,pts = utility.get_path_pts(entitylayer, start_row, start_col, objr, objc)
+
+        # create the animation
+        frames = {}
+        for idx,pt in enumerate(pts):
+            frames[str(idx)] = [['' for _ in row] for row in grid]
+            frames[str(idx)][pt[0]][pt[1]] = throw_obj.glyph
+        origin = [0,0]
+        delay = config.THROW_ANIM_DELAY
+        anim = animation.Animation(origin, frames, throw_obj.color, delay=delay)
+        animator.queueUp(anim)
+        Logger.info(f'throwing object')
+        return objr,objc
+
+    def attack_range(self, parent, levelmanager, animator, messager, throw_obj, direction_key, rng, start_row, start_col, z):
+        objr, objc = self.throw(levelmanager, animator, messager, throw_obj, direction_key, rng, start_row, start_col, z)
+
+        # deal damage
+        for ent in levelmanager.Levels[z].EntityLayer[objr][objc]:
+            if hasattr(throw_obj, 'Attack'):
+                damage = throw_obj.Attack.damage
+            else:
+                damage = throw_obj.size * 2
+
+            self.deal_damage(parent, levelmanager, animator, messager, ent, damage, 'range')
+
+    def attack_melee(self, parent, levelmanager, animator, messager, victim, rng):
+        '''Attack the entity passed in - does NOT check energy usage'''
+
+        damage = 0
+
+        # choose damage source
+        if hasattr(parent, 'Charge') and parent.Charge.charging:
+            damage = parent.Charge.end()
+        elif hasattr(parent, 'Inventory'):
+            damage = self.get_damage_melee(rng, parent.Inventory)
+
+        self.deal_damage(parent, levelmanager, animator, messager, victim, damage, 'melee')
+
+    def deal_damage(self, parent, levelmanager, animator, messager, victim, damage, dmg_type):
+        '''
+        Some types of damage are not from an attack
+        
+        Returns True if the damage caused death
+        '''
+
+        if hasattr(victim, 'Health'):
+            if damage == 0:
+                messager.add_miss_message(parent, victim)
+                return
+
+            Logger.info(f'{parent} dealing damage to {victim}: {damage} ')
+            if dmg_type == 'melee' or dmg_type == 'range':
+                messager.add_damage_message(parent, victim)
+            if hasattr(victim, 'Combat') and hasattr(victim, 'Inventory'):
+                damage = victim.Combat.take_damage(victim.Inventory, damage)
+            # check for kill
+            if victim.Health.change_health(-damage):
+                victim.death(levelmanager, animator, messager)
+                messager.add_kill_message(parent, victim)
+                # gain xp
+                if hasattr(parent, 'Leveling') and hasattr(victim, 'xp'):
+                    parent.Leveling.gain_xp(victim.xp, parent, messager)
+
+        elif hasattr(victim, 'Breakable'):
+            if damage == 0:
+                messager.add_miss_message(parent, victim)
+                return
+            Logger.info(f'{parent} hitting {victim} : {damage}')
+            messager.add_damage_message(parent, victim)
+            if victim.Breakable.change_dmg(damage):
+                victim.death(levelmanager, animator, messager)
+                messager.add_break_message(parent, victim)
 
 class Breakable:
     '''Objects that can break (instead of dying)'''
