@@ -10,30 +10,38 @@ import logging
 Logger = logging.getLogger(__name__)
 
 class Combat:
+    '''Combat component, every entity that can engage in damage must have one'''
     def __init__(self):
         self.critical = 1
+        '''Critical hit'''
         self.accuracy = 60
+        '''Roll under this number to hit on a melee attack'''
         self.throw_accuracy = 40
+        '''Roll under this number to hit on a ranged attack'''
         self.resistances = {}
+        '''Resistance library'''
         self.evade = 10
+        '''Roll under this to evade the attack'''
 
     def get_damage_range(self, rng, throw_obj):
+        '''Return the damage a ranged attack does, 0 for miss'''
         dmg = 0
         if rng.randint(1,100) < self.throw_accuracy:
             dmg = throw_obj.size * 2
         return dmg 
 
-    def get_damage_melee(self, rng, inventory):
+    def get_damage_melee(self, rng, parent):
+        '''Return the damage a melee attack does'''
         dmg = 0
         roll = rng.randint(1,100)
-        if roll < self.accuracy:
-            if inventory.mainHand and hasattr(inventory.mainHand, 'Attack'):
-                dmg += inventory.mainHand.Attack.damage
-                if inventory.offHand and hasattr(inventory.offHand, 'Attack'):
-                    dmg += inventory.offHand.Attack.damage
-            elif inventory.ability and hasattr(inventory.ability, 'Attack'):
-                dmg += inventory.ability.Attack.damage
-        Logger.info(f'COMBAT: ({roll}) dmg:{dmg}')
+        if hasattr(parent, 'Charging') and parent.Charge.charging:
+            potential_dmg = parent.Charge.end()
+            if roll < self.accuracy:
+                dmg = potential_dmg
+        elif hasattr(parent, 'Inventory'):
+            if roll < self.accuracy:
+                dmg = parent.Inventory.calculate_damage()
+        Logger.info(f"COMBAT: ({roll}) dmg:{dmg} {'HIT' if roll < self.accuracy else 'MISS'}")
         return dmg
 
     def take_damage(self, inventory, damage):
@@ -116,11 +124,9 @@ class Combat:
 
         damage = 0
 
-        # choose damage source
-        if hasattr(parent, 'Charge') and parent.Charge.charging:
-            damage = parent.Charge.end()
-        elif hasattr(parent, 'Inventory'):
-            damage = self.get_damage_melee(rng, parent.Inventory)
+        # get damage
+        if hasattr(parent, 'Inventory') or hasattr(parent, 'Charge'):
+            damage = self.get_damage_melee(rng, parent)
 
         self.deal_damage(parent, levelmanager, animator, messager, victim, damage, 'melee')
 
@@ -571,6 +577,16 @@ class Inventory:
         if hasattr(entity, 'ApplyInfo'):
             return entity.ApplyInfo
         return None
+
+    def calculate_damage(self):
+        dmg = 0
+        if self.mainHand and hasattr(self.mainHand, 'Attack'):
+            dmg += self.mainHand.Attack.damage
+            if self.offHand and hasattr(self.offHand, 'Attack'):
+                dmg += self.offHand.Attack.damage
+        elif self.ability and hasattr(self.ability, 'Attack'):
+            dmg += self.ability.Attack.damage
+        return dmg
 
     def add_to_quiver(self, entity):
         '''Tries to add an item to the quiver, returns False if it cannot'''
