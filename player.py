@@ -1,4 +1,5 @@
 import color
+import ability
 import item
 import utility
 import config
@@ -64,6 +65,7 @@ class Player(e.Entity):
         self.levelrows = levelrows
         self.levelcols = levelcols
         self.clear_memory()
+        self.Inventory.equip(ability.Fist())
 
     def clear_memory(self):
         '''Resets the mental map of the player'''

@@ -1,4 +1,5 @@
 import time
+import ability
 import item
 import inspect
 import monster
@@ -42,14 +43,24 @@ class CombatTest:
             json.dump(self.config_save, jfile, indent=4)
 
     def get_equipment(self):
-        self.weapons = [item.Sword]
-        self.armor = [item.Gambeson]
+        self.weapons = [None, item.Sword]
+        self.armor = [None, item.Gambeson]
         for w in self.weapons:
             if self.armor:
                 for a in self.armor:
-                    self.equipment.append([w(), a()])
-            else:
+                    if a is not None:
+                        if w is not None:
+                            self.equipment.append([w(), a()])
+                        else:
+                            self.equipment.append([a()])
+                    elif w is not None:
+                        self.equipment.append([w()])
+                    else:
+                        self.equipment.append([None])
+            elif w is not None:
                 self.equipment.append([w()])
+            else:
+                self.equipment.append([None])
 
     def get_monsters(self):
         self.monsters = [
@@ -99,13 +110,15 @@ class CombatTest:
         # clear inventory
         player = self.environment.Game.LevelManager.Player
         player.Inventory = component.Inventory()
+        player.Inventory.equip(ability.Fist())
         # move player to half
         row = config.LEVELROWS // 2
         col = config.LEVELCOLS // 2
         levelmanager.move_entity(player, (row, col-self.mons_spawn_distance))
         # set up equipment
         for equip in equipment:
-            player.Inventory.equip(equip)
+            if equip is not None:
+                player.Inventory.equip(equip)
         # place monster
         new_mon = mon()
         levelmanager.place_entity(0, new_mon, (row,col+self.mons_spawn_distance))
@@ -193,7 +206,10 @@ class CombatTest:
             for equipment in self.equipment:
                 name = ''
                 for equip in equipment:
-                    name += equip.name
+                    if equip is not None:
+                        name += equip.name
+                    else:
+                        name += 'None'
                 categories.append(name)
 
             values1 = self.results[monname]['player']

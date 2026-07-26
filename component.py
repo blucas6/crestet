@@ -439,9 +439,28 @@ class Inventory:
         '''Entrance for items being added into the inventory'''
         Logger.info(f'Collecting: {entity}')
 
-        # try to add it to the quiver
+        # try to add it to the correct slot
         if hasattr(entity, 'ItemType') and entity.ItemType == ItemType.QUIVER:
             if self.add_to_quiver(entity):
+                return
+        if hasattr(entity, 'ItemType') and entity.ItemType == ItemType.HAND:
+            if self.mainHand is None:
+                self.mainHand = entity
+                return
+            if self.offHand is None:
+                self.offHand = entity
+                return
+        if hasattr(entity, 'ItemType') and entity.ItemType == ItemType.BODY:
+            if self.body is None:
+                self.body = entity
+                return
+        if hasattr(entity, 'ItemType') and entity.ItemType == ItemType.HEAD:
+            if self.head is None:
+                self.head = entity
+                return
+        if hasattr(entity, 'ItemType') and entity.ItemType == ItemType.FEET:
+            if self.feet is None:
+                self.feet = entity
                 return
 
         # default to bag
