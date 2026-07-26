@@ -88,5 +88,13 @@ class Messager:
         else:
             self.MsgQueue.append(f'The {entitya.name} breaks the {entityb.name}.')
 
+    def add_miss_message(self, entitya, entityb):
+        if entitya.name == 'Player':
+            self.MsgQueue.append(f'You miss the {entityb.name}.')
+        elif entityb.name == 'Player':
+            self.MsgQueue.append(f'The {entitya.name} misses you.')
+        else:
+            self.MsgQueue.append(f'The {entitya.name} misses the {entityb.name}.')
+
 
 

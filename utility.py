@@ -22,6 +22,10 @@ def key_to_direction(key):
     '''Send a key (1, 2, ...) and get result (dx,dy)'''
     return ONE_LAYER_CIRCLE[int(key)-1]
 
+def get_max_layer(entitylist):
+    '''Returns the highest layer in the entity list'''
+    return max([int(x.layer) for x in entitylist])
+
 def get_max_entity(entitylist):
     '''Returns the index and the entity with the largest layer'''
     return max(enumerate(entitylist), key=lambda x: x[1].layer)
@@ -44,7 +48,7 @@ def find_last_position(direction_key, start_row, start_col, entitylayer):
         r,c = objr + direction[0], objc + direction[1]
         if entitylayer:
             maxlayer = max([x.layer for x in entitylayer[r][c]])
-            if (maxlayer == entity.Layer.MONST_LAYER or
+            if (maxlayer == entity.Layer.MONSTER_LAYER or
                 maxlayer == entity.Layer.BARREL_LAYER):
                 objr, objc = r, c
                 break
@@ -53,13 +57,10 @@ def find_last_position(direction_key, start_row, start_col, entitylayer):
         objr, objc = r, c
     return objr,objc
 
-def get_max_layer(entitylist):
-    return max([int(x.layer) for x in entitylist])
-
 def get_path_pts(entitylayer, start_row, start_col, end_row, end_col):
     '''Return a boolean grid and a pts list for the path from start to end'''
     # construct a grid of [0-1] (makes sure path to end point is valid)
-    grid = [[1 if get_max_layer(elist) > entity.Layer.MONST_LAYER
+    grid = [[1 if get_max_layer(elist) > entity.Layer.MONSTER_LAYER
              else 0
             for elist in row]
             for row in entitylayer]

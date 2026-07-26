@@ -23,46 +23,6 @@ class Barrel(entity.Entity):
         super().death(levelmanager)
         levelmanager.place_entity(self.z, item.Wood(), (self.row,self.col))
 
-class Sandstone(entity.Entity):
-    '''Wall entity'''
-    def __init__(self):
-        super().__init__(typeid=21,
-                         name='Sandstone',
-                         glyph='░',
-                         color=color.Color().white,
-                         layer=entity.Layer.WALL_LAYER,
-                         size=entity.Size.VERY_LARGE)
-
-class Limestone(entity.Entity):
-    '''Wall entity'''
-    def __init__(self):
-        super().__init__(typeid=2,
-                         name='Limestone',
-                         glyph='▒',
-                         color=color.Color().grey,
-                         layer=entity.Layer.WALL_LAYER,
-                         size=entity.Size.VERY_LARGE)
-
-class Quarrystone(entity.Entity):
-    '''Wall entity'''
-    def __init__(self):
-        super().__init__(typeid=22,
-                         name='Quarrystone',
-                         glyph='#',
-                         color=color.Color().grey,
-                         layer=entity.Layer.WALL_LAYER,
-                         size=entity.Size.VERY_LARGE)
-
-class Rubble(entity.Entity):
-    '''Wall entity'''
-    def __init__(self):
-        super().__init__(typeid=23,
-                         name='Rubble',
-                         glyph='%',
-                         color=color.Color().grey,
-                         layer=entity.Layer.WALL_LAYER,
-                         size=entity.Size.VERY_LARGE)
-
 class Floor(entity.Entity):
     '''Floor entity'''
     def __init__(self):
@@ -80,7 +40,7 @@ class StairUp(entity.Entity):
                          name='Upstair',
                          glyph='<',
                          color=color.Color().white,
-                         layer=entity.Layer.OBJECT_LAYER,
+                         layer=entity.Layer.STAIR_LAYER,
                          size=entity.Size.VERY_LARGE)
 
 class StairDown(entity.Entity):
@@ -90,7 +50,7 @@ class StairDown(entity.Entity):
                          name='Downstair',
                          glyph='>',
                          color=color.Color().white,
-                         layer=entity.Layer.OBJECT_LAYER,
+                         layer=entity.Layer.STAIR_LAYER,
                          size=entity.Size.VERY_LARGE)
 
 class Light(entity.Entity):
@@ -116,6 +76,5 @@ class Light(entity.Entity):
     def on_top(self, entity, levelmanager):
         '''Trigger the light on or off'''
         self.light = not self.light
-        Logger.info(f'{self} ACTIVATED {self.light}!')
         self.update_state(levelmanager)
     

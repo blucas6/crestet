@@ -32,7 +32,7 @@ PLAYERZ = 0
 '''Starting player z index'''
 PLAYERFOV = 20
 '''Player FOV range'''
-PLAYERHEALTH = 20
+PLAYERHEALTH = 8
 '''Player health amount'''
 
 
@@ -45,7 +45,7 @@ NEWT_SIGHTRANGE = 5
 NEWT_XP = 1
 
 ## JELLY
-JELLY_HEALTH = 2
+JELLY_HEALTH = 1
 JELLY_SPLASHDMG = 5
 JELLY_XP = 2
 

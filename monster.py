@@ -20,13 +20,14 @@ class Goblin(e.Entity):
                          name='Goblin',
                          glyph='g',
                          color=color.Color().green,
-                         layer=e.Layer.MONST_LAYER,
+                         layer=e.Layer.MONSTER_LAYER,
                          size=e.Size.MEDIUM)
         self.Health = component.Health(health=config.GOBLIN_HEALTH)
         self.Brain = component.Brain(sightrange=config.GOBLIN_SIGHTRANGE,
-                                     blockinglayer=e.Layer.MONST_LAYER,
+                                     blockinglayer=e.Layer.MONSTER_LAYER,
                                      attacks=[e.AttackType.THROW,
                                               e.AttackType.MELEE])
+        self.Combat = component.Combat()
         self.Inventory = component.Inventory(
                 autopickuplist=['Dart']
                 )
@@ -37,11 +38,9 @@ class Goblin(e.Entity):
         for _ in range(5):
             self.Inventory.collect(item.Dart())
 
+
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
         '''Uses brain to select an action'''
-        Logger.info(f'Goblin: {self.Inventory.quiver}')
-        if self.Inventory.has_ammo():
-            Logger.info(f'Goblin Ammo: {self.Inventory.quiver.Group.amount}')
         self.do_action(
             levelmanager,
             animator,
@@ -55,7 +54,8 @@ class Goblin(e.Entity):
                 rng,
                 self.speed,
                 self.Inventory
-            )
+            ),
+            rng
         )
         
 class Human(e.Entity):
@@ -67,7 +67,7 @@ class Human(e.Entity):
                          name='Human',
                          glyph='@',
                          color=color.Color().white,
-                         layer=e.Layer.MONST_LAYER,
+                         layer=e.Layer.MONSTER_LAYER,
                          size=e.Size.MEDIUM)
         self.Interact = component.Interact()
 
@@ -81,15 +81,16 @@ class Newt(e.Entity):
                          name='Newt',
                          glyph='n',
                          color=color.Color().yellow,
-                         layer=e.Layer.MONST_LAYER,
+                         layer=e.Layer.MONSTER_LAYER,
                          size=e.Size.MEDIUM)
         self.Health = component.Health(health=config.NEWT_HEALTH)
         self.Brain = component.Brain(sightrange=config.NEWT_SIGHTRANGE,
-                                     blockinglayer=e.Layer.MONST_LAYER,
+                                     blockinglayer=e.Layer.MONSTER_LAYER,
                                      attacks=[e.AttackType.MELEE])
         self.Inventory = component.Inventory()
         self.speed = e.Speed.VERY_SLOW
         self.xp = config.NEWT_XP
+        self.Combat = component.Combat()
         self.Inventory.equip(ability.Bite())
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
@@ -106,7 +107,8 @@ class Newt(e.Entity):
                 self.energy,
                 rng,
                 self.speed
-            )
+            ),
+            rng
         )
 
 class Jelly(e.Entity):
@@ -119,11 +121,12 @@ class Jelly(e.Entity):
                          name='Jelly',
                          glyph='j',
                          color=color.Color().blue,
-                         layer=e.Layer.MONST_LAYER,
+                         layer=e.Layer.MONSTER_LAYER,
                          size=e.Size.MEDIUM)
         self.Health = component.Health(health=config.JELLY_HEALTH)
         self.splashdamage = config.JELLY_SPLASHDMG
         self.xp = 2
+        self.Combat = component.Combat()
 
     def death(self, levelmanager, animator, messager):
         '''
@@ -161,5 +164,7 @@ class Jelly(e.Entity):
             if (ptrow,ptcol) == (self.row,self.col):
                 continue
             for entity in levelmanager.Levels[self.z].EntityLayer[ptrow][ptcol]:
-                self.deal_damage(levelmanager, animator, messager, entity, self.splashdamage)
+                self.Combat.deal_damage(
+                    self, levelmanager, animator, messager, entity,
+                    True, self.splashdamage, 'jelly')
 

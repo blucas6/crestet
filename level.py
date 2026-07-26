@@ -1,4 +1,6 @@
 import config
+import utility
+import item
 import message
 import timing
 import player
@@ -126,15 +128,15 @@ class LevelManager:
         if overwrite:
             return True
 
-        # if entity is on the floor or object layer it can always be placed
-        if entity.layer <= e.Layer.OBJECT_LAYER:
-            return True
-        # if entity is greater than floor or object layers than check to make sure
-        elif entity.layer > e.Layer.OBJECT_LAYER:
-            if level.EntityLayer[pos[0]][pos[1]]:
-                maxlayer = max([x.layer for x in level.EntityLayer[pos[0]][pos[1]]])
-                if maxlayer > e.Layer.OBJECT_LAYER:
-                    return False 
+        # if square already has a high layer, can't place
+        maxlayer = utility.get_max_layer(level.EntityLayer[pos[0]][pos[1]])
+        if maxlayer >= e.Layer.WALL_LAYER:
+            return False
+        # barrels and monsters cannot be placed on each other
+        if (maxlayer >= e.Layer.MONSTER_LAYER and
+            (entity.layer == e.Layer.BARREL_LAYER or
+             entity.layer == e.Layer.MONSTER_LAYER)):
+            return False
         return True
 
     def get_curr_level(self):
@@ -197,11 +199,11 @@ class LevelManager:
                     if entity.name == 'Light':
                         entity.update_state(self)
 
-    def update_player(self, animator, messager, menumanager, statemachine, event):
+    def update_player(self, animator, messager, menumanager, statemachine, event, rng):
         '''Updates the player and returns the energy used'''
         Logger.info(f'-------- TURN UPDATE ({self.Player.turn + 1}) ---------')
         self.Player.energy = 100
-        self.Player.do_action(self, animator, messager, menumanager, statemachine, event)
+        self.Player.do_action(self, animator, messager, menumanager, statemachine, event, rng)
         self.Player.turn += 1
 
         # calculate how much energy the player used

@@ -42,6 +42,13 @@ class Wood(e.Entity):
                          size=e.Size.SMALL)
         self.Attack = component.Attack(name='Wood', damage=1)
         self.ItemType = component.ItemType.HAND
+        self.Group = component.Group(
+                parent = self,
+                unstack_name = 'Wood',
+                unstack_glyph = '#',
+                stack_name = 'Wood Stack',
+                stack_glyph = '#',
+            )
 
 class Sword(e.Entity):
     spawn = True
@@ -73,3 +80,14 @@ class Dart(e.Entity):
                 stack_glyph = '≡',
             )
 
+class Gambeson(e.Entity):
+    spawn = True
+    def __init__(self):
+        super().__init__(typeid=24,
+                         name='Gambeson',
+                         glyph='[',
+                         color=color.Color().white,
+                         layer=e.Layer.OBJECT_LAYER,
+                         size=e.Size.SMALL)
+        self.ItemType = component.ItemType.BODY
+        self.armor = 1
