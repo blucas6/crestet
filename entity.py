@@ -269,8 +269,8 @@ class Entity:
         return self.move(levelmanager, (row,col))
 
     def fire(self, levelmanager, animator, messager, event, rng):
-        '''Checks the inventory for the quiver item and calls throw()'''
-        # need inventory component
+        '''Checks the inventory for the quiver item and starts the ranged attack'''
+        # need inventory and combat component
         if not hasattr(self, 'Inventory') or not hasattr(self, 'Combat'):
             return
         if event[1].isdigit():
@@ -313,7 +313,7 @@ class Entity:
                 elif newz < 0:
                     messager.add_message("There is nothing below you.")
                     return
-                # check if there are monsters on the next level
+                # check if there is a monster/barrel above you
                 entitylayer = levelmanager.Levels[newz].EntityLayer
                 _,an_entity = utility.get_max_entity(entitylayer[self.row][self.col])
                 if ((an_entity.layer == Layer.MONST_LAYER or

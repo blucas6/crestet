@@ -35,6 +35,7 @@ class Player(e.Entity):
         self.mentalmap = []
         '''Entity map for output to the screen'''
         self.objectmap = []
+        '''Entity map for remembered objects'''
         self.levelrows = 0
         '''Rows for mental map'''
         self.levelcols = 0
@@ -96,6 +97,7 @@ class Player(e.Entity):
                     if (r,c) in pts:
                         self.mentalmap[r][c] = level.EntityLayer[r][c]
                         maxlayer = utility.get_max_layer(level.EntityLayer[r][c])
+                        # save only objects that are visible
                         if maxlayer < e.Layer.BARREL_LAYER:
                             self.objectmap[r][c] = []
                             for entity in level.EntityLayer[r][c]:

@@ -54,12 +54,11 @@ class Combat:
             return 1
         return damage
 
-    def throw(self, levelmanager, animator, messager, throw_obj, direction_key, rng, start_row, start_col, z):
+    def throw(self, levelmanager, animator, projectile, direction_key, rng, start_row, start_col, z):
         '''
         Send an object flying through the air, if the accuracy check succeeds, stop the
         object at a target otherwise keep going until something blocks the trajectory
         '''
-
         success = False
         entitylayer = levelmanager.Levels[z].EntityLayer
         direction = utility.ONE_LAYER_CIRCLE[int(direction_key)-1]
@@ -83,45 +82,42 @@ class Combat:
                     break
             objr, objc = r, c
 
-        levelmanager.place_entity(z, throw_obj, (objr,objc))
-
-        grid,pts = utility.get_path_pts(entitylayer, start_row, start_col, objr, objc)
+        # place the object in it's final spot
+        levelmanager.place_entity(z, projectile, (objr,objc))
 
         # create the animation
+        grid,pts = utility.get_path_pts(entitylayer, start_row, start_col, objr, objc)
         frames = {}
         for idx,pt in enumerate(pts):
             frames[str(idx)] = [['' for _ in row] for row in grid]
-            frames[str(idx)][pt[0]][pt[1]] = throw_obj.glyph
+            frames[str(idx)][pt[0]][pt[1]] = projectile.glyph
         origin = [0,0]
         delay = config.THROW_ANIM_DELAY
-        anim = animation.Animation(origin, frames, throw_obj.color, delay=delay)
+        anim = animation.Animation(origin, frames, projectile.color, delay=delay)
         animator.queueUp(anim)
         Logger.info(f'throwing object')
         return success, objr,objc
 
-    def attack_range(self, parent, levelmanager, animator, messager, throw_obj, direction_key, rng, start_row, start_col, z):
-
-        success, objr, objc = self.throw(levelmanager, animator, messager, throw_obj, direction_key, rng, start_row, start_col, z)
-
+    def attack_range(self, parent, levelmanager, animator, messager, projectile, direction_key, rng, start_row, start_col, z):
+        '''Start a ranged attack by throwing a projectile'''
+        # throw
+        success, objr, objc = self.throw(levelmanager, animator, projectile, direction_key, rng, start_row, start_col, z)
+        # get damage
         damage = 0
-        if hasattr(throw_obj, 'Attack'):
-            damage = throw_obj.Attack.damage
+        if hasattr(projectile, 'Attack'):
+            damage = projectile.Attack.damage
         else:
-            damage = throw_obj.size * 2
-
+            damage = projectile.size * 2
         # deal damage
         for ent in levelmanager.Levels[z].EntityLayer[objr][objc]:
             self.deal_damage(parent, levelmanager, animator, messager, ent, success, damage, 'range')
 
     def attack_melee(self, parent, levelmanager, animator, messager, victim, rng):
-        '''Attack the entity passed in - does NOT check energy usage'''
-
-        damage = 0
-
+        '''Attack the entity passed in'''
         # get damage
+        damage = 0
         if hasattr(parent, 'Inventory') or hasattr(parent, 'Charge'):
             success, damage = self.get_damage_melee(rng, parent)
-
         self.deal_damage(parent, levelmanager, animator, messager, victim, success, damage, 'melee')
 
     def deal_damage(self, parent, levelmanager, animator, messager, victim, success, damage, dmg_type):
@@ -367,6 +363,7 @@ class Inventory:
         return entity, True
 
     def remove_from_bag(self, entity):
+        '''Delete an entity from the bag'''
         for ix,ent in enumerate(self.contents):
             if ent.id == entity.id:
                 del self.contents[ix]
@@ -510,6 +507,7 @@ class Inventory:
 
     
     def pickup(self, parent, levelmanager):
+        '''Pick up ONE entity from the ground'''
         entitylist = levelmanager.Levels[parent.z].EntityLayer[parent.row][parent.col]
         for ent in entitylist:
             if ent.layer == entity.Layer.OBJECT_LAYER:
@@ -583,6 +581,7 @@ class Inventory:
         return None
 
     def calculate_damage(self):
+        '''Get the damage based off of the inventory objects'''
         dmg = 0
         if self.mainHand and hasattr(self.mainHand, 'Attack'):
             dmg += self.mainHand.Attack.damage

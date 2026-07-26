@@ -18,31 +18,52 @@ import numpy as np
 Logger = logging.getLogger(__name__)
 
 class CombatTest:
+    '''Run the player through a guantlet to collect data on equipment'''
     def __init__(self, seed, display, timing):
         self.display = display
+        '''If the display is on'''
         self.environment = environment.Environment(seed, display, timing)
+        '''Environment that contains the game'''
         self.turn_delay_secs = 0.1
+        '''Delay between automated turns'''
         self.weapons = []
+        '''Collection of all weapons to be tested'''
         self.armor = []
+        '''Collection of all armor to be tested'''
         self.equipment = []
+        '''Final equipment list to run through, gets built upon setup'''
         self.monsters = []
+        '''List of all monsters to test'''
         self.config_save = None
+        '''Save the levels.json so running doesn't disrupt the original config'''
         self.results = {}
+        '''Results dictionary
+                            {'mon name':
+                                {'player': avg turns to win,
+                                 'monster': avg turns to win
+                                },
+                            }
+        '''
         self.mons_spawn_distance = 3
+        '''Distance in the arena from the center for both player and monster'''
         self.rounds = 10
+        '''Amount of rounds for each combat'''
 
     def start(self):
+        '''Start the environment and setup the configurations'''
         self.set_configuration()
         self.environment.start()
         self.get_equipment()
         self.get_monsters()
 
     def end(self):
+        '''End the environment'''
         self.environment.end()
         with open(config.LEVEL_CONFIG_FILE, 'w+') as jfile:
             json.dump(self.config_save, jfile, indent=4)
 
     def get_equipment(self):
+        '''Collect a list of all the equipment combinations'''
         self.weapons = [None, item.Sword]
         self.armor = [None, item.Gambeson]
         for w in self.weapons:
@@ -63,12 +84,14 @@ class CombatTest:
                 self.equipment.append([None])
 
     def get_monsters(self):
+        '''Set up the monster list'''
         self.monsters = [
             obj for name,obj in inspect.getmembers(monster, inspect.isclass)
             if obj.__module__ == monster.__name__ and hasattr(obj, 'difficulty')
         ]
 
     def set_configuration(self):
+        '''Set the configuration for an arena and save the old config'''
         with open(config.LEVEL_CONFIG_FILE, 'r') as jfile:
             self.config_save = json.load(jfile)
 
@@ -102,6 +125,7 @@ class CombatTest:
             json.dump(data, jfile, indent=4)
 
     def set_arena(self, mon, equipment):
+        '''Start a new arena'''
         # generate a new game
         self.environment.reset(new_seed=True)
         levelmanager = self.environment.Game.LevelManager
@@ -125,21 +149,22 @@ class CombatTest:
         return new_mon
 
     def run(self):
-        '''Run the profiling and gather results'''
+        '''Run the combat and gather results'''
 
         try:
 
             if not self.environment.Game.running:
                 return
             
+            # get the amount of trials needed to complete the study
             trials = [[mon,equip] for equip in self.equipment for mon in self.monsters]
-            Logger.info(trials)
             num_trials = range(len(trials))
             iteratable = num_trials if self.display else tqdm.tqdm(num_trials)
             
             for stage in iteratable:
                 player_average_turns = []
                 monster_average_turns = []
+                # run a bunch of rounds for monster and equipment set
                 for round in range(self.rounds):
                     # update the configuration
                     monster = self.set_arena(trials[stage][0], trials[stage][1])
@@ -155,6 +180,7 @@ class CombatTest:
                     Logger.info(f'{player.Health} {monster.Health}')
                     Logger.info(f'{player.Inventory.show()}')
 
+                    # run until someone dies
                     while (player.Health.currenthealth > 0 and
                         monster.Health.currenthealth > 0):
                         if not self.environment.Game.running:
@@ -167,6 +193,7 @@ class CombatTest:
                         if self.display:
                             time.sleep(self.turn_delay_secs)
 
+                    # save intermediary results
                     turns = self.environment.Game.turn
                     if player.Health.currenthealth > 0:
                         player_average_turns.append(turns)
@@ -175,6 +202,7 @@ class CombatTest:
                         player_average_turns.append(0)
                         monster_average_turns.append(turns)
 
+                # save averaged results
                 if monster.name not in self.results:
                     self.results[monster.name] = {}
                     self.results[monster.name]['player'] = []
@@ -184,6 +212,7 @@ class CombatTest:
                 self.results[monster.name]['player'].append(pavg)
                 self.results[monster.name]['monster'].append(mavg)
 
+            # end and show graphs
             self.end()
             self.plot()
         except Exception as e:
@@ -191,7 +220,7 @@ class CombatTest:
             print(f'ERROR: {e}')
 
     def plot(self):
-
+        '''Show the results in a grapha'''
         nplots = len(self.results.keys())
         num_cols = 2
         num_rows = (nplots + num_cols -1) // num_cols
@@ -200,8 +229,8 @@ class CombatTest:
 
         row = 0
         col = 0
+        # build a plot per monster
         for monname in self.results.keys():
-
             categories = []
             for equipment in self.equipment:
                 name = ''
@@ -234,7 +263,6 @@ class CombatTest:
 
         plt.tight_layout()
         plt.show()
-
 
 class Profiling:
     '''Launch a bunch of randomized games to test FPS'''

@@ -23,6 +23,7 @@ def key_to_direction(key):
     return ONE_LAYER_CIRCLE[int(key)-1]
 
 def get_max_layer(entitylist):
+    '''Returns the highest layer in the entity list'''
     return max([int(x.layer) for x in entitylist])
 
 def get_max_entity(entitylist):
