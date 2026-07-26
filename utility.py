@@ -48,7 +48,7 @@ def find_last_position(direction_key, start_row, start_col, entitylayer):
         r,c = objr + direction[0], objc + direction[1]
         if entitylayer:
             maxlayer = max([x.layer for x in entitylayer[r][c]])
-            if (maxlayer == entity.Layer.MONST_LAYER or
+            if (maxlayer == entity.Layer.MONSTER_LAYER or
                 maxlayer == entity.Layer.BARREL_LAYER):
                 objr, objc = r, c
                 break
@@ -60,7 +60,7 @@ def find_last_position(direction_key, start_row, start_col, entitylayer):
 def get_path_pts(entitylayer, start_row, start_col, end_row, end_col):
     '''Return a boolean grid and a pts list for the path from start to end'''
     # construct a grid of [0-1] (makes sure path to end point is valid)
-    grid = [[1 if get_max_layer(elist) > entity.Layer.MONST_LAYER
+    grid = [[1 if get_max_layer(elist) > entity.Layer.MONSTER_LAYER
              else 0
             for elist in row]
             for row in entitylayer]

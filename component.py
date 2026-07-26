@@ -71,7 +71,7 @@ class Combat:
                 break
             if entitylayer:
                 maxlayer = utility.get_max_layer(entitylayer[r][c])
-                if (maxlayer == entity.Layer.MONST_LAYER or
+                if (maxlayer == entity.Layer.MONSTER_LAYER or
                     maxlayer == entity.Layer.BARREL_LAYER):
                     objr, objc = r, c
                     # stop only if it passes the accuracy check
@@ -777,7 +777,7 @@ class Brain:
                 r,c = mypos[0] + direction[0], mypos[1] + direction[1]
                 if (r < len(currlevel.EntityLayer) and r >= 0 and
                     c < len(currlevel.EntityLayer[r]) and c >= 0):
-                    if utility.get_max_layer(currlevel.EntityLayer[r][c]) < entity.Layer.MONST_LAYER:
+                    if utility.get_max_layer(currlevel.EntityLayer[r][c]) < entity.Layer.MONSTER_LAYER:
                         possible_actions.append(key)
             # pick a random move
             if not possible_actions:

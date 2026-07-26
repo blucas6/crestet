@@ -59,7 +59,7 @@ class Layer(enum.IntEnum):
     STAIR_LAYER = 1
     OBJECT_LAYER = 2
     BARREL_LAYER = 3
-    MONST_LAYER = 4
+    MONSTER_LAYER = 4
     WALL_LAYER = 5
 
 class Size(enum.IntEnum):
@@ -232,7 +232,7 @@ class Entity:
         _,entity = utility.get_max_entity(entitylayer[row][col])
 
         # anything on the monster layer should be able to be attacked
-        if entity.layer == Layer.MONST_LAYER:
+        if entity.layer == Layer.MONSTER_LAYER:
 
             # check for interactions
             if self.name == 'Player' and hasattr(entity, 'Interact'):
@@ -316,7 +316,7 @@ class Entity:
                 # check if there is a monster/barrel above you
                 entitylayer = levelmanager.Levels[newz].EntityLayer
                 _,an_entity = utility.get_max_entity(entitylayer[self.row][self.col])
-                if ((an_entity.layer == Layer.MONST_LAYER or
+                if ((an_entity.layer == Layer.MONSTER_LAYER or
                     an_entity.layer == Layer.BARREL_LAYER) and
                     hasattr(self, 'Combat')):
                     # auto fight the entity
@@ -365,7 +365,7 @@ class Entity:
         entitylayer = levelmanager.Levels[self.z].EntityLayer
         eidx,entity = utility.get_max_entity(entitylayer[row][col])
         # monsters or barrels can be damaged
-        if ((entity.layer == Layer.MONST_LAYER or
+        if ((entity.layer == Layer.MONSTER_LAYER or
              entity.layer == Layer.BARREL_LAYER) and
             hasattr(self, 'Combat')):
             self.energy -= self.speed

@@ -20,11 +20,11 @@ class Goblin(e.Entity):
                          name='Goblin',
                          glyph='g',
                          color=color.Color().green,
-                         layer=e.Layer.MONST_LAYER,
+                         layer=e.Layer.MONSTER_LAYER,
                          size=e.Size.MEDIUM)
         self.Health = component.Health(health=config.GOBLIN_HEALTH)
         self.Brain = component.Brain(sightrange=config.GOBLIN_SIGHTRANGE,
-                                     blockinglayer=e.Layer.MONST_LAYER,
+                                     blockinglayer=e.Layer.MONSTER_LAYER,
                                      attacks=[e.AttackType.THROW,
                                               e.AttackType.MELEE])
         self.Combat = component.Combat()
@@ -67,7 +67,7 @@ class Human(e.Entity):
                          name='Human',
                          glyph='@',
                          color=color.Color().white,
-                         layer=e.Layer.MONST_LAYER,
+                         layer=e.Layer.MONSTER_LAYER,
                          size=e.Size.MEDIUM)
         self.Interact = component.Interact()
 
@@ -81,11 +81,11 @@ class Newt(e.Entity):
                          name='Newt',
                          glyph='n',
                          color=color.Color().yellow,
-                         layer=e.Layer.MONST_LAYER,
+                         layer=e.Layer.MONSTER_LAYER,
                          size=e.Size.MEDIUM)
         self.Health = component.Health(health=config.NEWT_HEALTH)
         self.Brain = component.Brain(sightrange=config.NEWT_SIGHTRANGE,
-                                     blockinglayer=e.Layer.MONST_LAYER,
+                                     blockinglayer=e.Layer.MONSTER_LAYER,
                                      attacks=[e.AttackType.MELEE])
         self.Inventory = component.Inventory()
         self.speed = e.Speed.VERY_SLOW
@@ -121,7 +121,7 @@ class Jelly(e.Entity):
                          name='Jelly',
                          glyph='j',
                          color=color.Color().blue,
-                         layer=e.Layer.MONST_LAYER,
+                         layer=e.Layer.MONSTER_LAYER,
                          size=e.Size.MEDIUM)
         self.Health = component.Health(health=config.JELLY_HEALTH)
         self.splashdamage = config.JELLY_SPLASHDMG

@@ -30,7 +30,7 @@ class Player(e.Entity):
                          name='Player',
                          glyph='@',
                          color=color.Color().white,
-                         layer=e.Layer.MONST_LAYER,
+                         layer=e.Layer.MONSTER_LAYER,
                          size=e.Size.LARGE)
         self.mentalmap = []
         '''Entity map for output to the screen'''
@@ -46,7 +46,7 @@ class Player(e.Entity):
         '''Decides the type of FOV the player gets'''
         self.sightrange = config.PLAYERFOV
         '''How far the FOV will check'''
-        self.blockinglayer = e.Layer.MONST_LAYER
+        self.blockinglayer = e.Layer.MONSTER_LAYER
         '''For FOV, highest level (exclusive) to see through'''
         self.speed = e.Speed.AVERAGE
         '''Speed component'''
@@ -98,7 +98,7 @@ class Player(e.Entity):
                         self.mentalmap[r][c] = level.EntityLayer[r][c]
                         maxlayer = utility.get_max_layer(level.EntityLayer[r][c])
                         # save only objects that are visible
-                        if maxlayer < e.Layer.BARREL_LAYER:
+                        if maxlayer < e.Layer.MONSTER_LAYER:
                             self.objectmap[r][c] = []
                             for entity in level.EntityLayer[r][c]:
                                 if entity.layer == e.Layer.OBJECT_LAYER:
