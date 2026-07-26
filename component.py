@@ -98,6 +98,10 @@ class Combat:
     def attack_range(self, parent, levelmanager, animator, messager, throw_obj, direction_key, rng, start_row, start_col, z):
         objr, objc = self.throw(levelmanager, animator, messager, throw_obj, direction_key, rng, start_row, start_col, z)
 
+        # did not travel
+        if objr == start_row and objc == start_col:
+            return
+
         # deal damage
         for ent in levelmanager.Levels[z].EntityLayer[objr][objc]:
             if hasattr(throw_obj, 'Attack'):

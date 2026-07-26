@@ -283,6 +283,7 @@ class Entity:
             if fired_entity is None:
                 return
             # throw
+            self.energy -= self.speed
             return self.Combat.attack_range(
                             self,
                             levelmanager,
