@@ -164,5 +164,7 @@ class Jelly(e.Entity):
             if (ptrow,ptcol) == (self.row,self.col):
                 continue
             for entity in levelmanager.Levels[self.z].EntityLayer[ptrow][ptcol]:
-                self.Combat.deal_damage(self, levelmanager, animator, messager, entity, self.splashdamage, 'jelly')
+                self.Combat.deal_damage(
+                    self, levelmanager, animator, messager, entity,
+                    True, self.splashdamage, 'jelly')
 

@@ -132,6 +132,9 @@ class LevelManager:
         maxlayer = utility.get_max_layer(level.EntityLayer[pos[0]][pos[1]])
         if maxlayer >= e.Layer.WALL_LAYER:
             return False
+        # barrels cannot be placed on each other
+        if maxlayer == e.Layer.BARREL_LAYER and entity.layer == e.Layer.BARREL_LAYER:
+            return False
         return True
 
     def get_curr_level(self):

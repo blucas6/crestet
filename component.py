@@ -23,28 +23,25 @@ class Combat:
         self.evade = 10
         '''Roll under this to evade the attack'''
 
-    def get_damage_range(self, rng, throw_obj):
-        '''Return the damage a ranged attack does, 0 for miss'''
-        dmg = 0
-        if rng.randint(1,100) < self.throw_accuracy:
-            dmg = throw_obj.size * 2
-        return dmg 
-
     def get_damage_melee(self, rng, parent):
         '''Return the damage a melee attack does'''
         dmg = 0
+        success = False
         roll = rng.randint(1,100)
-        if hasattr(parent, 'Charging') and parent.Charge.charging:
+        if hasattr(parent, 'Charge') and parent.Charge.charging:
             potential_dmg = parent.Charge.end()
             if roll < self.accuracy:
                 dmg = potential_dmg
+                success = True
         elif hasattr(parent, 'Inventory'):
             if roll < self.accuracy:
                 dmg = parent.Inventory.calculate_damage()
+                success = True
         Logger.info(f"COMBAT: ({roll}) dmg:{dmg} {'HIT' if roll < self.accuracy else 'MISS'}")
-        return dmg
+        return success, dmg
 
     def take_damage(self, inventory, damage):
+        '''Return the damage actually taken after subtracting for armor and resistances'''
         reduction = 0
         if inventory.head and hasattr(inventory.head, 'armor'):
             reduction += inventory.head.armor
@@ -59,19 +56,16 @@ class Combat:
 
     def throw(self, levelmanager, animator, messager, throw_obj, direction_key, rng, start_row, start_col, z):
         '''
-        If direction is included, the entity will be thrown in that direction
-        until it hits a wall layer
-
-        If target is included, the entity will be sent directly to that target's
-        position
+        Send an object flying through the air, if the accuracy check succeeds, stop the
+        object at a target otherwise keep going until something blocks the trajectory
         '''
 
+        success = False
         entitylayer = levelmanager.Levels[z].EntityLayer
-
-
         direction = utility.ONE_LAYER_CIRCLE[int(direction_key)-1]
         objr = start_row
         objc = start_col
+        # figure out where it lands
         while True:
             r,c = objr + direction[0], objc + direction[1]
             if r < 0 or c < 0 or r >= len(entitylayer) or c >= len(entitylayer[0]):
@@ -81,7 +75,9 @@ class Combat:
                 if (maxlayer == entity.Layer.MONST_LAYER or
                     maxlayer == entity.Layer.BARREL_LAYER):
                     objr, objc = r, c
+                    # stop only if it passes the accuracy check
                     if rng.randint(1,100) < self.throw_accuracy:
+                        success = True
                         break
                 elif maxlayer == entity.Layer.WALL_LAYER:
                     break
@@ -101,23 +97,21 @@ class Combat:
         anim = animation.Animation(origin, frames, throw_obj.color, delay=delay)
         animator.queueUp(anim)
         Logger.info(f'throwing object')
-        return objr,objc
+        return success, objr,objc
 
     def attack_range(self, parent, levelmanager, animator, messager, throw_obj, direction_key, rng, start_row, start_col, z):
-        objr, objc = self.throw(levelmanager, animator, messager, throw_obj, direction_key, rng, start_row, start_col, z)
 
-        # did not travel
-        if objr == start_row and objc == start_col:
-            return
+        success, objr, objc = self.throw(levelmanager, animator, messager, throw_obj, direction_key, rng, start_row, start_col, z)
+
+        damage = 0
+        if hasattr(throw_obj, 'Attack'):
+            damage = throw_obj.Attack.damage
+        else:
+            damage = throw_obj.size * 2
 
         # deal damage
         for ent in levelmanager.Levels[z].EntityLayer[objr][objc]:
-            if hasattr(throw_obj, 'Attack'):
-                damage = throw_obj.Attack.damage
-            else:
-                damage = throw_obj.size * 2
-
-            self.deal_damage(parent, levelmanager, animator, messager, ent, damage, 'range')
+            self.deal_damage(parent, levelmanager, animator, messager, ent, success, damage, 'range')
 
     def attack_melee(self, parent, levelmanager, animator, messager, victim, rng):
         '''Attack the entity passed in - does NOT check energy usage'''
@@ -126,27 +120,29 @@ class Combat:
 
         # get damage
         if hasattr(parent, 'Inventory') or hasattr(parent, 'Charge'):
-            damage = self.get_damage_melee(rng, parent)
+            success, damage = self.get_damage_melee(rng, parent)
 
-        self.deal_damage(parent, levelmanager, animator, messager, victim, damage, 'melee')
+        self.deal_damage(parent, levelmanager, animator, messager, victim, success, damage, 'melee')
 
-    def deal_damage(self, parent, levelmanager, animator, messager, victim, damage, dmg_type):
-        '''
-        Some types of damage are not from an attack
-        
-        Returns True if the damage caused death
-        '''
+    def deal_damage(self, parent, levelmanager, animator, messager, victim, success, damage, dmg_type):
+        '''Send damage to an entity and specify the damage type'''
 
+        # victim must have a health bar to take damage and for a 'miss'
         if hasattr(victim, 'Health'):
-            if damage == 0:
+            # missed
+            if not success:
                 messager.add_miss_message(parent, victim)
                 return
 
-            Logger.info(f'{parent} dealing damage to {victim}: {damage} ')
+            # only create a notification for actual attacks
             if dmg_type == 'melee' or dmg_type == 'range':
                 messager.add_damage_message(parent, victim)
+
+            # send damage to the victim Combat component for defense
             if hasattr(victim, 'Combat') and hasattr(victim, 'Inventory'):
                 damage = victim.Combat.take_damage(victim.Inventory, damage)
+
+            Logger.info(f'{parent} dealing damage to {victim}: {damage} ')
             # check for kill
             if victim.Health.change_health(-damage):
                 victim.death(levelmanager, animator, messager)
@@ -155,12 +151,20 @@ class Combat:
                 if hasattr(parent, 'Leveling') and hasattr(victim, 'xp'):
                     parent.Leveling.gain_xp(victim.xp, parent, messager)
 
+        # or victim must be breakable
         elif hasattr(victim, 'Breakable'):
-            if damage == 0:
+            # missed
+            if not success:
                 messager.add_miss_message(parent, victim)
                 return
+
             Logger.info(f'{parent} hitting {victim} : {damage}')
-            messager.add_damage_message(parent, victim)
+
+            # only create a notification for actual attacks
+            if dmg_type == 'melee' or dmg_type == 'range':
+                messager.add_damage_message(parent, victim)
+
+            # check for break
             if victim.Breakable.change_dmg(damage):
                 victim.death(levelmanager, animator, messager)
                 messager.add_break_message(parent, victim)
