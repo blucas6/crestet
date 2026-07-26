@@ -28,6 +28,7 @@ class CombatTest:
         self.config_save = None
         self.results = {}
         self.mons_spawn_distance = 3
+        self.rounds = 10
 
     def start(self):
         self.set_configuration()
@@ -123,43 +124,51 @@ class CombatTest:
             iteratable = num_trials if self.display else tqdm.tqdm(num_trials)
             
             for stage in iteratable:
-                # update the configuration
-                monster = self.set_arena(trials[stage][0], trials[stage][1])
-
-                if self.display:
-                    self.environment.render()
-                    time.sleep(self.turn_delay_secs)
-
-                player = self.environment.Game.LevelManager.Player
-
-                Logger.info(f'SET ARENA')
-                Logger.info(f'{player} {monster}')
-                Logger.info(f'{player.Health} {monster.Health}')
-                Logger.info(f'{player.Inventory.show()}')
-
-                while (player.Health.currenthealth > 0 and
-                       monster.Health.currenthealth > 0):
-                    if not self.environment.Game.running:
-                        break
-                    
-                    self.environment.Game.game_loop(str(6))
-
-                    Logger.info(f'{player.Health} {monster.Health}')
+                player_average_turns = []
+                monster_average_turns = []
+                for round in range(self.rounds):
+                    # update the configuration
+                    monster = self.set_arena(trials[stage][0], trials[stage][1])
 
                     if self.display:
+                        self.environment.render()
                         time.sleep(self.turn_delay_secs)
 
-                turns = self.environment.Game.turn
+                    player = self.environment.Game.LevelManager.Player
+
+                    Logger.info(f'SET ARENA')
+                    Logger.info(f'{player} {monster}')
+                    Logger.info(f'{player.Health} {monster.Health}')
+                    Logger.info(f'{player.Inventory.show()}')
+
+                    while (player.Health.currenthealth > 0 and
+                        monster.Health.currenthealth > 0):
+                        if not self.environment.Game.running:
+                            break
+                        
+                        self.environment.Game.game_loop(str(6))
+
+                        Logger.info(f'{player.Health} {monster.Health}')
+
+                        if self.display:
+                            time.sleep(self.turn_delay_secs)
+
+                    turns = self.environment.Game.turn
+                    if player.Health.currenthealth > 0:
+                        player_average_turns.append(turns)
+                        monster_average_turns.append(0)
+                    else:
+                        player_average_turns.append(0)
+                        monster_average_turns.append(turns)
+
                 if monster.name not in self.results:
                     self.results[monster.name] = {}
                     self.results[monster.name]['player'] = []
                     self.results[monster.name]['monster'] = []
-                if player.Health.currenthealth > 0:
-                    self.results[monster.name]['player'].append(turns)
-                    self.results[monster.name]['monster'].append(0)
-                else:
-                    self.results[monster.name]['player'].append(0)
-                    self.results[monster.name]['monster'].append(turns)
+                pavg = sum(player_average_turns) / len(player_average_turns)
+                mavg = sum(monster_average_turns) / len(monster_average_turns)
+                self.results[monster.name]['player'].append(pavg)
+                self.results[monster.name]['monster'].append(mavg)
 
             self.end()
             self.plot()
@@ -193,8 +202,8 @@ class CombatTest:
             width = 0.35
             axs[row,col].bar(x-width/2, values1, width, label='player')
             axs[row,col].bar(x+width/2, values2, width, label='monster')
-            axs[row,col].set_ylabel('Turns')
-            axs[row,col].set_title(f'{monname} Turns to Death')
+            axs[row,col].set_ylabel('Turns (avg)')
+            axs[row,col].set_title(f'{monname}')
             axs[row,col].set_xticks(x)
             axs[row,col].set_xticklabels(categories)
             axs[row,col].legend()
