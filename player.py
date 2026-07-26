@@ -34,6 +34,7 @@ class Player(e.Entity):
                          size=e.Size.LARGE)
         self.mentalmap = []
         '''Entity map for output to the screen'''
+        self.objectmap = []
         self.levelrows = 0
         '''Rows for mental map'''
         self.levelcols = 0
@@ -70,6 +71,7 @@ class Player(e.Entity):
     def clear_memory(self):
         '''Resets the mental map of the player'''
         self.mentalmap = [[[] for _ in range(self.levelcols)] for _ in range(self.levelrows)]
+        self.objectmap = [[[] for _ in range(self.levelcols)] for _ in range(self.levelrows)]
 
     def update_mental_map(self, level):
         '''Updates the mental map of the player'''
@@ -88,11 +90,20 @@ class Player(e.Entity):
             for pt in pts:
                 self.mentalmap[pt[0]][pt[1]] = level.EntityLayer[pt[0]][pt[1]]
         elif self.fovmemory == FOVMemory.OBJECTS:
-            # remember everything but monsters
             for r,row in enumerate(level.EntityLayer):
                 for c,col in enumerate(row):
+                    # immediate fov view
                     if (r,c) in pts:
                         self.mentalmap[r][c] = level.EntityLayer[r][c]
+                        maxlayer = utility.get_max_layer(level.EntityLayer[r][c])
+                        if maxlayer < e.Layer.BARREL_LAYER:
+                            self.objectmap[r][c] = []
+                            for entity in level.EntityLayer[r][c]:
+                                if entity.layer == e.Layer.OBJECT_LAYER:
+                                    self.objectmap[r][c].append(entity)
+                    # memory view
+                    elif self.mentalmap[r][c] and self.objectmap[r][c]:
+                        self.mentalmap[r][c] = self.objectmap[r][c]
                     elif self.mentalmap[r][c]:
                         # seen before, but not in current FOV
                         # only add the object layer
