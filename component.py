@@ -45,8 +45,8 @@ class Combat:
         if inventory.feet and hasattr(inventory.feet, 'armor'):
             reduction += inventory.feet.armor
         damage -= reduction
-        if damage < 0:
-            return 0
+        if damage <= 0:
+            return 1
         return damage
 
     def throw(self, levelmanager, animator, messager, throw_obj, direction_key, rng, start_row, start_col, z):

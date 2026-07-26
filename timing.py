@@ -43,6 +43,7 @@ class CombatTest:
 
     def get_equipment(self):
         self.weapons = [item.Sword]
+        self.armor = [item.Gambeson]
         for w in self.weapons:
             if self.armor:
                 for a in self.armor:

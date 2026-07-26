@@ -80,3 +80,14 @@ class Dart(e.Entity):
                 stack_glyph = '≡',
             )
 
+class Gambeson(e.Entity):
+    spawn = True
+    def __init__(self):
+        super().__init__(typeid=24,
+                         name='Gambeson',
+                         glyph='[',
+                         color=color.Color().white,
+                         layer=e.Layer.OBJECT_LAYER,
+                         size=e.Size.SMALL)
+        self.ItemType = component.ItemType.BODY
+        self.armor = 1
