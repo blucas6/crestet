@@ -23,3 +23,14 @@ class Fist(entity.Entity):
                          size=entity.Size.VERY_SMALL)
         self.Attack = component.Attack(name='Fist', damage=1)
         self.ItemType = component.ItemType.ABILITY
+
+class Peck(entity.Entity):
+    def __init__(self):
+        super().__init__(typeid=27,
+                         name='Peck',
+                         glyph='!',
+                         color=color.Color().magenta,
+                         layer=entity.Layer.OBJECT_LAYER,
+                         size=entity.Size.VERY_SMALL)
+        self.Attack = component.Attack(name='Peck', damage=1)
+        self.ItemType = component.ItemType.ABILITY

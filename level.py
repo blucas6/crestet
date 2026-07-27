@@ -133,7 +133,7 @@ class LevelManager:
         if maxlayer >= e.Layer.WALL_LAYER:
             return False
         # barrels and monsters cannot be placed on each other
-        if (maxlayer >= e.Layer.MONSTER_LAYER and
+        if (maxlayer >= e.Layer.BARREL_LAYER and
             (entity.layer == e.Layer.BARREL_LAYER or
              entity.layer == e.Layer.MONSTER_LAYER)):
             return False

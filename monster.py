@@ -10,34 +10,25 @@ import ability
 
 Logger = logging.getLogger(__name__)
 
-class Goblin(e.Entity):
-    '''
-    Goblin creature
-    '''
-    difficulty = 2
+class Raven(e.Entity):
+    difficulty = 3
     def __init__(self):
-        super().__init__(typeid=17,
-                         name='Goblin',
-                         glyph='g',
-                         color=color.Color().green,
+        super().__init__(typeid=26,
+                         name='Raven',
+                         glyph='r',
+                         color=color.Color().blue,
                          layer=e.Layer.MONSTER_LAYER,
-                         size=e.Size.MEDIUM)
-        self.Health = component.Health(health=config.GOBLIN_HEALTH)
-        self.Brain = component.Brain(sightrange=config.GOBLIN_SIGHTRANGE,
+                         size=e.Size.SMALL)
+        self.Health = component.Health(health=config.RAVEN_HEALTH)
+        self.Brain = component.Brain(sightrange=config.RAVEN_SIGHTRANGE,
                                      blockinglayer=e.Layer.MONSTER_LAYER,
-                                     attacks=[e.AttackType.THROW,
-                                              e.AttackType.MELEE])
+                                     attacks=[e.AttackType.MELEE])
         self.Combat = component.Combat()
-        self.Inventory = component.Inventory(
-                autopickuplist=['Dart']
-                )
-        self.speed = e.Speed.SLOW
-        self.xp = config.GOBLIN_XP
+        self.Inventory = component.Inventory(autopickuplist=['Seed'])
+        self.speed = e.Speed.MEDIUM
+        self.xp = config.RAVEN_XP
 
-        self.Inventory.equip(ability.Bite())
-        for _ in range(5):
-            self.Inventory.collect(item.Dart())
-
+        self.Inventory.equip(ability.Peck())
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
         '''Uses brain to select an action'''
@@ -57,7 +48,52 @@ class Goblin(e.Entity):
             ),
             rng
         )
-        
+
+class Goblin(e.Entity):
+    '''
+    Goblin creature
+    '''
+    difficulty = 2
+    def __init__(self):
+        super().__init__(typeid=17,
+                         name='Goblin',
+                         glyph='g',
+                         color=color.Color().green,
+                         layer=e.Layer.MONSTER_LAYER,
+                         size=e.Size.MEDIUM)
+        self.Health = component.Health(health=config.GOBLIN_HEALTH)
+        self.Brain = component.Brain(sightrange=config.GOBLIN_SIGHTRANGE,
+                                     blockinglayer=e.Layer.MONSTER_LAYER,
+                                     attacks=[e.AttackType.THROW,
+                                              e.AttackType.MELEE])
+        self.Combat = component.Combat()
+        self.Inventory = component.Inventory(autopickuplist=['Dart'])
+        self.speed = e.Speed.SLOW
+        self.xp = config.GOBLIN_XP
+
+        self.Inventory.equip(ability.Bite())
+        for _ in range(5):
+            self.Inventory.collect(item.Dart())
+
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
+        '''Uses brain to select an action'''
+        self.do_action(
+            levelmanager,
+            animator,
+            messager,
+            menumanager,
+            statemachine,
+            self.Brain.get_action(
+                levelmanager.Levels[self.z],
+                [self.row,self.col],
+                self.energy,
+                rng,
+                self.speed,
+                self.Inventory
+            ),
+            rng
+        )
+
 class Human(e.Entity):
     '''
     Human

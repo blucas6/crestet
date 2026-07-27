@@ -98,7 +98,7 @@ class Player(e.Entity):
                         self.mentalmap[r][c] = level.EntityLayer[r][c]
                         maxlayer = utility.get_max_layer(level.EntityLayer[r][c])
                         # save only objects that are visible
-                        if maxlayer < e.Layer.MONSTER_LAYER:
+                        if maxlayer < e.Layer.BARREL_LAYER:
                             self.objectmap[r][c] = []
                             for entity in level.EntityLayer[r][c]:
                                 if entity.layer == e.Layer.OBJECT_LAYER:
