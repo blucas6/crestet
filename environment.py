@@ -346,7 +346,7 @@ class Environment:
 
     def get_player_fov(self):
         '''Flattens the player view of the level into a 1D array'''
-        entity_layer = self.Game.LevelManager.Player.mentalmap
+        entity_layer = self.Game.LevelManager.Player.Brain.mentalmap
         obs = np.array([col[ix].typeid if ix < len(col) else 0 for row in entity_layer for col in row for ix in range(config.LEVELMAX_ENTITIES)])
         return obs
 

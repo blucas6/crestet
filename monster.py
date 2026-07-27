@@ -7,6 +7,7 @@ import utility
 import item
 import logging
 import ability
+import brain
 
 Logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class Raven(e.Entity):
                          size=e.Size.SMALL)
         self.eyes = config.RAVEN_SIGHTRANGE
         self.Health = component.Health(health=config.RAVEN_HEALTH)
-        self.Brain = component.Brain(sightrange=self.eyes,
+        self.Brain = brain.Brain(sightrange=self.eyes,
                                      blockinglayer=e.Layer.MONSTER_LAYER,
                                      attacks=[e.AttackType.MELEE])
         self.Combat = component.Combat()
@@ -65,7 +66,7 @@ class Goblin(e.Entity):
                          size=e.Size.MEDIUM)
         self.eyes = config.GOBLIN_SIGHTRANGE
         self.Health = component.Health(health=config.GOBLIN_HEALTH)
-        self.Brain = component.Brain(sightrange=self.eyes,
+        self.Brain = brain.Brain(sightrange=self.eyes,
                                      blockinglayer=e.Layer.MONSTER_LAYER,
                                      attacks=[e.AttackType.THROW,
                                               e.AttackType.MELEE])
@@ -125,7 +126,7 @@ class Newt(e.Entity):
                          size=e.Size.MEDIUM)
         self.eyes = config.NEWT_SIGHTRANGE
         self.Health = component.Health(health=config.NEWT_HEALTH)
-        self.Brain = component.Brain(sightrange=self.eyes,
+        self.Brain = brain.Brain(sightrange=self.eyes,
                                      blockinglayer=e.Layer.MONSTER_LAYER,
                                      attacks=[e.AttackType.MELEE])
         self.Inventory = component.Inventory()

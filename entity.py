@@ -174,7 +174,8 @@ class Entity:
 
     def on_zchange(self, *_):
         '''Hook gets called when the entity changes z levels'''
-        pass
+        if hasattr(self, 'Brain'):
+            self.Brain.clear_memory()
 
     def on_apply(self, cmd, parent, levelmanager, messager, *_):
         '''Default attempt to apply an entity'''
