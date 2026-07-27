@@ -181,6 +181,7 @@ class Entity:
         '''Add a status effect to the entity'''
         if status_effect in self.status:
             return
+        Logger.info(f'Applying status effect: {status_effect}')
         messager.add_status_message(self, status_effect)
         self.status[status_effect], bg_color = status_effect.status_lookup()
         if bg_color is not None:

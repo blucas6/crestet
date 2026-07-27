@@ -84,8 +84,9 @@ class Player(e.Entity):
         # get FOV points for player
         pts = self.Brain.getFOV(level, [self.row,self.col], self.status)
 
-        blind_pts = utility.get_one_layer_pts((self.row, self.col), level.rows, level.cols)
-        Logger.info(f'BLIND PTS: {blind_pts}')
+        blind_pts = []
+        if e.StatusEffect.BLIND in self.status:
+            blind_pts = utility.get_one_layer_pts((self.row, self.col), level.rows, level.cols)
 
         # optional types of FOV memory
         if self.fovmemory == FOVMemory.NOTHING:
@@ -118,6 +119,8 @@ class Player(e.Entity):
                                 elif ent.layer == e.Layer.WALL_LAYER:
                                     self.mentalmap[r][c].append(ent)
                                 elif ent.layer == e.Layer.BARREL_LAYER:
+                                    self.mentalmap[r][c].append(ent)
+                                elif ent.layer == e.Layer.OBJECT_LAYER:
                                     self.mentalmap[r][c].append(ent)
                     # memory view
                     elif self.mentalmap[r][c] and self.objectmap[r][c]:

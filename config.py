@@ -3,7 +3,7 @@ LEVEL_CONFIG_FILE = 'levels.json'
 '''Contains the json for setting up the levels'''
 
 ### ANIMATIONS
-THROW_ANIM_DELAY = 0.02
+THROW_ANIM_DELAY = 0.01
 '''Delay travel time in throwing animation'''
 
 CHARGE_FRAME_DELAY = 0.01

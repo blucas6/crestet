@@ -24,7 +24,7 @@ class CombatTest:
         '''If the display is on'''
         self.environment = environment.Environment(seed, display, timing)
         '''Environment that contains the game'''
-        self.turn_delay_secs = 0.1
+        self.turn_delay_secs = 0.001
         '''Delay between automated turns'''
         self.weapons = []
         '''Collection of all weapons to be tested'''
@@ -46,7 +46,7 @@ class CombatTest:
         '''
         self.mons_spawn_distance = 3
         '''Distance in the arena from the center for both player and monster'''
-        self.rounds = 10
+        self.rounds = 20
         '''Amount of rounds for each combat'''
 
     def start(self):
@@ -129,8 +129,6 @@ class CombatTest:
         # generate a new game
         self.environment.reset(new_seed=True)
         levelmanager = self.environment.Game.LevelManager
-        # turn off fov
-        self.environment.Game.playerFOV = False
         # clear inventory
         player = self.environment.Game.LevelManager.Player
         player.Inventory = component.Inventory()
@@ -225,7 +223,7 @@ class CombatTest:
         num_cols = 2
         num_rows = (nplots + num_cols -1) // num_cols
         fig,axs = plt.subplots(num_rows, num_cols, figsize=(8,6))
-        Logger.info(f'PLOTS: {nplots} {num_rows} {num_cols}')
+        Logger.info(f'PLOTS: {nplots} {num_rows} {num_cols} {axs}')
 
         row = 0
         col = 0
@@ -246,13 +244,22 @@ class CombatTest:
             
             x = np.arange(len(categories))
             width = 0.35
-            axs[row,col].bar(x-width/2, values1, width, label='player')
-            axs[row,col].bar(x+width/2, values2, width, label='monster')
-            axs[row,col].set_ylabel('Turns (avg)')
-            axs[row,col].set_title(f'{monname}')
-            axs[row,col].set_xticks(x)
-            axs[row,col].set_xticklabels(categories)
-            axs[row,col].legend()
+            if len(self.results.keys()) == 1:
+                axs[0].bar(x-width/2, values1, width, label='player')
+                axs[0].bar(x+width/2, values2, width, label='monster')
+                axs[0].set_ylabel('Turns (avg)')
+                axs[0].set_title(f'{monname}')
+                axs[0].set_xticks(x)
+                axs[0].set_xticklabels(categories)
+                axs[0].legend()
+            else:
+                axs[row,col].bar(x-width/2, values1, width, label='player')
+                axs[row,col].bar(x+width/2, values2, width, label='monster')
+                axs[row,col].set_ylabel('Turns (avg)')
+                axs[row,col].set_title(f'{monname}')
+                axs[row,col].set_xticks(x)
+                axs[row,col].set_xticklabels(categories)
+                axs[row,col].legend()
             
             col += 1
             if col >= num_cols:

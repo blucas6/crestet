@@ -204,6 +204,7 @@ class LevelManager:
         Logger.info(f'-------- TURN UPDATE ({self.Player.turn + 1}) ---------')
         self.Player.energy = 100
         self.Player.update_status()
+        Logger.info(f'Player status: {self.Player.status}')
         self.Player.do_action(self, animator, messager, menumanager, statemachine, event, rng)
         self.Player.turn += 1
 

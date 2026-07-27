@@ -224,7 +224,7 @@ class Generator:
         attempt = 0
         # go through until minimum wall amount was reached or max tries
         pts = utility.get_pts(self.levelrows, self.levelcols)
-        while wallsplaced < minwalls and attempt < config.MAX_RETRIES:
+        while wallsplaced < minwalls and attempt < config.MAX_RETRIES and pts:
             attempt += 1
             idx = self.RNG.randint(0,len(pts)-1)
             pt = pts.pop(idx)
@@ -250,7 +250,7 @@ class Generator:
         barrels_placed = 0
         attempt = 0
         pts = utility.get_pts(self.levelrows, self.levelcols)
-        while barrels_placed < min_barrels and attempt < config.MAX_RETRIES:
+        while barrels_placed < min_barrels and attempt < config.MAX_RETRIES and pts:
             attempt += 1
             idx = self.RNG.randint(0,len(pts)-1)
             pt = pts.pop(idx)

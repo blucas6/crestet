@@ -79,6 +79,11 @@ class Messager:
                 self.MsgQueue.append(f'You freeze!')
             else:
                 self.MsgQueue.append(f'The {entitya.name} freezes!')
+        elif status == entity.StatusEffect.BLIND:
+            if entitya.name == 'Player':
+                self.MsgQueue.append(f'You are blinded!')
+            else:
+                self.MsgQueue.append(f'The {entitya.name} is blinded!')
     
     def add_break_message(self, entitya, entityb):
         if entitya.name == 'Player':
