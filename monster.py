@@ -11,7 +11,7 @@ import ability
 Logger = logging.getLogger(__name__)
 
 class Raven(e.Entity):
-    difficulty = 3
+    difficulty = 0
     def __init__(self):
         super().__init__(typeid=26,
                          name='Raven',
@@ -44,6 +44,7 @@ class Raven(e.Entity):
                 self.energy,
                 rng,
                 self.speed,
+                self.status,
                 self.Inventory
             ),
             rng
@@ -89,6 +90,7 @@ class Goblin(e.Entity):
                 self.energy,
                 rng,
                 self.speed,
+                self.status,
                 self.Inventory
             ),
             rng
@@ -142,7 +144,8 @@ class Newt(e.Entity):
                 [self.row,self.col],
                 self.energy,
                 rng,
-                self.speed
+                self.speed,
+                self.status
             ),
             rng
         )

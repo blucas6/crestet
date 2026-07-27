@@ -13,13 +13,16 @@ class StatusEffect(enum.Enum):
     '''Entity status effects'''
     NONE = 0
     FROZEN = 1
+    BLIND = 2
 
     def status_lookup(self):
         '''Returns the turn cooldown for status effects'''
         if self == StatusEffect.NONE:
-            return 0
+            return 0, None
         elif self == StatusEffect.FROZEN:
-            return 8
+            return 8, color.Color().blue
+        elif self == StatusEffect.BLIND:
+            return 8, None
 
 class AttackType(enum.Enum):
     '''Possible attack options'''
@@ -172,25 +175,29 @@ class Entity:
 
     def on_apply(self, cmd, parent, levelmanager, messager, *_):
         '''Default attempt to apply an entity'''
-        messager.add_message('Nothing happens.')
+        pass
 
     def apply_status(self, messager, status_effect):
         '''Add a status effect to the entity'''
+        if status_effect in self.status:
+            return
         messager.add_status_message(self, status_effect)
-        self.status[status_effect] = status_effect.status_lookup()
-        self.color = color.Color().toggle_bg(self.color)
+        self.status[status_effect], bg_color = status_effect.status_lookup()
+        if bg_color is not None:
+            self.color = color.Color().toggle_bg(self.color, bg_color)
 
-    def unapply_status(self, status):
+    def unapply_status(self, status_effect):
         '''Remove a status effect from an entity'''
-        self.color = color.Color().toggle_bg(self.color)
+        _, bg_color = status_effect.status_lookup()
+        self.color = color.Color().toggle_bg(self.color, bg_color)
 
     def update_status(self):
         '''Triggers every turn, updates each status effect'''
         if self.status.keys():
-            for status in self.status.keys():
-                self.status[status] -= 1
-                if self.status[status] <= 0:
-                    self.unapply_status(self.status[status])
+            for status_effect in self.status.keys():
+                self.status[status_effect] -= 1
+                if self.status[status_effect] <= 0:
+                    self.unapply_status(status_effect)
             self.status = {status: timer for status,timer in self.status.items() if timer > 0}
 
     def update_state(self, *_):

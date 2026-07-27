@@ -6,7 +6,7 @@ class Bite(entity.Entity):
     def __init__(self):
         super().__init__(typeid=12,
                          name='Bite',
-                         glyph='!',
+                         glyph='X',
                          color=color.Color().magenta,
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.VERY_SMALL)
@@ -17,7 +17,7 @@ class Fist(entity.Entity):
     def __init__(self):
         super().__init__(typeid=25,
                          name='Fist',
-                         glyph='!',
+                         glyph='X',
                          color=color.Color().magenta,
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.VERY_SMALL)
@@ -28,9 +28,15 @@ class Peck(entity.Entity):
     def __init__(self):
         super().__init__(typeid=27,
                          name='Peck',
-                         glyph='!',
+                         glyph='X',
                          color=color.Color().magenta,
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.VERY_SMALL)
         self.Attack = component.Attack(name='Peck', damage=1)
         self.ItemType = component.ItemType.ABILITY
+
+    def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
+        entitylayer = levelmanager.Levels[z].EntityLayer
+        for ent in entitylayer[row][col]:
+            ent.apply_status(messager, entity.StatusEffect.BLIND)
+

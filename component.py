@@ -115,10 +115,11 @@ class Combat:
     def attack_melee(self, parent, levelmanager, animator, messager, victim, rng):
         '''Attack the entity passed in'''
         # get damage
-        damage = 0
         if hasattr(parent, 'Inventory') or hasattr(parent, 'Charge'):
             success, damage = self.get_damage_melee(rng, parent)
-        self.deal_damage(parent, levelmanager, animator, messager, victim, success, damage, 'melee')
+            self.deal_damage(parent, levelmanager, animator, messager, victim, success, damage, 'melee')
+            if success and hasattr(parent, 'Inventory'):
+                parent.Inventory.apply_ability(parent, levelmanager, messager, animator, victim.row, victim.col, victim.z)
 
     def deal_damage(self, parent, levelmanager, animator, messager, victim, success, damage, dmg_type):
         '''Send damage to an entity and specify the damage type'''
@@ -550,7 +551,9 @@ class Inventory:
     def apply(self, entity, cmd, parent, levelmanager, messager, animator, row, col, z):
         '''Trigger the apply on an entity'''
         remove = entity.on_apply(cmd, parent, levelmanager, messager, animator, row, col, z)
-        if remove:
+        if remove is None:
+            messager.add_message('Nothing happens')
+        elif remove:
             self.contents = [item for item in self.contents if item.id != entity.id]
 
     def get_apply_info(self, char):
@@ -625,6 +628,10 @@ class Inventory:
             entity = self.quiver
             self.quiver = None
             return entity 
+
+    def apply_ability(self, parent, levelmanager, messager, animator, row, col, z):
+        if self.mainHand is None and self.offHand is None and self.ability:
+            self.ability.on_apply('', parent, levelmanager, messager, animator, row, col, z)
 
 class Group:
     '''Group component, if an entity can group up with others of the same type'''
@@ -745,14 +752,14 @@ class Brain:
         '''List of AttackType enums'''
         self.state = BrainState.IDLE
 
-    def get_action(self, currlevel, mypos, energy, rng, speed, inventory=None):
+    def get_action(self, currlevel, mypos, energy, rng, speed, status, inventory=None):
         '''Returns an action'''
 
         # not enough energy
         if energy < speed:
             return '5'
 
-        pts = self.getFOV(currlevel, mypos)
+        pts = self.getFOV(currlevel, mypos, status)
         playerpos = self.find_player(currlevel, pts)
 
         # if the player is near, try to attack
@@ -856,9 +863,11 @@ class Brain:
                 return '4'
         return '.'
     
-    def getFOV(self, level, mypos):
+    def getFOV(self, level, mypos, status):
         '''Use FOV algorithm to get which points are visible'''
         if not level:
+            return []
+        if entity.StatusEffect.BLIND in status:
             return []
         grid = [[max([int(x.layer) for x in level.EntityLayer[r][c]]) if level.EntityLayer[r][c] else 0
                  for c in range(len(level.EntityLayer[r]))]

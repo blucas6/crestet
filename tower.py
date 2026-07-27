@@ -7,16 +7,25 @@ import logging
 
 Logger = logging.getLogger(__name__)
 
+class Unknown(entity.Entity):
+    def __init__(self):
+        super().__init__(typeid=99,
+                         name='Unknown',
+                         glyph='!',
+                         color=color.Color().magenta,
+                         layer=entity.Layer.MONSTER_LAYER,
+                         size=entity.Size.SMALL)
+
 class Barrel(entity.Entity):
     '''Barrel entity'''
     def __init__(self):
-        self.Breakable = component.Breakable(max_dmg=1)
         super().__init__(typeid=16,
                          name='Barrel',
                          glyph='0',
                          color=color.Color().yellow,
                          layer=entity.Layer.BARREL_LAYER,
                          size=entity.Size.LARGE)
+        self.Breakable = component.Breakable(max_dmg=1)
     
     def death(self, levelmanager, animator, messager):
         '''Break the barrel'''

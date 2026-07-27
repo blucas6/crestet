@@ -1,4 +1,5 @@
 import color
+import tower
 import ability
 import item
 import utility
@@ -81,7 +82,10 @@ class Player(e.Entity):
             return
 
         # get FOV points for player
-        pts = self.Brain.getFOV(level, [self.row,self.col])
+        pts = self.Brain.getFOV(level, [self.row,self.col], self.status)
+
+        blind_pts = utility.get_one_layer_pts((self.row, self.col), level.rows, level.cols)
+        Logger.info(f'BLIND PTS: {blind_pts}')
 
         # optional types of FOV memory
         if self.fovmemory == FOVMemory.NOTHING:
@@ -94,7 +98,7 @@ class Player(e.Entity):
             for r,row in enumerate(level.EntityLayer):
                 for c,col in enumerate(row):
                     # immediate fov view
-                    if (r,c) in pts:
+                    if not e.StatusEffect.BLIND in self.status and (r,c) in pts:
                         self.mentalmap[r][c] = level.EntityLayer[r][c]
                         maxlayer = utility.get_max_layer(level.EntityLayer[r][c])
                         # save only objects that are visible
@@ -103,22 +107,29 @@ class Player(e.Entity):
                             for entity in level.EntityLayer[r][c]:
                                 if entity.layer == e.Layer.OBJECT_LAYER:
                                     self.objectmap[r][c].append(entity)
+                    elif e.StatusEffect.BLIND in self.status and [r,c] in blind_pts:
+                        if self.row == r and self.col == c:
+                            self.mentalmap[r][c] = [self]
+                        else:
+                            self.mentalmap[r][c] = []
+                            for ent in level.EntityLayer[r][c]:
+                                if ent.layer == e.Layer.MONSTER_LAYER:
+                                    self.mentalmap[r][c].append(tower.Unknown())
+                                elif ent.layer == e.Layer.WALL_LAYER:
+                                    self.mentalmap[r][c].append(ent)
+                                elif ent.layer == e.Layer.BARREL_LAYER:
+                                    self.mentalmap[r][c].append(ent)
                     # memory view
                     elif self.mentalmap[r][c] and self.objectmap[r][c]:
+                        # put back saved objects
                         self.mentalmap[r][c] = self.objectmap[r][c]
                     elif self.mentalmap[r][c]:
                         # seen before, but not in current FOV
-                        # only add the object layer
-                        self.mentalmap[r][c] = []
-                        maxlayer = utility.get_max_layer(level.EntityLayer[r][c])
-                        for entity in level.EntityLayer[r][c]:
-                            # walls get saved
-                            # objects get saved, but not if covered by barrels
-                            if (entity.layer == e.Layer.WALL_LAYER or 
-                                entity.layer == e.Layer.STAIR_LAYER or
-                                (entity.layer == e.Layer.OBJECT_LAYER and
-                                  maxlayer != e.Layer.BARREL_LAYER)):
-                                self.mentalmap[r][c].append(entity)
+                        save = []
+                        for entity in self.mentalmap[r][c]:
+                            if entity.layer == e.Layer.WALL_LAYER:
+                                save.append(entity)
+                        self.mentalmap[r][c] = save
         elif self.fovmemory == FOVMemory.OBJECTS_BARRELS:
             for r,row in enumerate(level.EntityLayer):
                 for c,col in enumerate(row):
@@ -140,10 +151,11 @@ class Player(e.Entity):
                 self.mentalmap[pt[0]][pt[1]] = level.EntityLayer[pt[0]][pt[1]]
 
         # add light layer to FOV
-        for r,row in enumerate(level.LightLayer):
-            for c,col in enumerate(row):
-                if col:
-                    self.mentalmap[r][c] = level.EntityLayer[r][c]
+        if not e.StatusEffect.BLIND in self.status:
+            for r,row in enumerate(level.LightLayer):
+                for c,col in enumerate(row):
+                    if col:
+                        self.mentalmap[r][c] = level.EntityLayer[r][c]
 
     def on_placed(self, levelmanager, messager):
         '''

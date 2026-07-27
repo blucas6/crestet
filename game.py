@@ -304,9 +304,9 @@ class Game:
         else:
             lightlayer = []
 
-        screenbuffer,colorbuffer = self.Display.prepare_buffers(entitylayer,
-                                                                lightlayer,
-                                                                self.MenuManager)
+        screenbuffer,colorbuffer = self.Display.prepare_buffers(
+                            entitylayer, lightlayer, self.MenuManager,
+                            self.LevelManager.Player.status)
         # display through engine
         if self.usedisplay and self.Engine.frame_ready():
             # output

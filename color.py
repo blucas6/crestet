@@ -17,23 +17,24 @@ class Color:
 
     def toggle_bg(self, curr_color, bg=None):
         '''Enables or disables a specific background color'''
-        # apply
-        if curr_color == Color().yellow:
-            return Color().yellow_cyan
-        elif curr_color == Color().green:
-            return Color().green_cyan
-        elif curr_color == Color().blue:
-            return Color().blue_cyan
-        # unapply
-        elif curr_color == Color().yellow_cyan:
-            return Color().yellow
-        elif curr_color == Color().green_cyan:
-            return Color().green
-        elif curr_color == Color().blue_cyan:
-            return Color().blue
-        else:
-            Logger.warning(f'No support for color: {curr_color}')
-            return curr_color
+        if bg == Color().blue:
+            # apply
+            if curr_color == Color().yellow:
+                return Color().yellow_cyan
+            elif curr_color == Color().green:
+                return Color().green_cyan
+            elif curr_color == Color().blue:
+                return Color().blue_cyan
+            # unapply
+            elif curr_color == Color().yellow_cyan:
+                return Color().yellow
+            elif curr_color == Color().green_cyan:
+                return Color().green
+            elif curr_color == Color().blue_cyan:
+                return Color().blue
+        Logger.warning(f'No support for color: {curr_color}')
+        return curr_color
+
     
     def __init__(self, display=True):
         '''
