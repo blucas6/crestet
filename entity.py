@@ -16,7 +16,10 @@ class StatusEffect(enum.Enum):
     BLIND = 2
 
     def status_lookup(self):
-        '''Returns the turn cooldown for status effects'''
+        '''
+        Returns the turn cooldown for status effects
+        and if any color changes should happen
+        '''
         if self == StatusEffect.NONE:
             return 0, None
         elif self == StatusEffect.FROZEN:
@@ -180,6 +183,9 @@ class Entity:
     def apply_status(self, messager, status_effect):
         '''Add a status effect to the entity'''
         if status_effect in self.status:
+            return
+        # can't be blinded with no eyes
+        if status_effect == StatusEffect.BLIND and not hasattr(self, 'eyes'):
             return
         Logger.info(f'Applying status effect: {status_effect}')
         messager.add_status_message(self, status_effect)

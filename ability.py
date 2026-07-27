@@ -36,6 +36,7 @@ class Peck(entity.Entity):
         self.ItemType = component.ItemType.ABILITY
 
     def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
+        '''Abilities get applied on damage'''
         entitylayer = levelmanager.Levels[z].EntityLayer
         for ent in entitylayer[row][col]:
             ent.apply_status(messager, entity.StatusEffect.BLIND)

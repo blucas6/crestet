@@ -19,8 +19,9 @@ class Raven(e.Entity):
                          color=color.Color().blue,
                          layer=e.Layer.MONSTER_LAYER,
                          size=e.Size.SMALL)
+        self.eyes = config.RAVEN_SIGHTRANGE
         self.Health = component.Health(health=config.RAVEN_HEALTH)
-        self.Brain = component.Brain(sightrange=config.RAVEN_SIGHTRANGE,
+        self.Brain = component.Brain(sightrange=self.eyes,
                                      blockinglayer=e.Layer.MONSTER_LAYER,
                                      attacks=[e.AttackType.MELEE])
         self.Combat = component.Combat()
@@ -62,8 +63,9 @@ class Goblin(e.Entity):
                          color=color.Color().green,
                          layer=e.Layer.MONSTER_LAYER,
                          size=e.Size.MEDIUM)
+        self.eyes = config.GOBLIN_SIGHTRANGE
         self.Health = component.Health(health=config.GOBLIN_HEALTH)
-        self.Brain = component.Brain(sightrange=config.GOBLIN_SIGHTRANGE,
+        self.Brain = component.Brain(sightrange=self.eyes,
                                      blockinglayer=e.Layer.MONSTER_LAYER,
                                      attacks=[e.AttackType.THROW,
                                               e.AttackType.MELEE])
@@ -121,8 +123,9 @@ class Newt(e.Entity):
                          color=color.Color().yellow,
                          layer=e.Layer.MONSTER_LAYER,
                          size=e.Size.MEDIUM)
+        self.eyes = config.NEWT_SIGHTRANGE
         self.Health = component.Health(health=config.NEWT_HEALTH)
-        self.Brain = component.Brain(sightrange=config.NEWT_SIGHTRANGE,
+        self.Brain = component.Brain(sightrange=self.eyes,
                                      blockinglayer=e.Layer.MONSTER_LAYER,
                                      attacks=[e.AttackType.MELEE])
         self.Inventory = component.Inventory()

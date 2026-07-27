@@ -118,6 +118,7 @@ class Combat:
         if hasattr(parent, 'Inventory') or hasattr(parent, 'Charge'):
             success, damage = self.get_damage_melee(rng, parent)
             self.deal_damage(parent, levelmanager, animator, messager, victim, success, damage, 'melee')
+            # check for any special effects
             if success and hasattr(parent, 'Inventory'):
                 parent.Inventory.apply_ability(parent, levelmanager, messager, animator, victim.row, victim.col, victim.z)
 

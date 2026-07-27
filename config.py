@@ -40,7 +40,7 @@ MONS_IDLE = [0,4]
 '''Likeliness of brain transition'''
 
 ## NEWT
-NEWT_HEALTH = 5
+NEWT_HEALTH = 3
 NEWT_SIGHTRANGE = 5
 NEWT_XP = 1
 

@@ -45,15 +45,15 @@ class Player(e.Entity):
         '''Used for simple FOV'''
         self.fovmemory = FOVMemory.OBJECTS
         '''Decides the type of FOV the player gets'''
-        self.sightrange = config.PLAYERFOV
-        '''How far the FOV will check'''
+        self.eyes = config.PLAYERFOV
+        '''How far the FOV will check, also enables eye status effects'''
         self.blockinglayer = e.Layer.MONSTER_LAYER
         '''For FOV, highest level (exclusive) to see through'''
         self.speed = e.Speed.AVERAGE
         '''Speed component'''
         self.Health = component.Health(health=config.PLAYERHEALTH)
         '''Health component'''
-        self.Brain = component.Brain(self.sightrange, self.blockinglayer)
+        self.Brain = component.Brain(self.eyes, self.blockinglayer)
         '''Player brain for game interactions'''
         self.Charge = component.Charge(self.speed)
         '''Player can run'''
@@ -106,7 +106,7 @@ class Player(e.Entity):
                         if maxlayer < e.Layer.BARREL_LAYER:
                             self.objectmap[r][c] = []
                             for entity in level.EntityLayer[r][c]:
-                                if entity.layer == e.Layer.OBJECT_LAYER:
+                                if entity.layer == e.Layer.OBJECT_LAYER or e.Layer.STAIR_LAYER:
                                     self.objectmap[r][c].append(entity)
                     elif e.StatusEffect.BLIND in self.status and [r,c] in blind_pts:
                         if self.row == r and self.col == c:
