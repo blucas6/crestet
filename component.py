@@ -631,6 +631,7 @@ class Inventory:
             return entity 
 
     def apply_ability(self, parent, levelmanager, messager, animator, row, col, z):
+        '''If using an ability, activate the special effect'''
         if self.mainHand is None and self.offHand is None and self.ability:
             self.ability.on_apply('', parent, levelmanager, messager, animator, row, col, z)
 

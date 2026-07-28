@@ -12,7 +12,7 @@ import brain
 Logger = logging.getLogger(__name__)
 
 class Raven(e.Entity):
-    difficulty = 0
+    difficulty = 3
     def __init__(self):
         super().__init__(typeid=26,
                          name='Raven',

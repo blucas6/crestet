@@ -53,9 +53,13 @@ class Brain:
                                int(self.blockinglayer))
 
     def level_change(self, *_):
+        '''Base case, brain child classes can override this trigger'''
         pass
 
 class SimpleBrain(Brain):
+    '''
+    For monsters that can move around and attack
+    '''
     def __init__(self, sightrange, blockinglayer, attacks=[]):
         super().__init__(sightrange, blockinglayer)
 
@@ -176,66 +180,77 @@ class SimpleBrain(Brain):
         return '.'
 
 class FOVBrain(Brain):
+    '''
+    For entities that have memory
+    '''
     def __init__(self, sightrange, blockinglayer):
         super().__init__(sightrange, blockinglayer)
         self.mentalmap = []
+        '''Current view of the map'''
         self.objectmap = []
+        '''All remembered objects (and barrels if set)'''
         self.wallmap = []
+        '''All remembered walls'''
         self.fovmemory = FOVMemory.OBJECTS
         '''Decides the type of FOV'''
 
     def level_change(self, curr_level):
+        '''Implement trigger to clear the current memory'''
         self.clear_memory(curr_level.rows, curr_level.cols)
         self.clear_objects(curr_level.rows, curr_level.cols)
         self.clear_walls(curr_level.rows, curr_level.cols)
 
     def clear_memory(self, rows, cols):
-        '''Resets the mental map of the player'''
+        '''Resets the map memory'''
         self.mentalmap = [[[] for _ in range(cols)] for _ in range(rows)]
 
     def clear_objects(self, rows, cols):
-        '''Resets the mental map of the player'''
+        '''Resets the object memory'''
         self.objectmap = [[[] for _ in range(cols)] for _ in range(rows)]
 
     def clear_walls(self, rows, cols):
+        '''Resets the wall memory'''
         self.wallmap = [[[] for _ in range(cols)] for _ in range(rows)]
 
     def update_mental_map(self, level, myrow, mycol, status):
-        '''Updates the mental map of the player'''
+        '''Updates the mental map'''
 
         if not level:
             return
 
+        # create these maps if they don't exist
         if not self.objectmap:
             self.clear_objects(level.rows, level.cols)
         if not self.wallmap:
             self.clear_walls(level.rows, level.cols)
 
+        # clear the mental map except if remembering everything
         if self.fovmemory != FOVMemory.EVERYTHING or not self.mentalmap:
             self.clear_memory(level.rows, level.cols)
 
         # get the current FOV points
-        pts = self.getFOV(level, [myrow,mycol], status)
+        fovpts = self.getFOV(level, [myrow,mycol], status)
 
-        blind_pts = []
+        # get the current blind points if needed
+        blindpts = []
         if entity.StatusEffect.BLIND in status:
-            blind_pts = utility.get_one_layer_pts((myrow, mycol), level.rows, level.cols)
+            blindpts = utility.get_one_layer_pts((myrow, mycol), level.rows, level.cols)
 
         # optional types of FOV memory
         if self.fovmemory == FOVMemory.NOTHING:
-            self.mental_map_load_FOV(level, pts, blind_pts, status, myrow, mycol)
+            self.mental_map_load_FOV(level, fovpts, blindpts, status, myrow, mycol)
         elif self.fovmemory == FOVMemory.OBJECTS:
-            self.mental_map_load_FOV(level, pts, blind_pts, status, myrow, mycol)
-            self.object_map_save(level, pts, blind_pts, status)
-            self.wall_map_save(level, pts, blind_pts, status)
+            self.mental_map_load_FOV(level, fovpts, blindpts, status, myrow, mycol)
+            self.object_map_save(level, fovpts, blindpts, status)
+            self.wall_map_save(level, fovpts, status)
         elif self.fovmemory == FOVMemory.OBJECTS_BARRELS:
-            self.mental_map_load_FOV(level, pts, blind_pts, status, myrow, mycol)
-            self.object_map_save(level, pts, blind_pts, status)
-            self.wall_map_save(level, pts, blind_pts, status)
+            self.mental_map_load_FOV(level, fovpts, blindpts, status, myrow, mycol)
+            self.object_map_save(level, fovpts, blindpts, status)
+            self.wall_map_save(level, fovpts, status)
         elif self.fovmemory == FOVMemory.EVERYTHING:
             if entity.StatusEffect.BLIND in status:
                 self.clear_memory(level.rows, level.cols)
-            self.mental_map_load_FOV(level, pts, blind_pts, status, myrow, mycol)
+            self.mental_map_load_FOV(level, fovpts, blindpts, status, myrow, mycol)
 
         # add light layer to FOV
         if not entity.StatusEffect.BLIND in status:
@@ -244,23 +259,31 @@ class FOVBrain(Brain):
                     if col:
                         self.mentalmap[r][c] = level.EntityLayer[r][c]
 
-        # add back objects that are not in current fov
+        # add back objects/walls that are not in current fov
         for r,row in enumerate(self.objectmap):
             for c,col in enumerate(row):
-                if self.objectmap[r][c] and not self.mentalmap[r][c]:
-                    for ent in self.objectmap[r][c]:
-                        self.mentalmap[r][c].append(ent)
-                if self.wallmap[r][c] and not self.mentalmap[r][c]:
-                    for ent in self.wallmap[r][c]:
-                        self.mentalmap[r][c].append(ent)
+                if self.mentalmap[r][c]:
+                    continue
+                if self.objectmap[r][c]:
+                    self.mentalmap[r][c] = self.objectmap[r][c]
+                if self.wallmap[r][c]:
+                    self.mentalmap[r][c] = self.wallmap[r][c]
 
     def mental_map_load_FOV(self, level, fovpts, blindpts, status, myrow, mycol):
-        if entity.StatusEffect.BLIND in status:
+        '''Load the mental map with the current vision'''
+        # normal vision
+        if not entity.StatusEffect.BLIND in status:
+            for r,c in fovpts:
+                self.mentalmap[r][c] = level.EntityLayer[r][c]
+        # blind
+        else:
             for r,c in blindpts:
+                # add player always
                 if myrow == r and mycol == c:
                     for ent in level.EntityLayer[r][c]:
                         if ent.name == 'Player':
                             self.mentalmap[r][c] = [ent]
+                # add other nearby objects as blurry
                 else:
                     self.mentalmap[r][c] = []
                     for ent in level.EntityLayer[r][c]:
@@ -272,11 +295,9 @@ class FOVBrain(Brain):
                         elif (ent.layer == entity.Layer.OBJECT_LAYER or 
                               ent.layer == entity.Layer.STAIR_LAYER):
                             self.mentalmap[r][c].append(ent)
-        else:
-            for r,c in fovpts:
-                self.mentalmap[r][c] = level.EntityLayer[r][c]
 
     def object_map_save(self, level, fovpts, blindpts, status):
+        '''Save objects within view'''
         pts = []
         if entity.StatusEffect.BLIND in status:
             pts = blindpts
@@ -291,13 +312,15 @@ class FOVBrain(Brain):
                     if (ent.layer == entity.Layer.OBJECT_LAYER or
                         ent.layer == entity.Layer.STAIR_LAYER):
                         self.objectmap[r][c].append(ent)
+            # save barrels only for that type of FOV
             elif self.fovmemory == FOVMemory.OBJECTS_BARRELS:
                 self.objectmap[r][c] = []
                 for ent in level.EntityLayer[r][c]:
                     if ent.layer == entity.Layer.BARREL_LAYER:
                         self.objectmap[r][c].append(ent)
 
-    def wall_map_save(self, level, fovpts, blindpts, status):
+    def wall_map_save(self, level, fovpts, status):
+        '''Save walls in view'''
         if entity.StatusEffect.BLIND in status:
             return
         for r,c in fovpts:

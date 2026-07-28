@@ -60,5 +60,6 @@ class Player(e.Entity):
                 ent.Edible.get_eaten(levelmanager, messager, self)
 
     def update_mental_map(self, curr_level):
+        '''Update the mental map of the player'''
         self.Brain.update_mental_map(curr_level, self.row, self.col, self.status)
 

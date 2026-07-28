@@ -25,7 +25,7 @@ class StatusEffect(enum.Enum):
         elif self == StatusEffect.FROZEN:
             return 8, color.Color().blue
         elif self == StatusEffect.BLIND:
-            return 8, None
+            return 18, None
 
 class AttackType(enum.Enum):
     '''Possible attack options'''
