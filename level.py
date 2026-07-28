@@ -56,7 +56,7 @@ class LevelManager:
         self.RNG = rng
         self.Levels = []
         self.Player = player.Player()
-        self.Player.init(self.levelrows, self.levelcols)
+        self.Player.init()
 
     def place_player(self, playerpos, playerz):
         '''
@@ -203,6 +203,8 @@ class LevelManager:
         '''Updates the player and returns the energy used'''
         Logger.info(f'-------- TURN UPDATE ({self.Player.turn + 1}) ---------')
         self.Player.energy = 100
+        self.Player.update_status()
+        Logger.info(f'Player status: {self.Player.status}')
         self.Player.do_action(self, animator, messager, menumanager, statemachine, event, rng)
         self.Player.turn += 1
 
@@ -282,7 +284,7 @@ class LevelManager:
 
         self.place_entity(level.z, entity, newpos)
 
-        entity.on_zchange()
+        entity.on_zchange(level)
 
         return True
 

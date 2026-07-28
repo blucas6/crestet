@@ -115,10 +115,12 @@ class Combat:
     def attack_melee(self, parent, levelmanager, animator, messager, victim, rng):
         '''Attack the entity passed in'''
         # get damage
-        damage = 0
         if hasattr(parent, 'Inventory') or hasattr(parent, 'Charge'):
             success, damage = self.get_damage_melee(rng, parent)
-        self.deal_damage(parent, levelmanager, animator, messager, victim, success, damage, 'melee')
+            self.deal_damage(parent, levelmanager, animator, messager, victim, success, damage, 'melee')
+            # check for any special effects
+            if success and hasattr(parent, 'Inventory'):
+                parent.Inventory.apply_ability(parent, levelmanager, messager, animator, victim.row, victim.col, victim.z)
 
     def deal_damage(self, parent, levelmanager, animator, messager, victim, success, damage, dmg_type):
         '''Send damage to an entity and specify the damage type'''
@@ -550,7 +552,9 @@ class Inventory:
     def apply(self, entity, cmd, parent, levelmanager, messager, animator, row, col, z):
         '''Trigger the apply on an entity'''
         remove = entity.on_apply(cmd, parent, levelmanager, messager, animator, row, col, z)
-        if remove:
+        if remove is None:
+            messager.add_message('Nothing happens')
+        elif remove:
             self.contents = [item for item in self.contents if item.id != entity.id]
 
     def get_apply_info(self, char):
@@ -625,6 +629,11 @@ class Inventory:
             entity = self.quiver
             self.quiver = None
             return entity 
+
+    def apply_ability(self, parent, levelmanager, messager, animator, row, col, z):
+        '''If using an ability, activate the special effect'''
+        if self.mainHand is None and self.offHand is None and self.ability:
+            self.ability.on_apply('', parent, levelmanager, messager, animator, row, col, z)
 
 class Group:
     '''Group component, if an entity can group up with others of the same type'''
@@ -725,148 +734,6 @@ class Health:
             return True
         return False
 
-class BrainState(enum.Enum):
-    '''Used to keep track of what state the brain is in'''
-    IDLE = 0
-    '''Do nothing'''
-    MOVE = 1
-    '''Move around randomly'''
-
-class Brain:
-    '''
-    Brain component, if an entity needs to make decisions
-    '''
-    def __init__(self, sightrange, blockinglayer, attacks=[]):
-        self.sightrange = sightrange
-        '''How far FOV will check'''
-        self.blockinglayer = blockinglayer
-        '''Highest level (exclusive) FOV will see through'''
-        self.attacks = attacks
-        '''List of AttackType enums'''
-        self.state = BrainState.IDLE
-
-    def get_action(self, currlevel, mypos, energy, rng, speed, inventory=None):
-        '''Returns an action'''
-
-        # not enough energy
-        if energy < speed:
-            return '5'
-
-        pts = self.getFOV(currlevel, mypos)
-        playerpos = self.find_player(currlevel, pts)
-
-        # if the player is near, try to attack
-        if playerpos:
-            # go through possible attacks
-            for attack in self.attacks:
-                if (attack == entity.AttackType.THROW and
-                    self.throw_attack_possible(mypos, playerpos, inventory)):
-                    return self.throw_attack(mypos, playerpos)
-                elif attack == entity.AttackType.MELEE:
-                    return self.find_path(currlevel.EntityLayer, mypos, playerpos)
-
-        # move around
-        if self.state == BrainState.MOVE:
-            actions = ['1', '2', '3', '4', '6', '7', '8', '9']
-            rows = len(currlevel.EntityLayer)
-            cols = len(currlevel.EntityLayer[0])
-            # get which moves are legal
-            possible_actions = []
-            for key in actions:
-                direction = utility.key_to_direction(key)
-                r,c = mypos[0] + direction[0], mypos[1] + direction[1]
-                if (r < len(currlevel.EntityLayer) and r >= 0 and
-                    c < len(currlevel.EntityLayer[r]) and c >= 0):
-                    if utility.get_max_layer(currlevel.EntityLayer[r][c]) < entity.Layer.MONSTER_LAYER:
-                        possible_actions.append(key)
-            # pick a random move
-            if not possible_actions:
-                return '.'
-            if len(possible_actions) == 1:
-                return possible_actions[0]
-            move = possible_actions[rng.randint(0, len(possible_actions)-1)]
-            if rng.randint(*config.MONS_IDLE) == 0:
-                self.state = BrainState.IDLE
-            return move
-
-        # rest if not able to do anything
-        if rng.randint(*config.MONS_IDLE) == 0:
-            self.state = BrainState.MOVE
-        return '.'
-
-    def throw_attack_possible(self, mypos, playerpos, inventory):
-        '''Check if the player is reachable by a throw'''
-        if not inventory.has_ammo():
-            return False
-        drow = abs(mypos[0] - playerpos[0])
-        dcol = abs(mypos[1] - playerpos[1])
-        if drow == 0 or dcol == 0 or drow == dcol:
-            return True
-        return False
-
-    def throw_attack(self, mypos, playerpos):
-        '''Get the throw command'''
-        d = self.move_towards_pt(mypos, playerpos)
-        return 't' + str(d)
-
-    def find_player(self, currlevel, pts):
-        '''In a set of FOV points, check if the player exists'''
-        for pt in pts:
-            for ent in currlevel.EntityLayer[pt[0]][pt[1]]:
-                if ent.name == 'Player':
-                    return pt
-        return None
-
-    def find_path(self, entitylayer, mypos, playerpos):
-        '''Finds a path using A* to the player position'''
-        # create the 1,0 grid
-        grid = [[1 if max([int(x.layer) for x in elist]) > entity.Layer.OBJECT_LAYER else 0
-                    for elist in row]
-                    for row in entitylayer]
-        # set the source/dest positions to open
-        grid[mypos[0]][mypos[1]] = 0
-        grid[playerpos[0]][playerpos[1]] = 0
-        # call A* to get a set of pts
-        returncode, pts = algo.astar(grid, mypos, playerpos)
-        if returncode != 1:
-            Logger.error(f'Error: brain failed to find path -> {returncode}')
-            return '.'
-        return self.move_towards_pt(mypos, pts[1])
-    
-    def move_towards_pt(self, mypos, otherpos):
-        '''Moves towards a point on the map'''
-        if otherpos[0] > mypos[0]:
-            if otherpos[1] > mypos[1]:
-                return '3'
-            elif otherpos[1] < mypos[1]:
-                return '1'
-            else:
-                return '2'
-        elif otherpos[0] < mypos[0]:
-            if otherpos[1] > mypos[1]:
-                return '9'
-            elif otherpos[1] < mypos[1]:
-                return '7'
-            else:
-                return '8'
-        else:
-            if otherpos[1] > mypos[1]:
-                return '6'
-            elif otherpos[1] < mypos[1]:
-                return '4'
-        return '.'
-    
-    def getFOV(self, level, mypos):
-        '''Use FOV algorithm to get which points are visible'''
-        if not level:
-            return []
-        grid = [[max([int(x.layer) for x in level.EntityLayer[r][c]]) if level.EntityLayer[r][c] else 0
-                 for c in range(len(level.EntityLayer[r]))]
-                    for r in range(len(level.EntityLayer))]
-        return algo.RecursiveShadow(grid,
-                               mypos,
-                               self.sightrange,
-                               int(self.blockinglayer))
 
 class Attack:
     '''

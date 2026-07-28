@@ -292,7 +292,7 @@ class Game:
         # get the either the entire level or the FOV
         if (self.StateMachine.GameState != state.GameState.VIEWING and
             self.playerFOV):
-            entitylayer = self.LevelManager.Player.mentalmap
+            entitylayer = self.LevelManager.Player.Brain.mentalmap
         elif currlevel:
             entitylayer = currlevel.EntityLayer
         else:
@@ -304,9 +304,9 @@ class Game:
         else:
             lightlayer = []
 
-        screenbuffer,colorbuffer = self.Display.prepare_buffers(entitylayer,
-                                                                lightlayer,
-                                                                self.MenuManager)
+        screenbuffer,colorbuffer = self.Display.prepare_buffers(
+                            entitylayer, lightlayer, self.MenuManager,
+                            self.LevelManager.Player.status)
         # display through engine
         if self.usedisplay and self.Engine.frame_ready():
             # output
@@ -387,7 +387,7 @@ class Game:
             msg = ''
             map = []
             if self.playerFOV:
-                map = self.LevelManager.Player.mentalmap[row][col]
+                map = self.LevelManager.Player.Brain.mentalmap[row][col]
             else:
                 level = self.LevelManager.get_curr_level()
                 if level:

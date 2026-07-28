@@ -42,7 +42,7 @@ class Display:
         self.colorbuffer = [[clr.Color().white for _ in range(self.termcols-1)] 
                                     for _ in range(self.termrows-1)]
 
-    def prepare_buffers(self, entitylayer, lightlayer, menumanager):
+    def prepare_buffers(self, entitylayer, lightlayer, menumanager, player_status):
         '''Build the buffers to send to the engine'''
 
         self.clear_buffers()
@@ -51,7 +51,8 @@ class Display:
         self.render_entitylayer(entitylayer)
 
         # go through light layer
-        self.render_lightlayer(entitylayer, lightlayer)
+        if entity.StatusEffect.BLIND not in player_status:
+            self.render_lightlayer(entitylayer, lightlayer)
         
         # add menus
         self.render_menus(menumanager)
