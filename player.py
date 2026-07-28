@@ -33,7 +33,7 @@ class Player(e.Entity):
         '''Speed component'''
         self.Health = component.Health(health=config.PLAYERHEALTH)
         '''Health component'''
-        self.Brain = brain.Brain(self.eyes, self.blockinglayer)
+        self.Brain = brain.FOVBrain(self.eyes, self.blockinglayer)
         '''Player brain for game interactions'''
         self.Charge = component.Charge(self.speed)
         '''Player can run'''

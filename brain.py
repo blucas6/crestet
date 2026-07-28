@@ -32,30 +32,37 @@ class Brain:
     '''
     Brain component, if an entity needs to make decisions
     '''
-    def __init__(self, sightrange, blockinglayer, attacks=[]):
+    def __init__(self, sightrange, blockinglayer):
         self.sightrange = sightrange
         '''How far FOV will check'''
         self.blockinglayer = blockinglayer
         '''Highest level (exclusive) FOV will see through'''
+
+    def getFOV(self, level, mypos, status):
+        '''Use FOV algorithm to get which points are visible'''
+        if not level:
+            return []
+        if entity.StatusEffect.BLIND in status:
+            return []
+        grid = [[max([int(x.layer) for x in level.EntityLayer[r][c]]) if level.EntityLayer[r][c] else 0
+                 for c in range(len(level.EntityLayer[r]))]
+                    for r in range(len(level.EntityLayer))]
+        return algo.RecursiveShadow(grid,
+                               mypos,
+                               self.sightrange,
+                               int(self.blockinglayer))
+
+    def level_change(self, *_):
+        pass
+
+class SimpleBrain(Brain):
+    def __init__(self, sightrange, blockinglayer, attacks=[]):
+        super().__init__(sightrange, blockinglayer)
+
         self.attacks = attacks
         '''List of AttackType enums'''
         self.state = BrainState.IDLE
-        self.mentalmap = []
-        self.objectmap = []
-        self.wallmap = []
-        self.fovmemory = FOVMemory.OBJECTS
-        '''Decides the type of FOV'''
-
-    def clear_memory(self, rows, cols):
-        '''Resets the mental map of the player'''
-        self.mentalmap = [[[] for _ in range(cols)] for _ in range(rows)]
-
-    def clear_objects(self, rows, cols):
-        '''Resets the mental map of the player'''
-        self.objectmap = [[[] for _ in range(cols)] for _ in range(rows)]
-
-    def clear_walls(self, rows, cols):
-        self.wallmap = [[[] for _ in range(cols)] for _ in range(rows)]
+        '''Current brain state'''
 
     def get_action(self, currlevel, mypos, energy, rng, speed, status, inventory=None):
         '''Returns an action'''
@@ -167,20 +174,31 @@ class Brain:
             elif otherpos[1] < mypos[1]:
                 return '4'
         return '.'
-    
-    def getFOV(self, level, mypos, status):
-        '''Use FOV algorithm to get which points are visible'''
-        if not level:
-            return []
-        if entity.StatusEffect.BLIND in status:
-            return []
-        grid = [[max([int(x.layer) for x in level.EntityLayer[r][c]]) if level.EntityLayer[r][c] else 0
-                 for c in range(len(level.EntityLayer[r]))]
-                    for r in range(len(level.EntityLayer))]
-        return algo.RecursiveShadow(grid,
-                               mypos,
-                               self.sightrange,
-                               int(self.blockinglayer))
+
+class FOVBrain(Brain):
+    def __init__(self, sightrange, blockinglayer):
+        super().__init__(sightrange, blockinglayer)
+        self.mentalmap = []
+        self.objectmap = []
+        self.wallmap = []
+        self.fovmemory = FOVMemory.OBJECTS
+        '''Decides the type of FOV'''
+
+    def level_change(self, curr_level):
+        self.clear_memory(curr_level.rows, curr_level.cols)
+        self.clear_objects(curr_level.rows, curr_level.cols)
+        self.clear_walls(curr_level.rows, curr_level.cols)
+
+    def clear_memory(self, rows, cols):
+        '''Resets the mental map of the player'''
+        self.mentalmap = [[[] for _ in range(cols)] for _ in range(rows)]
+
+    def clear_objects(self, rows, cols):
+        '''Resets the mental map of the player'''
+        self.objectmap = [[[] for _ in range(cols)] for _ in range(rows)]
+
+    def clear_walls(self, rows, cols):
+        self.wallmap = [[[] for _ in range(cols)] for _ in range(rows)]
 
     def update_mental_map(self, level, myrow, mycol, status):
         '''Updates the mental map of the player'''
@@ -290,8 +308,3 @@ class Brain:
                 for ent in level.EntityLayer[r][c]:
                     if ent.layer == entity.Layer.WALL_LAYER:
                         self.wallmap[r][c].append(ent)
-
-    def level_change(self, curr_level):
-        self.clear_memory(curr_level.rows, curr_level.cols)
-        self.clear_objects(curr_level.rows, curr_level.cols)
-        self.clear_walls(curr_level.rows, curr_level.cols)
