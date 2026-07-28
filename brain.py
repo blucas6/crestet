@@ -40,22 +40,22 @@ class Brain:
         self.attacks = attacks
         '''List of AttackType enums'''
         self.state = BrainState.IDLE
-        self.mental_map = []
+        self.mentalmap = []
         self.objectmap = []
-        self.levelrows = 0
-        self.levelcols = 0
+        self.wallmap = []
         self.fovmemory = FOVMemory.OBJECTS
         '''Decides the type of FOV'''
 
-    def setup_mental(self, levelrows, levelcols):
-        self.levelrows = levelrows
-        self.levelcols = levelcols
-        self.clear_memory()
-
-    def clear_memory(self):
+    def clear_memory(self, rows, cols):
         '''Resets the mental map of the player'''
-        self.mentalmap = [[[] for _ in range(self.levelcols)] for _ in range(self.levelrows)]
-        self.objectmap = [[[] for _ in range(self.levelcols)] for _ in range(self.levelrows)]
+        self.mentalmap = [[[] for _ in range(cols)] for _ in range(rows)]
+
+    def clear_objects(self, rows, cols):
+        '''Resets the mental map of the player'''
+        self.objectmap = [[[] for _ in range(cols)] for _ in range(rows)]
+
+    def clear_walls(self, rows, cols):
+        self.wallmap = [[[] for _ in range(cols)] for _ in range(rows)]
 
     def get_action(self, currlevel, mypos, energy, rng, speed, status, inventory=None):
         '''Returns an action'''
@@ -188,7 +188,15 @@ class Brain:
         if not level:
             return
 
-        # get FOV points for player
+        if not self.objectmap:
+            self.clear_objects(level.rows, level.cols)
+        if not self.wallmap:
+            self.clear_walls(level.rows, level.cols)
+
+        if self.fovmemory != FOVMemory.EVERYTHING or not self.mentalmap:
+            self.clear_memory(level.rows, level.cols)
+
+        # get the current FOV points
         pts = self.getFOV(level, [myrow,mycol], status)
 
         blind_pts = []
@@ -197,70 +205,19 @@ class Brain:
 
         # optional types of FOV memory
         if self.fovmemory == FOVMemory.NOTHING:
-            # always clear previous points
-            self.mentalmap = [[[] for _ in range(len(level.EntityLayer[row]))]
-                                    for row in range(len(level.EntityLayer))]
-            for pt in pts:
-                self.mentalmap[pt[0]][pt[1]] = level.EntityLayer[pt[0]][pt[1]]
+            self.mental_map_load_FOV(level, pts, blind_pts, status, myrow, mycol)
         elif self.fovmemory == FOVMemory.OBJECTS:
-            for r,row in enumerate(level.EntityLayer):
-                for c,_ in enumerate(row):
-                    # immediate fov view
-                    if not entity.StatusEffect.BLIND in status and (r,c) in pts:
-                        self.mentalmap[r][c] = level.EntityLayer[r][c]
-                        maxlayer = utility.get_max_layer(level.EntityLayer[r][c])
-                        # save only objects that are visible
-                        if maxlayer < entity.Layer.BARREL_LAYER:
-                            self.objectmap[r][c] = []
-                            for ent in level.EntityLayer[r][c]:
-                                if ent.layer == entity.Layer.OBJECT_LAYER or ent.layer == entity.Layer.STAIR_LAYER:
-                                    self.objectmap[r][c].append(ent)
-                    elif entity.StatusEffect.BLIND in status and [r,c] in blind_pts:
-                        if myrow == r and mycol == c:
-                            for ent in level.EntityLayer[r][c]:
-                                if ent.name == 'Player':
-                                    self.mentalmap[r][c] = [ent]
-                        else:
-                            self.mentalmap[r][c] = []
-                            for ent in level.EntityLayer[r][c]:
-                                if ent.layer == entity.Layer.MONSTER_LAYER:
-                                    self.mentalmap[r][c].append(tower.Unknown())
-                                elif ent.layer == entity.Layer.WALL_LAYER:
-                                    self.mentalmap[r][c].append(ent)
-                                elif ent.layer == entity.Layer.BARREL_LAYER:
-                                    self.mentalmap[r][c].append(ent)
-                                elif ent.layer == entity.Layer.OBJECT_LAYER:
-                                    self.mentalmap[r][c].append(ent)
-                    # memory view
-                    elif self.mentalmap[r][c] and self.objectmap[r][c]:
-                        # put back saved objects
-                        self.mentalmap[r][c] = self.objectmap[r][c]
-                    elif self.mentalmap[r][c]:
-                        # seen before, but not in current FOV
-                        save = []
-                        for ent in self.mentalmap[r][c]:
-                            if ent.layer == entity.Layer.WALL_LAYER:
-                                save.append(ent)
-                        self.mentalmap[r][c] = save
+            self.mental_map_load_FOV(level, pts, blind_pts, status, myrow, mycol)
+            self.object_map_save(level, pts, blind_pts, status)
+            self.wall_map_save(level, pts, blind_pts, status)
         elif self.fovmemory == FOVMemory.OBJECTS_BARRELS:
-            for r,row in enumerate(level.EntityLayer):
-                for c,_ in enumerate(row):
-                    if (r,c) in pts:
-                        self.mentalmap[r][c] = level.EntityLayer[r][c]
-                    elif self.mentalmap[r][c]:
-                        # seen before, but not in current FOV
-                        # only add the object layer
-                        self.mentalmap[r][c] = []
-                        for ent in level.EntityLayer[r][c]:
-                            if (ent.layer == entity.Layer.STAIR_LAYER or
-                                ent.layer == entity.Layer.OBJECT_LAYER or
-                                ent.layer == entity.Layer.BARREL_LAYER or
-                                ent.layer == entity.Layer.WALL_LAYER):
-                                self.mentalmap[r][c].append(ent)
+            self.mental_map_load_FOV(level, pts, blind_pts, status, myrow, mycol)
+            self.object_map_save(level, pts, blind_pts, status)
+            self.wall_map_save(level, pts, blind_pts, status)
         elif self.fovmemory == FOVMemory.EVERYTHING:
-            # just add new seen points
-            for pt in pts:
-                self.mentalmap[pt[0]][pt[1]] = level.EntityLayer[pt[0]][pt[1]]
+            if entity.StatusEffect.BLIND in status:
+                self.clear_memory(level.rows, level.cols)
+            self.mental_map_load_FOV(level, pts, blind_pts, status, myrow, mycol)
 
         # add light layer to FOV
         if not entity.StatusEffect.BLIND in status:
@@ -268,3 +225,73 @@ class Brain:
                 for c,col in enumerate(row):
                     if col:
                         self.mentalmap[r][c] = level.EntityLayer[r][c]
+
+        # add back objects that are not in current fov
+        for r,row in enumerate(self.objectmap):
+            for c,col in enumerate(row):
+                if self.objectmap[r][c] and not self.mentalmap[r][c]:
+                    for ent in self.objectmap[r][c]:
+                        self.mentalmap[r][c].append(ent)
+                if self.wallmap[r][c] and not self.mentalmap[r][c]:
+                    for ent in self.wallmap[r][c]:
+                        self.mentalmap[r][c].append(ent)
+
+    def mental_map_load_FOV(self, level, fovpts, blindpts, status, myrow, mycol):
+        if entity.StatusEffect.BLIND in status:
+            for r,c in blindpts:
+                if myrow == r and mycol == c:
+                    for ent in level.EntityLayer[r][c]:
+                        if ent.name == 'Player':
+                            self.mentalmap[r][c] = [ent]
+                else:
+                    self.mentalmap[r][c] = []
+                    for ent in level.EntityLayer[r][c]:
+                        if ent.layer == entity.Layer.MONSTER_LAYER:
+                            self.mentalmap[r][c].append(tower.UnknownEntity())
+                        elif (ent.layer == entity.Layer.WALL_LAYER or
+                            ent.layer == entity.Layer.BARREL_LAYER):
+                            self.mentalmap[r][c].append(tower.UnknownStructure())
+                        elif (ent.layer == entity.Layer.OBJECT_LAYER or 
+                              ent.layer == entity.Layer.STAIR_LAYER):
+                            self.mentalmap[r][c].append(ent)
+        else:
+            for r,c in fovpts:
+                self.mentalmap[r][c] = level.EntityLayer[r][c]
+
+    def object_map_save(self, level, fovpts, blindpts, status):
+        pts = []
+        if entity.StatusEffect.BLIND in status:
+            pts = blindpts
+        else:
+            pts = fovpts
+        for r,c in pts:
+            maxlayer = utility.get_max_layer(level.EntityLayer[r][c])
+            # save only objects/stairs that are visible
+            if maxlayer < entity.Layer.BARREL_LAYER:
+                self.objectmap[r][c] = []
+                for ent in level.EntityLayer[r][c]:
+                    if (ent.layer == entity.Layer.OBJECT_LAYER or
+                        ent.layer == entity.Layer.STAIR_LAYER):
+                        self.objectmap[r][c].append(ent)
+            elif self.fovmemory == FOVMemory.OBJECTS_BARRELS:
+                self.objectmap[r][c] = []
+                for ent in level.EntityLayer[r][c]:
+                    if ent.layer == entity.Layer.BARREL_LAYER:
+                        self.objectmap[r][c].append(ent)
+
+    def wall_map_save(self, level, fovpts, blindpts, status):
+        if entity.StatusEffect.BLIND in status:
+            return
+        for r,c in fovpts:
+            maxlayer = utility.get_max_layer(level.EntityLayer[r][c])
+            # save only objects/stairs that are visible
+            if maxlayer == entity.Layer.WALL_LAYER:
+                self.wallmap[r][c] = []
+                for ent in level.EntityLayer[r][c]:
+                    if ent.layer == entity.Layer.WALL_LAYER:
+                        self.wallmap[r][c].append(ent)
+
+    def level_change(self, curr_level):
+        self.clear_memory(curr_level.rows, curr_level.cols)
+        self.clear_objects(curr_level.rows, curr_level.cols)
+        self.clear_walls(curr_level.rows, curr_level.cols)

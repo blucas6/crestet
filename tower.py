@@ -7,12 +7,20 @@ import logging
 
 Logger = logging.getLogger(__name__)
 
-class Unknown(entity.Entity):
+class UnknownEntity(entity.Entity):
     def __init__(self):
         super().__init__(typeid=99,
                          name='Unknown',
                          glyph='!',
                          color=color.Color().magenta,
+                         layer=entity.Layer.MONSTER_LAYER,
+                         size=entity.Size.SMALL)
+class UnknownStructure(entity.Entity):
+    def __init__(self):
+        super().__init__(typeid=98,
+                         name='Unknown',
+                         glyph='▒',
+                         color=color.Color().white,
                          layer=entity.Layer.MONSTER_LAYER,
                          size=entity.Size.SMALL)
 

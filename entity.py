@@ -172,10 +172,10 @@ class Entity:
         if hasattr(self, 'Group'):
             self.Group.check_square(entity, levelmanager)
 
-    def on_zchange(self, *_):
+    def on_zchange(self, curr_level):
         '''Hook gets called when the entity changes z levels'''
         if hasattr(self, 'Brain'):
-            self.Brain.clear_memory()
+            self.Brain.level_change(curr_level)
 
     def on_apply(self, cmd, parent, levelmanager, messager, *_):
         '''Default attempt to apply an entity'''

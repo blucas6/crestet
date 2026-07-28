@@ -56,7 +56,7 @@ class LevelManager:
         self.RNG = rng
         self.Levels = []
         self.Player = player.Player()
-        self.Player.init(self.levelrows, self.levelcols)
+        self.Player.init()
 
     def place_player(self, playerpos, playerz):
         '''
@@ -284,7 +284,7 @@ class LevelManager:
 
         self.place_entity(level.z, entity, newpos)
 
-        entity.on_zchange()
+        entity.on_zchange(level)
 
         return True
 

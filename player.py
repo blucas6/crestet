@@ -43,9 +43,8 @@ class Player(e.Entity):
         '''Inventory component'''
         self.Combat = component.Combat()
 
-    def init(self, levelrows, levelcols):
+    def init(self):
         '''Initialize player data'''
-        self.Brain.setup_mental(levelrows, levelcols)
         self.Inventory.equip(ability.Fist())
 
     def on_placed(self, levelmanager, messager):
