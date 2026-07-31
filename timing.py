@@ -35,8 +35,6 @@ class CombatTest:
         '''Final equipment list to run through, gets built upon setup'''
         self.monsters = []
         '''List of all monsters to test'''
-        self.config_save = None
-        '''Save the levels.json so running doesn't disrupt the original config'''
         self.results = {}
         '''Results dictionary
                             {'mon name':
@@ -61,8 +59,6 @@ class CombatTest:
     def end(self):
         '''End the environment'''
         self.environment.end()
-        with open(config.LEVEL_CONFIG_FILE, 'w+') as jfile:
-            json.dump(self.config_save, jfile, indent=4)
 
     def get_equipment(self):
         '''Collect a list of all the equipment combinations'''
