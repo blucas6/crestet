@@ -1,4 +1,5 @@
 import time
+import os
 import ability
 import item
 import inspect
@@ -52,6 +53,7 @@ class CombatTest:
     def start(self):
         '''Start the environment and setup the configurations'''
         self.set_configuration()
+        config.LEVEL_CONFIG_FILE = config.SIM_LEVEL_CONFIG
         self.environment.start()
         self.get_equipment()
         self.get_monsters()
@@ -92,9 +94,10 @@ class CombatTest:
 
     def set_configuration(self):
         '''Set the configuration for an arena and save the old config'''
-        with open(config.LEVEL_CONFIG_FILE, 'r') as jfile:
-            self.config_save = json.load(jfile)
 
+        config.LEVELROWS = 7
+        config.LEVELCOLS = 14
+        
         data = None
         with open(config.LEVEL_CONFIG_FILE, 'r') as jfile:
             data = json.load(jfile)
@@ -121,7 +124,9 @@ class CombatTest:
         data['1']['runes'] = 0
         data['1']['mons'] = False
 
-        with open(config.LEVEL_CONFIG_FILE, 'w+') as jfile:
+        if not os.path.exists(os.path.dirname(config.SIM_LEVEL_CONFIG)):
+            os.makedirs(os.path.dirname(config.SIM_LEVEL_CONFIG))
+        with open(config.SIM_LEVEL_CONFIG, 'w+') as jfile:
             json.dump(data, jfile, indent=4)
 
     def set_arena(self, mon, equipment):
@@ -295,12 +300,12 @@ class Profiling:
     def update_level_amount(self, total_levels):
         '''Update the config with a new amount of levels'''
         data = None
-        with open(config.LEVEL_CONFIG_FILE, 'r') as jfile:
+        with open(config.SIM_LEVEL_CONFIG, 'r') as jfile:
             data = json.load(jfile)
 
         data['total_levels'] = total_levels
 
-        with open(config.LEVEL_CONFIG_FILE, 'w+') as jfile:
+        with open(config.SIM_LEVEL_CONFIG, 'w+') as jfile:
             json.dump(data, jfile, indent=4)
 
     def run(self):
