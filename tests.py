@@ -1,4 +1,6 @@
 import unittest
+import wall
+import tower
 import time
 import os
 import environment
@@ -14,6 +16,9 @@ logging.basicConfig(
 )
 
 class TestMovement(unittest.TestCase):
+    display = False
+    turn_delay = 0.1
+
     @classmethod
     def setUpClass(cls):
         # make small arena
@@ -57,37 +62,86 @@ class TestMovement(unittest.TestCase):
         # set the new config file
         config.LEVEL_CONFIG_FILE = config.SIM_LEVEL_CONFIG
 
-    def setUp(self):
-        self.display = False
-        self.turn_delay = 0.1
-        self.environment = environment.Environment(seed='', display=self.display, timing=False)
-        self.environment.start()
-        if not self.environment.Game.running:
+        TestMovement.environment = environment.Environment(seed='',
+                                                           display=TestMovement.display,
+                                                           timing=False)
+        TestMovement.environment.start()
+        if not TestMovement.environment.Game.running:
             print('FAILED to start the environment')
             exit()
-        self.environment.reset(new_seed=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        TestMovement.environment.end()
+
+    def setUp(self):
+        TestMovement.environment.reset(new_seed=True)
 
     def loop(self, action=''):
         if self.display:
-            self.environment.render()
+            TestMovement.environment.render()
             time.sleep(self.turn_delay)
-        self.environment.Game.game_loop(str(action))
+        TestMovement.environment.Game.game_loop(str(action))
+
+    def test_place_player_valid(self):
+        player = TestMovement.environment.Game.LevelManager.Player
+        entitylayer = TestMovement.environment.Game.LevelManager.Levels[0].EntityLayer
+        self.assertEqual(player.pos(), [1, 1, 0, 1])
+        self.assertIn(player, entitylayer[1][1])
+        self.assertEqual(tower.Floor().name, entitylayer[1][1][0].name)
+        self.assertEqual(2, len(entitylayer[1][1]))
+
+    def test_place_entity_invalid_wall(self):
+        entitylayer = TestMovement.environment.Game.LevelManager.Levels[0].EntityLayer
+        levelmanager = TestMovement.environment.Game.LevelManager
+        wll = wall.Sandstone()
+        levelmanager.place_entity(0, wll, (0,0))
+        self.assertTrue(TestMovement.environment.Game.running)
+        self.assertNotIn(wll, entitylayer[0][0])
+        self.assertEqual(1, len(levelmanager.Levels[0].EntityLayer[0][0]))
+
+    def test_place_entity_invalid_level(self):
+        entitylayer = TestMovement.environment.Game.LevelManager.Levels[0].EntityLayer
+        levelmanager = TestMovement.environment.Game.LevelManager
+        wll = wall.Sandstone()
+        self.assertEqual(2, len(levelmanager.Levels))
+        levelmanager.place_entity(5, wll, (0,0))
+        self.assertEqual(2, len(levelmanager.Levels))
+        self.assertTrue(TestMovement.environment.Game.running)
+        self.assertNotIn(wll, entitylayer[0][0])
+        self.assertEqual(1, len(levelmanager.Levels[0].EntityLayer[0][0]))
 
     def test_move_valid(self):
-        player = self.environment.Game.LevelManager.Player
-        self.assertEqual(player.pos(), [1, 1, 0, 1])
+        player = TestMovement.environment.Game.LevelManager.Player
+        entitylayer = TestMovement.environment.Game.LevelManager.Levels[0].EntityLayer
         for _ in range(4):
             self.loop(6)
-        self.environment.end()
         self.assertEqual(player.pos(), [1, 5, 0, 1])
+        self.assertIn(player, entitylayer[1][5])
 
     def test_move_invalid(self):
-        player = self.environment.Game.LevelManager.Player
-        self.assertEqual(player.pos(), [1, 1, 0, 1])
+        player = TestMovement.environment.Game.LevelManager.Player
+        entitylayer = TestMovement.environment.Game.LevelManager.Levels[0].EntityLayer
         for _ in range(4):
             self.loop(4)
-        self.environment.end()
         self.assertEqual(player.pos(), [1, 1, 0, 1])
+        self.assertIn(player, entitylayer[1][1])
+
+    def test_push_barrel(self):
+        player = TestMovement.environment.Game.LevelManager.Player
+        levelmanager = TestMovement.environment.Game.LevelManager
+        entitylayer = TestMovement.environment.Game.LevelManager.Levels[0].EntityLayer
+        barrel = tower.Barrel()
+        levelmanager.place_entity(0, barrel, (1,2))
+        for _ in range(4):
+            self.loop(6)
+        self.assertEqual(player.pos(), [1, 5, 0, 1])
+        self.assertIn(player, entitylayer[1][5])
+        self.assertEqual(2, len(entitylayer[1][5]))
+        self.assertEqual(barrel.pos(), [1, 6, 0, 1])
+        self.assertIn(barrel, entitylayer[1][6])
+        self.assertEqual(2, len(entitylayer[1][6]))
+
 
 if __name__ == '__main__':
     unittest.main()
