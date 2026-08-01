@@ -4,6 +4,14 @@ import os
 import environment
 import config
 import json
+import logging
+
+logging.basicConfig(
+    level = logging.INFO,
+    filename = 'test.log',
+    filemode = 'w',
+    format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
 
 class TestMovement(unittest.TestCase):
     @classmethod
