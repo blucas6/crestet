@@ -14,6 +14,7 @@ import config
 import json
 import logging
 
+# configure the logger here since not running from main
 logging.basicConfig(
     level = logging.INFO,
     filename = 'test.log',
@@ -24,12 +25,19 @@ logging.basicConfig(
 Logger = logging.getLogger(__name__)
 
 class TestSuite(unittest.TestCase):
+    '''
+    Crestet Unit Test Suite
+    '''
     display = False
+    '''Run the unit tests with the display'''
     turn_delay = 0.3
+    '''Turn delay for running with a display'''
 
     @classmethod
     def setUpClass(cls):
+        '''Set up the entire environment'''
         Logger.info('=== UNIT TEST SETUP ===')
+
         # make small arena
         config.LEVELROWS = 8
         config.LEVELCOLS = 20
@@ -71,29 +79,35 @@ class TestSuite(unittest.TestCase):
         # set the new config file
         config.LEVEL_CONFIG_FILE = config.SIM_LEVEL_CONFIG
 
-        TestSuite.environment = environment.Environment(seed='',
-                                                           display=TestSuite.display,
-                                                           timing=False)
+        # load the environment
+        TestSuite.environment = environment.Environment(
+            seed='', display=TestSuite.display, timing=False)
         TestSuite.environment.start()
+
         if not TestSuite.environment.Game.running:
             print('FAILED to start the environment')
             exit()
 
+        # if not running with a display, still configure it so unit tests can
+        # check the display buffer
         if not TestSuite.display:
             termrows, termcols = config.LEVELROWS+config.LEVELORIGIN[0], config.LEVELCOLS+config.LEVELORIGIN[1]
             TestSuite.environment.Game.Display.init(termrows, termcols, config.LEVELORIGIN)
 
     @classmethod
     def tearDownClass(cls):
+        '''Clean up the environment at the end'''
         TestSuite.environment.end()
 
     def setUp(self):
+        '''Reset the environment before every test'''
         Logger.info('')
         Logger.info('')
         Logger.info(f'EXECUTING: {self._testMethodName}')
         TestSuite.environment.reset(new_seed=True)
 
     def loop(self, action=''):
+        '''Runs a single loop of the game, with rendering'''
         if self.display:
             TestSuite.environment.render()
             time.sleep(self.turn_delay)
@@ -103,6 +117,7 @@ class TestSuite(unittest.TestCase):
             time.sleep(self.turn_delay)
 
     def test_place_player_valid(self):
+        '''Checks that entities are placed correctly'''
         player = TestSuite.environment.Game.LevelManager.Player
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         self.assertEqual(player.pos(), [1, 1, 0, 1])
@@ -111,6 +126,7 @@ class TestSuite(unittest.TestCase):
         self.assertEqual(2, len(entitylayer[1][1]))
 
     def test_place_entity_invalid_wall(self):
+        '''Checks that entities cannot be placed in walls'''
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         levelmanager = TestSuite.environment.Game.LevelManager
         wll = wall.Sandstone()
@@ -120,6 +136,7 @@ class TestSuite(unittest.TestCase):
         self.assertEqual(1, len(levelmanager.Levels[0].EntityLayer[0][0]))
 
     def test_place_entity_invalid_level(self):
+        '''Checks that entities cannot be placed in levels that don't exist'''
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         levelmanager = TestSuite.environment.Game.LevelManager
         wll = wall.Sandstone()
@@ -131,6 +148,7 @@ class TestSuite(unittest.TestCase):
         self.assertEqual(1, len(levelmanager.Levels[0].EntityLayer[0][0]))
 
     def test_move_valid(self):
+        '''Checks that the player can move correctly'''
         player = TestSuite.environment.Game.LevelManager.Player
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         for _ in range(4):
@@ -139,6 +157,7 @@ class TestSuite(unittest.TestCase):
         self.assertIn(player, entitylayer[1][5])
 
     def test_move_invalid(self):
+        '''Checks that the player cannot move into a wall'''
         player = TestSuite.environment.Game.LevelManager.Player
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         self.loop(4)
@@ -146,6 +165,7 @@ class TestSuite(unittest.TestCase):
         self.assertIn(player, entitylayer[1][1])
 
     def test_push_barrel_valid(self):
+        '''Checks that the player can move a barrel'''
         player = TestSuite.environment.Game.LevelManager.Player
         levelmanager = TestSuite.environment.Game.LevelManager
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
@@ -161,6 +181,7 @@ class TestSuite(unittest.TestCase):
         self.assertEqual(2, len(entitylayer[1][6]))
 
     def test_push_barrel_invalid(self):
+        '''Checks that the player cannot move the barrel into a wall'''
         player = TestSuite.environment.Game.LevelManager.Player
         levelmanager = TestSuite.environment.Game.LevelManager
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
@@ -177,6 +198,7 @@ class TestSuite(unittest.TestCase):
         self.assertEqual(2, len(entitylayer[1][1]))
 
     def test_throw_valid(self):
+        '''Checks that the player can throw an object'''
         player = TestSuite.environment.Game.LevelManager.Player
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         dart = item.Dart()
@@ -188,6 +210,7 @@ class TestSuite(unittest.TestCase):
         self.assertEqual(2, len(entitylayer[1][1]))
 
     def test_throw_invalid(self):
+        '''Checks that the player cannot throw an object if not equipped'''
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         dart = item.Dart()
         self.loop(6)
@@ -197,6 +220,7 @@ class TestSuite(unittest.TestCase):
         self.assertEqual(1, len(entitylayer[1][1]))
 
     def test_light_layer(self):
+        '''Checks that the lights add to the light layer'''
         levelmanager = TestSuite.environment.Game.LevelManager
         lightlayer = TestSuite.environment.Game.LevelManager.Levels[0].LightLayer
         light = tower.Light()
@@ -207,6 +231,7 @@ class TestSuite(unittest.TestCase):
             self.assertTrue(lightlayer[pt[0]][pt[1]])
 
     def test_light_off(self):
+        '''Checks that the lights can be turned off'''
         levelmanager = TestSuite.environment.Game.LevelManager
         lightlayer = TestSuite.environment.Game.LevelManager.Levels[0].LightLayer
         light = tower.Light()
@@ -218,6 +243,7 @@ class TestSuite(unittest.TestCase):
             self.assertFalse(lightlayer[pt[0]][pt[1]])
 
     def test_barrel_break(self):
+        '''Checks that a barrel can be broken'''
         player = TestSuite.environment.Game.LevelManager.Player
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         levelmanager = TestSuite.environment.Game.LevelManager
@@ -228,6 +254,7 @@ class TestSuite(unittest.TestCase):
         self.assertEqual(item.Wood().name, entitylayer[1][2][1].name)
 
     def test_fov_barrel_memory(self):
+        '''Checks that barrels can be remembered'''
         player = TestSuite.environment.Game.LevelManager.Player
         lightlayer = TestSuite.environment.Game.LevelManager.Levels[0].LightLayer
         menumanager = TestSuite.environment.Game.MenuManager
@@ -254,6 +281,7 @@ class TestSuite(unittest.TestCase):
         self.assertEqual('0', screenbuffer[r][c])
 
     def test_fov_hidden_object(self):
+        '''Checks that the FOV will not reveal hidden objects'''
         player = TestSuite.environment.Game.LevelManager.Player
         lightlayer = TestSuite.environment.Game.LevelManager.Levels[0].LightLayer
         menumanager = TestSuite.environment.Game.MenuManager
@@ -276,6 +304,7 @@ class TestSuite(unittest.TestCase):
         self.assertEqual(display.unknownglyph, screenbuffer[r][c])
 
     def test_fov_blind_barrel(self):
+        '''Checks that barrels will be hidden when blinded'''
         player = TestSuite.environment.Game.LevelManager.Player
         lightlayer = TestSuite.environment.Game.LevelManager.Levels[0].LightLayer
         menumanager = TestSuite.environment.Game.MenuManager
@@ -299,6 +328,7 @@ class TestSuite(unittest.TestCase):
         self.assertEqual(' ', screenbuffer[r][c])
 
     def test_fov_blind_object_memory(self):
+        '''Checks that objects will be remembered when blinded'''
         player = TestSuite.environment.Game.LevelManager.Player
         lightlayer = TestSuite.environment.Game.LevelManager.Levels[0].LightLayer
         menumanager = TestSuite.environment.Game.MenuManager
@@ -329,5 +359,6 @@ if __name__ == '__main__':
                                 'Display is off by default')
     args,unknown = parser.parse_known_args()
     TestSuite.display = args.display
+    # reset args to not interfere with unittest args
     sys.argv = [sys.argv[0]] + unknown
     unittest.main()
