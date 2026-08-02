@@ -16,4 +16,4 @@ jobs:
         python-version: '3.11'
     
     - name: run tests
-      run: python test.py
+      run: python tests.py
