@@ -1,4 +1,5 @@
 import unittest
+import brain
 import sys
 import argparse
 import utility
@@ -23,14 +24,14 @@ Logger = logging.getLogger(__name__)
 
 class TestSuite(unittest.TestCase):
     display = False
-    turn_delay = 1
+    turn_delay = 0.3
 
     @classmethod
     def setUpClass(cls):
         Logger.info('=== UNIT TEST SETUP ===')
         # make small arena
         config.LEVELROWS = 7
-        config.LEVELCOLS = 14
+        config.LEVELCOLS = 12
 
         # create .tmp for config files
         if not os.path.exists(os.path.dirname(config.SIM_LEVEL_CONFIG)):
@@ -88,6 +89,9 @@ class TestSuite(unittest.TestCase):
         TestSuite.environment.reset(new_seed=True)
 
     def loop(self, action=''):
+        if self.display:
+            TestSuite.environment.render()
+            time.sleep(self.turn_delay)
         TestSuite.environment.Game.game_loop(str(action))
         if self.display:
             TestSuite.environment.render()
@@ -190,7 +194,6 @@ class TestSuite(unittest.TestCase):
     def test_light_layer(self):
         levelmanager = TestSuite.environment.Game.LevelManager
         lightlayer = TestSuite.environment.Game.LevelManager.Levels[0].LightLayer
-        currlevel = TestSuite.environment.Game.LevelManager.Levels[0]
         light = tower.Light()
         levelmanager.place_entity(0, light, (3,3))
         self.loop('.')
@@ -198,6 +201,26 @@ class TestSuite(unittest.TestCase):
         for pt in pts:
             self.assertTrue(lightlayer[pt[0]][pt[1]])
 
+    def test_light_off(self):
+        levelmanager = TestSuite.environment.Game.LevelManager
+        lightlayer = TestSuite.environment.Game.LevelManager.Levels[0].LightLayer
+        light = tower.Light()
+        levelmanager.place_entity(0, light, (3,3))
+        self.loop(3)
+        self.loop(3)
+        pts = utility.get_one_layer_pts((3,3), len(lightlayer), len(lightlayer[0]))
+        for pt in pts:
+            self.assertFalse(lightlayer[pt[0]][pt[1]])
+
+    def test_barrel_break(self):
+        player = TestSuite.environment.Game.LevelManager.Player
+        entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
+        levelmanager = TestSuite.environment.Game.LevelManager
+        player.Combat.accuracy = 100
+        barrel = tower.Barrel()
+        levelmanager.place_entity(0, barrel, (1,2))
+        self.loop('F6')
+        self.assertEqual(item.Wood().name, entitylayer[1][2][1].name)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False)
