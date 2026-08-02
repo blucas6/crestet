@@ -27,7 +27,7 @@ class Game:
     Game class controls the entire game execution from start to finish
     '''
     def __init__(self, seed=None, msgblocking=True, usedisplay=True,
-                 timing=False, logging=True):
+                 timing=False):
         # Properties
         self.running = False
         '''If the game is running'''

@@ -150,9 +150,11 @@ class LevelManager:
         if not level:
             return
 
-        # clear light layer
-        level.LightLayer = [[0 for _ in range(self.levelcols)]
-                                for _ in range(self.levelrows)]
+        # clear light layer, do not create a new list just update
+        for r in range(self.levelrows):
+            for c in range(self.levelcols):
+                level.LightLayer[r][c] = 0
+
         # energy
         for row in level.EntityLayer:
             for entitylist in row:
