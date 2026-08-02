@@ -1,4 +1,5 @@
 import unittest
+import entity
 import brain
 import sys
 import argparse
@@ -30,8 +31,8 @@ class TestSuite(unittest.TestCase):
     def setUpClass(cls):
         Logger.info('=== UNIT TEST SETUP ===')
         # make small arena
-        config.LEVELROWS = 7
-        config.LEVELCOLS = 12
+        config.LEVELROWS = 8
+        config.LEVELCOLS = 20
 
         # create .tmp for config files
         if not os.path.exists(os.path.dirname(config.SIM_LEVEL_CONFIG)):
@@ -77,6 +78,10 @@ class TestSuite(unittest.TestCase):
         if not TestSuite.environment.Game.running:
             print('FAILED to start the environment')
             exit()
+
+        if not TestSuite.display:
+            termrows, termcols = config.LEVELROWS+config.LEVELORIGIN[0], config.LEVELCOLS+config.LEVELORIGIN[1]
+            TestSuite.environment.Game.Display.init(termrows, termcols, config.LEVELORIGIN)
 
     @classmethod
     def tearDownClass(cls):
@@ -221,6 +226,101 @@ class TestSuite(unittest.TestCase):
         levelmanager.place_entity(0, barrel, (1,2))
         self.loop('F6')
         self.assertEqual(item.Wood().name, entitylayer[1][2][1].name)
+
+    def test_fov_barrel_memory(self):
+        player = TestSuite.environment.Game.LevelManager.Player
+        lightlayer = TestSuite.environment.Game.LevelManager.Levels[0].LightLayer
+        menumanager = TestSuite.environment.Game.MenuManager
+        display = TestSuite.environment.Game.Display
+        levelmanager = TestSuite.environment.Game.LevelManager
+        player.Brain.sightrange = 2
+        player.Brain.fovmemory = brain.FOVMemory.OBJECTS_BARRELS
+        row = 1
+        col = 4
+        r,c = display.level_to_screen_pos(row, col)
+        levelmanager.place_entity(0, tower.Barrel(), (row,col))
+        self.loop('.')
+        screenbuffer, _ = display.prepare_buffers(
+            player.Brain.mentalmap, lightlayer, menumanager, player.status
+        )
+        self.assertEqual(display.unknownglyph, screenbuffer[r][c])
+        for _ in range(2):
+            self.loop(6)
+        for _ in range(2):
+            self.loop(4)
+        screenbuffer, _ = display.prepare_buffers(
+            player.Brain.mentalmap, lightlayer, menumanager, player.status
+        )
+        self.assertEqual('0', screenbuffer[r][c])
+
+    def test_fov_hidden_object(self):
+        player = TestSuite.environment.Game.LevelManager.Player
+        lightlayer = TestSuite.environment.Game.LevelManager.Levels[0].LightLayer
+        menumanager = TestSuite.environment.Game.MenuManager
+        display = TestSuite.environment.Game.Display
+        levelmanager = TestSuite.environment.Game.LevelManager
+        player.Brain.sightrange = 2
+        row = 1
+        col = 4
+        levelmanager.place_entity(0, item.Dart(), (row,col))
+        levelmanager.place_entity(0, tower.Barrel(), (row,col))
+        self.loop('.')
+        for _ in range(2):
+            self.loop(6)
+        for _ in range(2):
+            self.loop(4)
+        screenbuffer, _ = display.prepare_buffers(
+            player.Brain.mentalmap, lightlayer, menumanager, player.status
+        )
+        r,c = display.level_to_screen_pos(row, col)
+        self.assertEqual(display.unknownglyph, screenbuffer[r][c])
+
+    def test_fov_blind_barrel(self):
+        player = TestSuite.environment.Game.LevelManager.Player
+        lightlayer = TestSuite.environment.Game.LevelManager.Levels[0].LightLayer
+        menumanager = TestSuite.environment.Game.MenuManager
+        display = TestSuite.environment.Game.Display
+        levelmanager = TestSuite.environment.Game.LevelManager
+        messager = TestSuite.environment.Game.Messager
+        row = 1
+        col = 4
+        r,c = display.level_to_screen_pos(row, col)
+        levelmanager.place_entity(0, tower.Barrel(), (row,col))
+        self.loop('.')
+        screenbuffer, _ = display.prepare_buffers(
+            player.Brain.mentalmap, lightlayer, menumanager, player.status
+        )
+        self.assertEqual('0', screenbuffer[r][c])
+        player.apply_status(messager, entity.StatusEffect.BLIND)
+        self.loop('.')
+        screenbuffer, _ = display.prepare_buffers(
+            player.Brain.mentalmap, lightlayer, menumanager, player.status
+        )
+        self.assertEqual(' ', screenbuffer[r][c])
+
+    def test_fov_blind_object_memory(self):
+        player = TestSuite.environment.Game.LevelManager.Player
+        lightlayer = TestSuite.environment.Game.LevelManager.Levels[0].LightLayer
+        menumanager = TestSuite.environment.Game.MenuManager
+        display = TestSuite.environment.Game.Display
+        levelmanager = TestSuite.environment.Game.LevelManager
+        messager = TestSuite.environment.Game.Messager
+        row = 1
+        col = 4
+        r,c = display.level_to_screen_pos(row, col)
+        levelmanager.place_entity(0, item.Dart(), (row,col))
+        self.loop('.')
+        screenbuffer, _ = display.prepare_buffers(
+            player.Brain.mentalmap, lightlayer, menumanager, player.status
+        )
+        self.assertEqual(')', screenbuffer[r][c])
+        player.apply_status(messager, entity.StatusEffect.BLIND)
+        self.loop('.')
+        screenbuffer, _ = display.prepare_buffers(
+            player.Brain.mentalmap, lightlayer, menumanager, player.status
+        )
+        self.assertEqual(')', screenbuffer[r][c])
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False)
