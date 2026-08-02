@@ -1,0 +1,19 @@
+name: Crestet Unit Tests
+
+on: [push, pull_request]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+  
+    steps:
+    - name: check out repository
+      uses: actions/checkout@v4
+
+    - name: set up python
+      uses: actions/checkout@v4
+      with:
+        python-version: '3.11'
+    
+    - name: run tests
+      run: python test.py
