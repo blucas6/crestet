@@ -1,4 +1,8 @@
 import unittest
+import sys
+import argparse
+import utility
+import item
 import wall
 import tower
 import time
@@ -15,12 +19,15 @@ logging.basicConfig(
     format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 
-class TestMovement(unittest.TestCase):
+Logger = logging.getLogger(__name__)
+
+class TestSuite(unittest.TestCase):
     display = False
-    turn_delay = 0.1
+    turn_delay = 1
 
     @classmethod
     def setUpClass(cls):
+        Logger.info('=== UNIT TEST SETUP ===')
         # make small arena
         config.LEVELROWS = 7
         config.LEVELCOLS = 14
@@ -62,75 +69,77 @@ class TestMovement(unittest.TestCase):
         # set the new config file
         config.LEVEL_CONFIG_FILE = config.SIM_LEVEL_CONFIG
 
-        TestMovement.environment = environment.Environment(seed='',
-                                                           display=TestMovement.display,
+        TestSuite.environment = environment.Environment(seed='',
+                                                           display=TestSuite.display,
                                                            timing=False)
-        TestMovement.environment.start()
-        if not TestMovement.environment.Game.running:
+        TestSuite.environment.start()
+        if not TestSuite.environment.Game.running:
             print('FAILED to start the environment')
             exit()
 
     @classmethod
     def tearDownClass(cls):
-        TestMovement.environment.end()
+        TestSuite.environment.end()
 
     def setUp(self):
-        TestMovement.environment.reset(new_seed=True)
+        Logger.info('')
+        Logger.info('')
+        Logger.info(f'EXECUTING: {self._testMethodName}')
+        TestSuite.environment.reset(new_seed=True)
 
     def loop(self, action=''):
+        TestSuite.environment.Game.game_loop(str(action))
         if self.display:
-            TestMovement.environment.render()
+            TestSuite.environment.render()
             time.sleep(self.turn_delay)
-        TestMovement.environment.Game.game_loop(str(action))
 
     def test_place_player_valid(self):
-        player = TestMovement.environment.Game.LevelManager.Player
-        entitylayer = TestMovement.environment.Game.LevelManager.Levels[0].EntityLayer
+        player = TestSuite.environment.Game.LevelManager.Player
+        entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         self.assertEqual(player.pos(), [1, 1, 0, 1])
         self.assertIn(player, entitylayer[1][1])
         self.assertEqual(tower.Floor().name, entitylayer[1][1][0].name)
         self.assertEqual(2, len(entitylayer[1][1]))
 
     def test_place_entity_invalid_wall(self):
-        entitylayer = TestMovement.environment.Game.LevelManager.Levels[0].EntityLayer
-        levelmanager = TestMovement.environment.Game.LevelManager
+        entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
+        levelmanager = TestSuite.environment.Game.LevelManager
         wll = wall.Sandstone()
         levelmanager.place_entity(0, wll, (0,0))
-        self.assertTrue(TestMovement.environment.Game.running)
+        self.assertTrue(TestSuite.environment.Game.running)
         self.assertNotIn(wll, entitylayer[0][0])
         self.assertEqual(1, len(levelmanager.Levels[0].EntityLayer[0][0]))
 
     def test_place_entity_invalid_level(self):
-        entitylayer = TestMovement.environment.Game.LevelManager.Levels[0].EntityLayer
-        levelmanager = TestMovement.environment.Game.LevelManager
+        entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
+        levelmanager = TestSuite.environment.Game.LevelManager
         wll = wall.Sandstone()
         self.assertEqual(2, len(levelmanager.Levels))
         levelmanager.place_entity(5, wll, (0,0))
         self.assertEqual(2, len(levelmanager.Levels))
-        self.assertTrue(TestMovement.environment.Game.running)
+        self.assertTrue(TestSuite.environment.Game.running)
         self.assertNotIn(wll, entitylayer[0][0])
         self.assertEqual(1, len(levelmanager.Levels[0].EntityLayer[0][0]))
 
     def test_move_valid(self):
-        player = TestMovement.environment.Game.LevelManager.Player
-        entitylayer = TestMovement.environment.Game.LevelManager.Levels[0].EntityLayer
+        player = TestSuite.environment.Game.LevelManager.Player
+        entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         for _ in range(4):
             self.loop(6)
         self.assertEqual(player.pos(), [1, 5, 0, 1])
         self.assertIn(player, entitylayer[1][5])
 
     def test_move_invalid(self):
-        player = TestMovement.environment.Game.LevelManager.Player
-        entitylayer = TestMovement.environment.Game.LevelManager.Levels[0].EntityLayer
-        for _ in range(4):
-            self.loop(4)
+        player = TestSuite.environment.Game.LevelManager.Player
+        entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
+        self.loop(4)
         self.assertEqual(player.pos(), [1, 1, 0, 1])
         self.assertIn(player, entitylayer[1][1])
 
-    def test_push_barrel(self):
-        player = TestMovement.environment.Game.LevelManager.Player
-        levelmanager = TestMovement.environment.Game.LevelManager
-        entitylayer = TestMovement.environment.Game.LevelManager.Levels[0].EntityLayer
+    def test_push_barrel_valid(self):
+        player = TestSuite.environment.Game.LevelManager.Player
+        levelmanager = TestSuite.environment.Game.LevelManager
+        entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         barrel = tower.Barrel()
         levelmanager.place_entity(0, barrel, (1,2))
         for _ in range(4):
@@ -142,6 +151,60 @@ class TestMovement(unittest.TestCase):
         self.assertIn(barrel, entitylayer[1][6])
         self.assertEqual(2, len(entitylayer[1][6]))
 
+    def test_push_barrel_invalid(self):
+        player = TestSuite.environment.Game.LevelManager.Player
+        levelmanager = TestSuite.environment.Game.LevelManager
+        entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
+        self.loop(6)
+        barrel = tower.Barrel()
+        levelmanager.place_entity(0, barrel, (1,1))
+        self.loop(4)
+        self.assertTrue(TestSuite.environment.Game.running)
+        self.assertEqual(player.pos(), [1, 2, 0, 1])
+        self.assertIn(player, entitylayer[1][2])
+        self.assertEqual(2, len(entitylayer[1][2]))
+        self.assertEqual(barrel.pos(), [1, 1, 0, 1])
+        self.assertIn(barrel, entitylayer[1][1])
+        self.assertEqual(2, len(entitylayer[1][1]))
+
+    def test_throw_valid(self):
+        player = TestSuite.environment.Game.LevelManager.Player
+        entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
+        dart = item.Dart()
+        player.Inventory.equip(dart)
+        self.loop(6)
+        self.loop('t4')
+        self.assertEqual(dart.pos(), [1, 1, 0, 1])
+        self.assertIn(dart, entitylayer[1][1])
+        self.assertEqual(2, len(entitylayer[1][1]))
+
+    def test_throw_invalid(self):
+        entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
+        dart = item.Dart()
+        self.loop(6)
+        self.loop('t4')
+        self.assertNotEqual(dart.pos(), [1, 1, 0, 1])
+        self.assertNotIn(dart, entitylayer[1][1])
+        self.assertEqual(1, len(entitylayer[1][1]))
+
+    def test_light_layer(self):
+        levelmanager = TestSuite.environment.Game.LevelManager
+        lightlayer = TestSuite.environment.Game.LevelManager.Levels[0].LightLayer
+        currlevel = TestSuite.environment.Game.LevelManager.Levels[0]
+        light = tower.Light()
+        levelmanager.place_entity(0, light, (3,3))
+        self.loop('.')
+        pts = utility.get_one_layer_pts((3,3), len(lightlayer), len(lightlayer[0]))
+        for pt in pts:
+            self.assertTrue(lightlayer[pt[0]][pt[1]])
+
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('-d', '--display', action='store_true',
+                        help='Turns the display on\n'\
+                                'Display is off by default')
+    args,unknown = parser.parse_known_args()
+    TestSuite.display = args.display
+    sys.argv = [sys.argv[0]] + unknown
     unittest.main()
