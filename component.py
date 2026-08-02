@@ -30,14 +30,14 @@ class Combat:
         roll = rng.randint(1,100)
         if hasattr(parent, 'Charge') and parent.Charge.charging:
             potential_dmg = parent.Charge.end()
-            if roll < self.accuracy:
+            if roll <= self.accuracy:
                 dmg = potential_dmg
                 success = True
         elif hasattr(parent, 'Inventory'):
-            if roll < self.accuracy:
+            if roll <= self.accuracy:
                 dmg = parent.Inventory.calculate_damage()
                 success = True
-        Logger.info(f"COMBAT: ({roll}) dmg:{dmg} {'HIT' if roll < self.accuracy else 'MISS'}")
+        Logger.info(f"COMBAT: ({roll}) dmg:{dmg} {'HIT' if roll <= self.accuracy else 'MISS'}")
         return success, dmg
 
     def take_damage(self, inventory, damage):
@@ -75,7 +75,7 @@ class Combat:
                     maxlayer == entity.Layer.BARREL_LAYER):
                     objr, objc = r, c
                     # stop only if it passes the accuracy check
-                    if rng.randint(1,100) < self.throw_accuracy:
+                    if rng.randint(1,100) <= self.throw_accuracy:
                         success = True
                         break
                 elif maxlayer == entity.Layer.WALL_LAYER:
