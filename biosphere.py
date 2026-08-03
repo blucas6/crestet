@@ -61,3 +61,8 @@ class Plant(entity.Entity):
             self.change_to(PlantStage.GROWTH)
         elif self.nutrients > self.sprout and self.PlantStage != PlantStage.SPROUT:
             self.change_to(PlantStage.SPROUT)
+
+    def fruit_picked(self):
+        self.change_to(PlantStage.SPROUT)
+        Logger.info(f'FRUIT PICKED {self.glyph}')
+        self.nutrients = 0

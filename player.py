@@ -56,8 +56,11 @@ class Player(e.Entity):
         entitylist = levelmanager.Levels[self.z].EntityLayer[self.row][self.col]
         for ent in entitylist:
             # check to auto eat anything
-            if hasattr(ent, 'Edible') and hasattr(self, 'Health'):
+            if (hasattr(ent, 'Edible') and ent.Edible is not None
+                and hasattr(self, 'Health')):
                 ent.Edible.get_eaten(levelmanager, messager, self)
+                if hasattr(ent, 'PlantStage'):
+                    ent.fruit_picked()
 
     def update_mental_map(self, curr_level):
         '''Update the mental map of the player'''
