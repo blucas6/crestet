@@ -245,7 +245,7 @@ class Edible:
         '''Called when another entity eats this entity'''
         if hasattr(entity_eater, 'Health'):
             entity_eater.Health.change_health(self.nutrition)
-            messager.add_eat_message(entity_eater, self.parent_entity)
+            #messager.add_eat_message(entity_eater, self.parent_entity)
             if not hasattr(self.parent_entity, 'PlantStage'):
                 levelmanager.remove_entity(self.parent_entity)
 

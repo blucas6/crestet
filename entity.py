@@ -154,14 +154,21 @@ class Entity:
     def on_placed(self, levelmanager, messager):
         '''
         Hook gets called when an entity is placed on the level
-
-        Base class checks for Inventory auto pickup
         '''
+
+        entitylist = levelmanager.Levels[self.z].EntityLayer[self.row][self.col]
+        for ent in entitylist:
+            if ent.id == self.id:
+                continue
+            # check to auto eat anything
+            if (hasattr(ent, 'Edible') and ent.Edible is not None
+                and hasattr(self, 'Health')):
+                ent.Edible.get_eaten(levelmanager, messager, self)
 
         # check for auto pickup
         if hasattr(self, 'Inventory'):
-            entitylist = levelmanager.Levels[self.z].EntityLayer[self.row][self.col]
             self.Inventory.autopickup(levelmanager, entitylist)
+
 
     def on_top(self, entity, levelmanager):
         '''

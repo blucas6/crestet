@@ -21,22 +21,21 @@ class Plant(entity.Entity):
                          color=color.Color().green,
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.VERY_SMALL)
-        #self.Edible = component.Edible(self, nutrition=5)
         self.PlantStage = PlantStage.SPROUT
         self.nutrients = 0
-        self.growth = 15
-        self.fruit = 20
+        self.growth = 80
+        self.fruit = 100
 
     def on_init(self, rng):
         self.nutrients = rng.randint(0, self.fruit)
-        self.advance()
+        self.advance(rng)
 
     def on_top(self, *_):
         if self.PlantStage >= PlantStage.GROWTH:
             self.change_to(PlantStage.SPROUT)
 
     def update_state(self, levelmanager):
-        self.advance()
+        self.advance(levelmanager.RNG)
 
     def change_to(self, plantstage):
         if plantstage == PlantStage.FRUIT:
@@ -56,12 +55,14 @@ class Plant(entity.Entity):
             self.glyph = '.'
             self.Edible = None
 
-    def advance(self, amount=1):
+    def advance(self, rng, amount=1):
         self.nutrients += amount
         if self.nutrients > self.fruit:
             self.nutrients = self.fruit + 1
 
-        if self.nutrients > self.fruit and self.PlantStage == PlantStage.GROWTH:
+        if (self.nutrients > self.fruit and
+            self.PlantStage == PlantStage.GROWTH and
+            rng.randint(1,100) == 1):
             self.change_to(PlantStage.FRUIT)
         elif self.nutrients > self.growth and self.PlantStage == PlantStage.SPROUT:
             self.change_to(PlantStage.GROWTH)
