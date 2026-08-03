@@ -8,11 +8,10 @@ import enum
 
 Logger = logging.getLogger(__name__)
 
-class PlantStage(enum.Enum):
+class PlantStage(enum.IntEnum):
     SPROUT = 0
     GROWTH = 1
     FRUIT = 2
-
 
 class Plant(entity.Entity):
     def __init__(self):
@@ -25,29 +24,36 @@ class Plant(entity.Entity):
         #self.Edible = component.Edible(self, nutrition=5)
         self.PlantStage = PlantStage.SPROUT
         self.nutrients = 0
-        self.sprout = 2
-        self.growth = 6
-        self.fruit = 10
+        self.growth = 15
+        self.fruit = 20
 
     def on_init(self, rng):
-        self.nutrients = rng.randint(0,11)
+        self.nutrients = rng.randint(0, self.fruit)
         self.advance()
+
+    def on_top(self, *_):
+        if self.PlantStage >= PlantStage.GROWTH:
+            self.change_to(PlantStage.SPROUT)
 
     def update_state(self, levelmanager):
         self.advance()
 
     def change_to(self, plantstage):
         if plantstage == PlantStage.FRUIT:
+            self.PlantStage = PlantStage.FRUIT
             self.name = 'Fruit'
             self.glyph = '&'
             self.Edible = component.Edible(self, nutrition=5)
         elif plantstage == PlantStage.GROWTH:
+            self.PlantStage = PlantStage.GROWTH
             self.name = 'Growth'
-            self.glyph = '"'
+            self.glyph = '*'
             self.Edible = None
         elif plantstage == PlantStage.SPROUT:
+            self.PlantStage = PlantStage.SPROUT
+            self.nutrients = 0
             self.name = 'Sprout'
-            self.glyph = '*'
+            self.glyph = '.'
             self.Edible = None
 
     def advance(self, amount=1):
@@ -55,14 +61,7 @@ class Plant(entity.Entity):
         if self.nutrients > self.fruit:
             self.nutrients = self.fruit + 1
 
-        if self.nutrients > self.fruit and self.PlantStage != PlantStage.FRUIT:
+        if self.nutrients > self.fruit and self.PlantStage == PlantStage.GROWTH:
             self.change_to(PlantStage.FRUIT)
-        elif self.nutrients > self.growth and self.PlantStage != PlantStage.GROWTH:
+        elif self.nutrients > self.growth and self.PlantStage == PlantStage.SPROUT:
             self.change_to(PlantStage.GROWTH)
-        elif self.nutrients > self.sprout and self.PlantStage != PlantStage.SPROUT:
-            self.change_to(PlantStage.SPROUT)
-
-    def fruit_picked(self):
-        self.change_to(PlantStage.SPROUT)
-        Logger.info(f'FRUIT PICKED {self.glyph}')
-        self.nutrients = 0
