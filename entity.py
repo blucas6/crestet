@@ -181,6 +181,9 @@ class Entity:
         '''Default attempt to apply an entity'''
         pass
 
+    def on_init(self, *_):
+        pass
+
     def apply_status(self, messager, status_effect):
         '''Add a status effect to the entity'''
         if status_effect in self.status:

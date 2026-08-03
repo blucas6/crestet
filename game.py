@@ -142,6 +142,7 @@ class Game:
             self.MenuManager.DepthMenu.update(self.LevelManager.currentz)
             # update inventory
             self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
+
             tt.Timing.end()
 
         except Exception as ex:

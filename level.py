@@ -5,6 +5,7 @@ import message
 import timing
 import player
 import entity as e
+import biosphere
 import logging
 
 Logger = logging.getLogger(__name__)
@@ -25,7 +26,6 @@ class Level:
         '''Tracks all lit spaces on level'''
         self.RNG = rng
         '''Random generator with optional seed'''
-
 
 class LevelManager:
     '''
@@ -66,6 +66,10 @@ class LevelManager:
         '''
         self.place_entity(playerz, self.Player, playerpos)
         self.currentz = playerz
+
+    def add_to_level(self, entity, pos, z):
+        entity.on_init(self.RNG)
+        return self.place_entity(z, entity, pos)
 
     def place_entity(self, z, entity, pos, overwrite=False):
         '''Place an entity into the level'''
@@ -194,18 +198,12 @@ class LevelManager:
                         else:
                             index += 1
 
-        # update light layer
-        for row in level.EntityLayer:
-            for entitylist in row:
-                for entity in entitylist:
-                    if entity.name == 'Light':
-                        entity.update_state(self)
-
     def update_player(self, animator, messager, menumanager, statemachine, event, rng):
         '''Updates the player and returns the energy used'''
         Logger.info(f'-------- TURN UPDATE ({self.Player.turn + 1}) ---------')
         self.Player.energy = 100
         self.Player.update_status()
+        self.Player.update_state(self)
         Logger.info(f'Player status: {self.Player.status}')
         self.Player.do_action(self, animator, messager, menumanager, statemachine, event, rng)
         self.Player.turn += 1
@@ -222,7 +220,6 @@ class LevelManager:
 
         timing.Timing.start('Game Loop')
 
-
         # update the level the player is on
         self.currentz = self.Player.z
 
@@ -235,6 +232,7 @@ class LevelManager:
         if entity.turn >= currentturn:
             return True
         energystart = entity.energy
+        entity.update_state(self)
         entity.update_status()
         entity.take_turn(self, animator, messager, menumanager, statemachine, self.RNG) 
         energyend = entity.energy

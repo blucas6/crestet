@@ -22,7 +22,6 @@ class Arrow(e.Entity):
 
 
 class Fruit(e.Entity):
-    spawn = True
     def __init__(self):
         super().__init__(typeid=10,
                          name='Fruit',
