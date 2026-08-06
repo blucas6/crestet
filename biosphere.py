@@ -40,7 +40,9 @@ class Plant(entity.Entity):
         self.advance(rng)
 
     def on_top(self, *_):
+        Logger.info(f'Plant ON TOP HOOK {self} {self.PlantStage}')
         if self.PlantStage >= PlantStage.GROWTH:
+            self.nutrients = self.sprout
             self.change_to(PlantStage.SPROUT)
 
     def update_state(self, levelmanager):
