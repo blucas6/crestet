@@ -28,9 +28,15 @@ class Plant(entity.Entity):
         self.growth = 80
         self.fruit = 100
         self.decay = 150
+        self.growth_glyphs = ['*', '"']
+        self.growth_glyph = '*'
+        self.sprout_glyphs = ['.', ',', '`']
+        self.sprout_glyph = '.'
 
     def on_init(self, rng):
         self.nutrients = rng.randint(0, self.fruit)
+        self.growth_glyph = self.growth_glyphs[rng.randint(0,len(self.growth_glyphs))-1]
+        self.sprout_glyph = self.sprout_glyphs[rng.randint(0,len(self.sprout_glyphs))-1]
         self.advance(rng)
 
     def on_top(self, *_):
@@ -49,12 +55,12 @@ class Plant(entity.Entity):
         elif plantstage == PlantStage.GROWTH:
             self.PlantStage = PlantStage.GROWTH
             self.name = 'Growth'
-            self.glyph = '*'
+            self.glyph = self.growth_glyph
             self.Edible = None
         elif plantstage == PlantStage.SPROUT:
             self.PlantStage = PlantStage.SPROUT
             self.name = 'Sprout'
-            self.glyph = '.'
+            self.glyph = self.sprout_glyph
             self.color = color.Color().green
             self.Edible = None
         elif plantstage == PlantStage.DECAY:
