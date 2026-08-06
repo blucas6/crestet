@@ -12,6 +12,7 @@ class PlantStage(enum.IntEnum):
     SPROUT = 0
     GROWTH = 1
     FRUIT = 2
+    DECAY = 3
 
 class Plant(entity.Entity):
     def __init__(self):
@@ -23,8 +24,10 @@ class Plant(entity.Entity):
                          size=entity.Size.VERY_SMALL)
         self.PlantStage = PlantStage.SPROUT
         self.nutrients = 0
+        self.sprout = 10
         self.growth = 80
         self.fruit = 100
+        self.decay = 150
 
     def on_init(self, rng):
         self.nutrients = rng.randint(0, self.fruit)
@@ -50,19 +53,36 @@ class Plant(entity.Entity):
             self.Edible = None
         elif plantstage == PlantStage.SPROUT:
             self.PlantStage = PlantStage.SPROUT
-            self.nutrients = 0
             self.name = 'Sprout'
             self.glyph = '.'
+            self.color = color.Color().green
             self.Edible = None
+        elif plantstage == PlantStage.DECAY:
+            self.PlantStage = PlantStage.DECAY
+            self.name = 'Ripe Fruit'
+            self.glyph = '&'
+            self.color = color.Color().grey
+            self.Edible = component.Edible(self, nutrition=1)
+            self.nutrients = 0
+
+    def get_stage(self):
+        if self.nutrients > self.decay:
+            return PlantStage.DECAY
+        if self.nutrients > self.fruit:
+            return PlantStage.FRUIT
+        if self.nutrients > self.growth:
+            return PlantStage.GROWTH
+        if self.nutrients > self.sprout:
+            return PlantStage.SPROUT
 
     def advance(self, rng, amount=1):
         self.nutrients += amount
-        if self.nutrients > self.fruit:
-            self.nutrients = self.fruit + 1
 
-        if (self.nutrients > self.fruit and
-            self.PlantStage == PlantStage.GROWTH and
-            rng.randint(1,100) == 1):
-            self.change_to(PlantStage.FRUIT)
-        elif self.nutrients > self.growth and self.PlantStage == PlantStage.SPROUT:
-            self.change_to(PlantStage.GROWTH)
+        stage = self.get_stage()
+        if self.PlantStage != stage:
+            if stage != PlantStage.FRUIT:
+                self.change_to(stage)
+            elif rng.randint(1,50) == 1:
+                self.change_to(stage)
+            else:
+                self.nutrients -= amount

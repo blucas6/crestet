@@ -346,12 +346,11 @@ class Generator:
                         continue
                     if self.RNG.randint(1,3) == 1:
                         plant = biosphere.Plant()
-                        if levelmanager.add_to_level(plant, pos, currlevel.z):
+                        if levelmanager.add_to_level(plant, pos2, currlevel.z):
                             plants += 1
                         if plants >= plant_amount:
                             return
         Logger.warning(f'PLANT GEN MAX RETRIES')
-        
 
     def get_wall_piece(self):
         '''Return a random wall'''
