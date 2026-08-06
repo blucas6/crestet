@@ -334,17 +334,17 @@ class Generator:
             attempt += 1
             idx = self.RNG.randint(0,len(pts)-1)
             pt = pts.pop(idx)
-            first_pad = utility.get_one_layer_pts(pt, self.levelrows, self.levelcols)
+            first_pad = utility.get_one_layer_pts(pt, self.levelrows, self.levelcols, shape='cross')
             for pos in first_pad:
-                second_pad = utility.get_one_layer_pts(pos, self.levelrows, self.levelcols)
+                second_pad = utility.get_one_layer_pts(pos, self.levelrows, self.levelcols, shape='cross')
                 for pos2 in second_pad:
                     plant_present = False
-                    for ent in currlevel.EntityLayer[pos[0]][pos[1]]:
+                    for ent in currlevel.EntityLayer[pos2[0]][pos2[1]]:
                         if hasattr(ent, 'PlantStage'):
                             plant_present = True
                     if plant_present:
                         continue
-                    if self.RNG.randint(1,5) == 1:
+                    if self.RNG.randint(1,3) == 1:
                         plant = biosphere.Plant()
                         if levelmanager.add_to_level(plant, pos, currlevel.z):
                             plants += 1

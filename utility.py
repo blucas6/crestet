@@ -5,13 +5,19 @@ import logging
 Logger = logging.getLogger(__name__)
 
 ONE_LAYER_CIRCLE = [(1,-1),(1,0),(1,1),(0,-1),(0,0),(0,1),(-1,-1),(-1,0),(-1,1)]
+ONE_LAYER_CROSS = [(0,0), (-1,0), (1,0), (0,-1), (0,1)]
 
-def get_one_layer_pts(pos, rows, cols):
+def get_one_layer_pts(pos, rows, cols, shape='circle'):
     '''
     Pass in a position to return all points around that position
     '''
+    useshape = []
+    if shape == 'circle':
+        useshape = ONE_LAYER_CIRCLE
+    elif shape == 'cross':
+        useshape = ONE_LAYER_CROSS
     pts = []
-    for r,c in ONE_LAYER_CIRCLE:
+    for r,c in useshape:
         row = pos[0] + r
         col = pos[1] + c
         if row > -1 and col > -1 and row < rows and col < cols:
