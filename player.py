@@ -47,18 +47,6 @@ class Player(e.Entity):
         '''Initialize player data'''
         self.Inventory.equip(ability.Fist())
 
-    def on_placed(self, levelmanager, messager):
-        '''
-        Activates when an entity is placed on a square
-        Checks the rest of the entities already on the square
-        '''
-        super().on_placed(levelmanager, messager)
-        entitylist = levelmanager.Levels[self.z].EntityLayer[self.row][self.col]
-        for ent in entitylist:
-            # check to auto eat anything
-            if hasattr(ent, 'Edible') and hasattr(self, 'Health'):
-                ent.Edible.get_eaten(levelmanager, messager, self)
-
     def update_mental_map(self, curr_level):
         '''Update the mental map of the player'''
         self.Brain.update_mental_map(curr_level, self.row, self.col, self.status)

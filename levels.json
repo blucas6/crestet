@@ -38,7 +38,8 @@
       "lights": true,
       "items": 5,
       "runes": 1,
-      "mons": true
+      "mons": true,
+      "plants": 10
    },
    "1": {
       "floor": true,
@@ -50,6 +51,7 @@
       "lights": true,
       "items": 5,
       "runes": 1,
-      "mons": true
+      "mons": true,
+      "plants": 10
    }
 }

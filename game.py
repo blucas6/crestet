@@ -100,7 +100,7 @@ class Game:
             # start running
             self.running = True
             # reset turn
-            self.turn = 1
+            self.turn = 0
             # set up seed
             if self.seed is None:
                 self.seed = secrets.randbits(64)
@@ -126,22 +126,28 @@ class Game:
             # load generator and run the generation
             self.Generator.load_config(config.LEVELROWS, config.LEVELCOLS, self.RNG)
             self.Generator.generate_levels(self.LevelManager)
-            # add player to the map
-            self.LevelManager.place_player(config.PLAYERPOS, config.PLAYERZ)
-            # update player FOV
-            self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
+
             # menus
             leveling = self.LevelManager.Player.Leveling
             lvl = leveling.curr_level
             xp = leveling.xp
             nextlv = leveling.nextlv
             self.MenuManager.init(self.Messager, self.messageblocking, self.turn, lvl, xp, nextlv)
-            # update menu health
-            self.MenuManager.HealthMenu.update(self.LevelManager.Player.Health)
-            # update menu z level
-            self.MenuManager.DepthMenu.update(self.LevelManager.currentz)
-            # update inventory
-            self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
+
+            # run loop a bunch
+            for _ in range(config.PRE_LOOPS):
+                self.loop(25, '.')
+
+            # reset all turn counters
+            self.turn = 0
+            self.LevelManager.reset_turns(self.turn)
+            self.update_menus()
+
+            # add player to the map
+            self.LevelManager.place_player(config.PLAYERPOS, config.PLAYERZ)
+            # update player FOV
+            self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
+
             tt.Timing.end()
 
         except Exception as ex:
@@ -229,14 +235,12 @@ class Game:
         # increment the turn
         self.turn += 1
 
-        # clear current message
-        self.MenuManager.MessageMenu.clear()
-
-        if self.StateMachine.GameState == state.GameState.INTERACTING and self.StateMachine.callback:
+        if (self.StateMachine.GameState == state.GameState.INTERACTING and
+            self.StateMachine.callback):
             self.StateMachine.callback(self.StateMachine, self.MenuManager, event)
         else:
             # update all entities
-            self.LevelManager.update_all(self.Animator, self.Messager, self.MenuManager, self.StateMachine, energy)
+            self.LevelManager.update_all(self.Animator, self.Messager, self.MenuManager, self.StateMachine, energy, self.turn)
 
             # end the player charge, get back into playing mode
             if (self.StateMachine.GameState == state.GameState.RUNNING and
@@ -254,6 +258,14 @@ class Game:
             elif self.lose():
                 self.StateMachine.new_state('endgame')
                 self.Messager.add_message('You died!')
+
+        # update all menus
+        self.update_menus()
+
+    def update_menus(self):
+        '''Updates all menu texts'''
+        # clear current message
+        self.MenuManager.MessageMenu.clear()
 
         # update and grab any messages in the queue
         self.messages()
@@ -275,7 +287,6 @@ class Game:
         # update inventory menu
         self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
 
-
     def render(self):
         '''Render the current game state to the screen'''
         if not self.usedisplay:
@@ -293,6 +304,8 @@ class Game:
         if (self.StateMachine.GameState != state.GameState.VIEWING and
             self.playerFOV):
             entitylayer = self.LevelManager.Player.Brain.mentalmap
+            if not entitylayer and currlevel:
+                entitylayer = currlevel.EntityLayer
         elif currlevel:
             entitylayer = currlevel.EntityLayer
         else:

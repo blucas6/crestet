@@ -1,4 +1,5 @@
 import config
+import biosphere
 import wall
 import inspect 
 import rune
@@ -39,6 +40,7 @@ class LevelLayout:
     '''Minimum amount of runes on the level'''
     mons: bool
     '''If there are monsters on the level'''
+    plants: int
 
     upstair_pos: tuple = ()
     '''Location of the upstairs on the level'''
@@ -162,6 +164,8 @@ class Generator:
                 self.generate_items(levelmanager, currlevel, level_layout.items)
             if level_layout.runes > 0:
                 self.generate_runes(levelmanager, currlevel, level_layout.runes)
+            if level_layout.plants > 0:
+                self.generate_plants(levelmanager, currlevel, level_layout.plants)
             # make sure player can be placed, even after placing all items down
             if z == config.PLAYERZ:
                 levelmanager.place_entity(currlevel.z, tower.Floor(), config.PLAYERPOS, overwrite=True)
@@ -267,6 +271,7 @@ class Generator:
                         barrels_placed += 1
             if barrels_placed >= min_barrels:
                 return
+        Logger.warning(f'BARREL GEN MAX RETRIES')
 
     def generate_lights(self, levelmanager:level.LevelManager, currlevel:level.Level):
         '''Add lights to the level'''
@@ -320,6 +325,32 @@ class Generator:
             new_rune = self.rune_classes[n]()
             if levelmanager.place_entity(currlevel.z, new_rune, (r,c)):
                 rune_amount -= 1
+
+    def generate_plants(self, levelmanager: level.LevelManager, currlevel: level.Level, plant_amount):
+        plants = 0
+        attempt = 0
+        pts = utility.get_pts(self.levelrows, self.levelcols)
+        while plants < plant_amount and attempt < config.MAX_RETRIES and pts:
+            attempt += 1
+            idx = self.RNG.randint(0,len(pts)-1)
+            pt = pts.pop(idx)
+            first_pad = utility.get_one_layer_pts(pt, self.levelrows, self.levelcols, shape='cross')
+            for pos in first_pad:
+                second_pad = utility.get_one_layer_pts(pos, self.levelrows, self.levelcols, shape='cross')
+                for pos2 in second_pad:
+                    plant_present = False
+                    for ent in currlevel.EntityLayer[pos2[0]][pos2[1]]:
+                        if ent.layer == entity.Layer.PLANT_LAYER:
+                            plant_present = True
+                    if plant_present:
+                        continue
+                    if self.RNG.randint(1,3) == 1:
+                        plant = biosphere.Plant()
+                        if levelmanager.add_to_level(plant, pos2, currlevel.z):
+                            plants += 1
+                        if plants >= plant_amount:
+                            return
+        Logger.warning(f'PLANT GEN MAX RETRIES')
 
     def get_wall_piece(self):
         '''Return a random wall'''

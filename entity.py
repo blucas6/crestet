@@ -53,20 +53,20 @@ class Speed(enum.IntEnum):
     HYPER = 1
 
 class Layer(enum.IntEnum):
-    '''
-    Layer Types:
-        0-1: stackable, anything with these layers will be placed on top of
-            each other
-        2: not stackable, entities that move around, FOV can see through them
-        3: not stackable, can be pushed
-        4: not stackable, FOV cannot see through them
-    '''
     FLOOR_LAYER = 0
-    STAIR_LAYER = 1
-    OBJECT_LAYER = 2
-    BARREL_LAYER = 3
-    MONSTER_LAYER = 4
-    WALL_LAYER = 5
+    '''Stackable'''
+    PLANT_LAYER = 1
+    '''Stackable'''
+    STAIR_LAYER = 2
+    '''Stackable, will be remembered by FOV'''
+    OBJECT_LAYER = 3
+    '''Stackable, will be remembered by FOV, can be picked up'''
+    BARREL_LAYER = 4
+    '''Not stackable, can be pushed'''
+    MONSTER_LAYER = 5
+    '''Not stackable, will auto attack'''
+    WALL_LAYER = 6
+    '''Not stackable, will be remembered by FOV'''
 
 class Size(enum.IntEnum):
     '''
@@ -154,14 +154,21 @@ class Entity:
     def on_placed(self, levelmanager, messager):
         '''
         Hook gets called when an entity is placed on the level
-
-        Base class checks for Inventory auto pickup
         '''
+
+        entitylist = levelmanager.Levels[self.z].EntityLayer[self.row][self.col]
+        for ent in entitylist:
+            if ent.id == self.id:
+                continue
+            # check to auto eat anything
+            if (hasattr(ent, 'Edible') and ent.Edible is not None
+                and hasattr(self, 'Health')):
+                ent.Edible.get_eaten(levelmanager, messager, self)
 
         # check for auto pickup
         if hasattr(self, 'Inventory'):
-            entitylist = levelmanager.Levels[self.z].EntityLayer[self.row][self.col]
             self.Inventory.autopickup(levelmanager, entitylist)
+
 
     def on_top(self, entity, levelmanager):
         '''
@@ -179,6 +186,9 @@ class Entity:
 
     def on_apply(self, cmd, parent, levelmanager, messager, *_):
         '''Default attempt to apply an entity'''
+        pass
+
+    def on_init(self, *_):
         pass
 
     def apply_status(self, messager, status_effect):

@@ -84,7 +84,7 @@ class Light(entity.Entity):
 
     def update_state(self, levelmanager):
         '''Update the map based on the light state'''
-        if self.light:
+        if self.light and levelmanager.Levels:
             points = utility.get_one_layer_pts((self.row,self.col),
                                                levelmanager.levelrows, levelmanager.levelcols)
             for pt in points:
