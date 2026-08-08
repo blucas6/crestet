@@ -62,6 +62,7 @@ class TestSuite(unittest.TestCase):
         data['0']['items'] = 0
         data['0']['runes'] = 0
         data['0']['mons'] = False
+        data['0']['plants'] = 0
         data['1']['floor'] = True
         data['1']['outer_walls'] = True
         data['1']['upstair'] = False
@@ -72,6 +73,7 @@ class TestSuite(unittest.TestCase):
         data['1']['items'] = 0
         data['1']['runes'] = 0
         data['1']['mons'] = False
+        data['0']['plants'] = 0
 
         with open(config.SIM_LEVEL_CONFIG, 'w+') as jfile:
             json.dump(data, jfile, indent=4)

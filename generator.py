@@ -340,7 +340,7 @@ class Generator:
                 for pos2 in second_pad:
                     plant_present = False
                     for ent in currlevel.EntityLayer[pos2[0]][pos2[1]]:
-                        if hasattr(ent, 'PlantStage'):
+                        if ent.layer == entity.Layer.PLANT_LAYER:
                             plant_present = True
                     if plant_present:
                         continue

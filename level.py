@@ -149,7 +149,7 @@ class LevelManager:
             return self.Levels[self.currentz]
         return None
 
-    def update_level(self, level, energy, animator, messager, menumanager, statemachine):
+    def update_level(self, level, energy, animator, messager, menumanager, statemachine, currentturn):
         '''Updates all entities on a single level with a given amount of energy'''
         if not level:
             return
@@ -183,12 +183,14 @@ class LevelManager:
                             Logger.error(f'ERROR: idx:{index}')
                             break
                         currlistsize = len(entitylist)
+                        if entity.name == 'Newt':
+                            Logger.info(f'Current turn: {currentturn} {entity} {entity.turn}')
                         done = self.update_entity(animator,
                                                   messager,
                                                   menumanager,
                                                   statemachine,
                                                   entity,
-                                                  self.Player.turn)
+                                                  currentturn)
                         # some entities need more turns
                         if not done: done_turn = False
                         # entities were removed from the list
@@ -215,21 +217,24 @@ class LevelManager:
             energy = self.Player.speed
         return energy
 
-    def update_all(self, animator, messager, menumanager, statemachine, energy):
+    def update_all(self, animator, messager, menumanager, statemachine, energy, currentturn):
         '''Go through all entities and update them'''
 
         timing.Timing.start('Game Loop')
+
+        Logger.info(f'-- UPDATE ALL {currentturn} --')
 
         # update the level the player is on
         self.currentz = self.Player.z
 
         for level in self.Levels:
-            self.update_level(level, energy, animator, messager, menumanager, statemachine)
+            self.update_level(level, energy, animator, messager, menumanager, statemachine, currentturn)
 
         timing.Timing.end()
 
     def update_entity(self, animator, messager, menumanager, statemachine, entity, currentturn):
-        if entity.turn >= currentturn:
+        '''Update a single entity'''
+        if entity.turn > currentturn:
             return True
         energystart = entity.energy
         entity.update_state(self)
@@ -256,7 +261,7 @@ class LevelManager:
         level = self.Levels[entity.z]
 
         if not self.is_entity_pos_valid(level, entity, pos):
-            Logger.error(f'Moving entity failed: invalid {entity.name}|{entity.id}')
+            Logger.error(f'Moving entity failed: invalid {entity}')
             return False
 
         # move is valid - delete old entity
@@ -303,3 +308,9 @@ class LevelManager:
             level.EntityLayer[r][c][ix].idx -= 1
         return level.EntityLayer[r][c].pop(idx)
 
+    def reset_turns(self, turn):
+        for level in self.Levels:
+            for row in level.EntityLayer:
+                for col in row:
+                    for ent in col:
+                        ent.turn = turn

@@ -62,11 +62,12 @@ class Layer(enum.IntEnum):
         4: not stackable, FOV cannot see through them
     '''
     FLOOR_LAYER = 0
-    STAIR_LAYER = 1
-    OBJECT_LAYER = 2
-    BARREL_LAYER = 3
-    MONSTER_LAYER = 4
-    WALL_LAYER = 5
+    PLANT_LAYER = 1
+    STAIR_LAYER = 2
+    OBJECT_LAYER = 3
+    BARREL_LAYER = 4
+    MONSTER_LAYER = 5
+    WALL_LAYER = 6
 
 class Size(enum.IntEnum):
     '''
@@ -400,8 +401,9 @@ class Entity:
     
     def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event, rng):
         '''Pass an event for the entity to preform a certain action'''
-        if self.z == levelmanager.currentz:
-            Logger.info(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
+        #if self.z == levelmanager.currentz:
+            #Logger.info(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
+        Logger.info(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
 
         if not isinstance(event, str):
             return
