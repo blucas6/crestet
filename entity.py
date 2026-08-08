@@ -53,21 +53,20 @@ class Speed(enum.IntEnum):
     HYPER = 1
 
 class Layer(enum.IntEnum):
-    '''
-    Layer Types:
-        0-1: stackable, anything with these layers will be placed on top of
-            each other
-        2: not stackable, entities that move around, FOV can see through them
-        3: not stackable, can be pushed
-        4: not stackable, FOV cannot see through them
-    '''
     FLOOR_LAYER = 0
+    '''Stackable'''
     PLANT_LAYER = 1
+    '''Stackable'''
     STAIR_LAYER = 2
+    '''Stackable, will be remembered by FOV'''
     OBJECT_LAYER = 3
+    '''Stackable, will be remembered by FOV, can be picked up'''
     BARREL_LAYER = 4
+    '''Not stackable, can be pushed'''
     MONSTER_LAYER = 5
+    '''Not stackable, will auto attack'''
     WALL_LAYER = 6
+    '''Not stackable, will be remembered by FOV'''
 
 class Size(enum.IntEnum):
     '''
@@ -401,9 +400,8 @@ class Entity:
     
     def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event, rng):
         '''Pass an event for the entity to preform a certain action'''
-        #if self.z == levelmanager.currentz:
-            #Logger.info(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
-        Logger.info(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
+        if self.z == levelmanager.currentz:
+            Logger.info(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
 
         if not isinstance(event, str):
             return

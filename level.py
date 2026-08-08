@@ -309,6 +309,7 @@ class LevelManager:
         return level.EntityLayer[r][c].pop(idx)
 
     def reset_turns(self, turn):
+        '''Pass in a turn number to reset all entities to that turn'''
         for level in self.Levels:
             for row in level.EntityLayer:
                 for col in row:
