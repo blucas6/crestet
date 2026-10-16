@@ -188,7 +188,7 @@ class FOVBrain(Brain):
         self.mentalmap = []
         '''Current view of the map'''
         self.fovpoints = []
-
+        '''Store current turns fov points to reuse'''
         self.objectmap = []
         '''All remembered objects (and barrels if set)'''
         self.wallmap = []
