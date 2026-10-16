@@ -246,7 +246,7 @@ class Edible:
         if hasattr(entity_eater, 'Health'):
             entity_eater.Health.change_health(self.nutrition)
             # need localized messages before uncommenting
-            #messager.add_eat_message(entity_eater, self.parent_entity)
+            messager.add_eat_message(entity_eater, self.parent_entity)
             if not hasattr(self.parent_entity, 'PlantStage'):
                 levelmanager.remove_entity(self.parent_entity)
 
@@ -527,7 +527,7 @@ class Inventory:
             cmd = event[2:]
             entity,valid = self.get_entity_from_key(key)
             if entity is None or not valid:
-                messager.add_message('Invalid inventory key!')
+                messager.add_text('Invalid inventory key!')
                 return
             # Equip
             if action == 'e':
@@ -555,7 +555,7 @@ class Inventory:
         '''Trigger the apply on an entity'''
         remove = entity.on_apply(cmd, parent, levelmanager, messager, animator, row, col, z)
         if remove is None:
-            messager.add_message('Nothing happens')
+            messager.add_text('Nothing happens')
         elif remove:
             self.contents = [item for item in self.contents if item.id != entity.id]
 

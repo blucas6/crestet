@@ -22,7 +22,7 @@ class SnowRune(entity.Entity):
         self.damage = 1
 
     def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
-        messager.add_message('Ice freezes the air!')
+        messager.add_notif('Ice freezes the air!', self.pos())
 
         entitylayer = levelmanager.Levels[z].EntityLayer
         objr,objc = utility.find_last_position(cmd[0], row, col, entitylayer)
@@ -62,7 +62,7 @@ class EmberRune(entity.Entity):
         self.damage = 2
 
     def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
-        messager.add_message('Flames shoot out!')
+        messager.add_notif('Flames shoot out!', self.pos())
 
         entitylayer = levelmanager.Levels[z].EntityLayer
         objr,objc = utility.find_last_position(cmd[0], row, col, entitylayer)

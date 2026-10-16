@@ -252,12 +252,13 @@ class Game:
 
         # check for ending the game
         if not self.StateMachine.GameState == state.GameState.END:
+            pos = self.LevelManager.Player.pos()
             if self.win():
                 self.StateMachine.new_state('endgame')
-                self.Messager.add_message('You won!')
+                self.Messager.add_notif('You won!', pos)
             elif self.lose():
                 self.StateMachine.new_state('endgame')
-                self.Messager.add_message('You died!')
+                self.Messager.add_notif('You died!', pos)
 
         # update all menus
         self.update_menus()
@@ -355,7 +356,7 @@ class Game:
 
     def messages(self):
         '''Deal with messages in the queue'''
-        self.MenuManager.MessageMenu.update()
+        self.MenuManager.MessageMenu.update(self.LevelManager.Player.Brain.fovpoints, self.LevelManager.currentz)
         if self.Messager.MsgQueue:
             # still more messages to process, msg queue should never be full if
             # non blocking mode is on
@@ -409,7 +410,7 @@ class Game:
                 msg += ent.name
                 if ix != len(map)-1:
                     msg += ','
-            self.Messager.add_message(msg)
+            self.Messager.add_text(msg)
         return state.Event.BLANK, event
 
     def view_event(self, event):
@@ -421,7 +422,7 @@ class Game:
         elif event == '>':
             if self.viewing_level - 1 >= 0:
                 self.viewing_level -= 1
-        self.Messager.add_message(f'Viewing Level: {self.viewing_level+1}')
+        self.Messager.add_text(f'Viewing Level: {self.viewing_level+1}')
         return state.Event.BLANK, event
     
     def motion_event(self, event):
@@ -432,7 +433,7 @@ class Game:
             self.StateMachine.new_state('done')
             # expects a direction
             if not event.isdigit() or event == '5':
-                self.Messager.add_message('Invalid direction!')
+                self.Messager.add_text('Invalid direction!')
                 return state.Event.CLEAR,event
             # valid direction increment turn
             # return the combined event
@@ -449,13 +450,13 @@ class Game:
             try:
                 applyinfo = self.LevelManager.Player.Inventory.get_apply_info(event)
             except Exception as e:
-                self.Messager.add_message('Invalid inventory key!')
+                self.Messager.add_text('Invalid inventory key!')
                 self.StateMachine.new_state('done')
                 return state.Event.CLEAR,event
 
             # direction request
             if applyinfo == component.ApplyInfo.DIRECTION:
-                self.Messager.add_message('Direction?')
+                self.Messager.add_text('Direction?')
                 self.previousevent += event
                 return state.Event.CLEAR,event
 
@@ -476,24 +477,24 @@ class Game:
             # throw
             if event == 't':
                 if not self.LevelManager.Player.Inventory.has_ammo():
-                    self.Messager.add_message('No ammo.')
+                    self.Messager.add_text('No ammo.')
                     return state.Event.CLEAR,event
                 else:
-                    self.Messager.add_message('Direction?')
+                    self.Messager.add_text('Direction?')
             # equip
             elif event == 'e':
-                self.Messager.add_message('Equip what?')
+                self.Messager.add_text('Equip what?')
             # unequip
             elif event == 'u':
-                self.Messager.add_message('Unequip what?')
+                self.Messager.add_text('Unequip what?')
             # apply
             elif event == 'a':
-                self.Messager.add_message('Apply what?')
+                self.Messager.add_text('Apply what?')
             # drop 
             elif event == 'd':
-                self.Messager.add_message('Drop what?')
+                self.Messager.add_text('Drop what?')
             else:
-                self.Messager.add_message('Direction?')
+                self.Messager.add_text('Direction?')
             self.StateMachine.new_state('motion')
             self.previousevent = event
             return state.Event.CLEAR,event
@@ -547,13 +548,13 @@ class Game:
                 self.Display.cursor_on = True
                 prow, pcol = (self.LevelManager.Player.row, self.LevelManager.Player.col)
                 self.Display.cursor_position = [prow,pcol]
-                self.Messager.add_message('-- Observation Tool --')
+                self.Messager.add_text('-- Observation Tool --')
             return state.Event.BLANK,event
         elif event == 'v':
             # START VIEW MODE
             self.StateMachine.new_state('viewing')
             if self.StateMachine.GameState == state.GameState.VIEWING:
-                self.Messager.add_message('-- View Mode --')
+                self.Messager.add_text('-- View Mode --')
                 self.viewing_level = self.LevelManager.Player.z
             return state.Event.BLANK,event
         elif self.StateMachine.GameState == state.GameState.MOTION:
