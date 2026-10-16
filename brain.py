@@ -75,8 +75,8 @@ class SimpleBrain(Brain):
         if energy < speed:
             return '5'
 
-        pts = self.getFOV(currlevel, mypos, status)
-        playerpos = self.find_player(currlevel, pts)
+        fovpoints = self.getFOV(currlevel, mypos, status)
+        playerpos = self.find_player(currlevel, fovpoints)
 
         # if the player is near, try to attack
         if playerpos:
@@ -187,6 +187,8 @@ class FOVBrain(Brain):
         super().__init__(sightrange, blockinglayer)
         self.mentalmap = []
         '''Current view of the map'''
+        self.fovpoints = []
+        '''Store current turns fov points to reuse'''
         self.objectmap = []
         '''All remembered objects (and barrels if set)'''
         self.wallmap = []
@@ -229,7 +231,7 @@ class FOVBrain(Brain):
             self.clear_memory(level.rows, level.cols)
 
         # get the current FOV points
-        fovpts = self.getFOV(level, [myrow,mycol], status)
+        self.fovpoints = self.getFOV(level, [myrow,mycol], status)
 
         # get the current blind points if needed
         blindpts = []
@@ -238,19 +240,19 @@ class FOVBrain(Brain):
 
         # optional types of FOV memory
         if self.fovmemory == FOVMemory.NOTHING:
-            self.mental_map_load_FOV(level, fovpts, blindpts, status, myrow, mycol)
+            self.mental_map_load_FOV(level, self.fovpoints, blindpts, status, myrow, mycol)
         elif self.fovmemory == FOVMemory.OBJECTS:
-            self.mental_map_load_FOV(level, fovpts, blindpts, status, myrow, mycol)
-            self.object_map_save(level, fovpts, blindpts, status)
-            self.wall_map_save(level, fovpts, status)
+            self.mental_map_load_FOV(level, self.fovpoints, blindpts, status, myrow, mycol)
+            self.object_map_save(level, self.fovpoints, blindpts, status)
+            self.wall_map_save(level, self.fovpoints, status)
         elif self.fovmemory == FOVMemory.OBJECTS_BARRELS:
-            self.mental_map_load_FOV(level, fovpts, blindpts, status, myrow, mycol)
-            self.object_map_save(level, fovpts, blindpts, status)
-            self.wall_map_save(level, fovpts, status)
+            self.mental_map_load_FOV(level, self.fovpoints, blindpts, status, myrow, mycol)
+            self.object_map_save(level, self.fovpoints, blindpts, status)
+            self.wall_map_save(level, self.fovpoints, status)
         elif self.fovmemory == FOVMemory.EVERYTHING:
             if entity.StatusEffect.BLIND in status:
                 self.clear_memory(level.rows, level.cols)
-            self.mental_map_load_FOV(level, fovpts, blindpts, status, myrow, mycol)
+            self.mental_map_load_FOV(level, self.fovpoints, blindpts, status, myrow, mycol)
 
         # add light layer to FOV
         if not entity.StatusEffect.BLIND in status:

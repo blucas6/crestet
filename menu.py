@@ -66,18 +66,23 @@ class MessageMenu(Menu):
         self.msg = ''
         self.blocking = blocking
 
-    def update(self):
+    def update(self, fovpoints, levelz):
         '''Get the latest message'''
         super().update()
         if not self.msg:
             msgtext = ''
             # get the length of the next message and try to add it
             while (self.Messager.MsgQueue and
-                len(msgtext) + len(self.Messager.MsgQueue[0]) + 1 < self.cols):
+                len(msgtext) + len(self.Messager.MsgQueue[0].msg) + 1 < self.cols):
 
-                self.msg = self.Messager.pop_message(self.blocking)
-                msgtext += self.msg + ' '
-                Logger.info(f'{msgtext} {self.Messager.MsgQueue}')
+                notif = self.Messager.pop_notif(self.blocking)
+                # display messages that are text (no position)
+                # or messages that are in the FOV
+                if (not notif.pos or
+                    (notif.pos[2] == levelz and
+                     (notif.pos[0],notif.pos[1]) in fovpoints)):
+                    self.msg = notif.msg
+                    msgtext += self.msg + ' '
             if self.Messager.MsgQueue:
                 msgtext += '--more--'
             self.text[0] = msgtext

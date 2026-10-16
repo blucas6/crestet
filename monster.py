@@ -176,7 +176,7 @@ class Jelly(e.Entity):
         Generate the explosion on death
         '''
         super().death(levelmanager)
-        messager.add_message('It explodes!')
+        messager.add_notif('It explodes!', self.pos())
         # queue animation
         frames = {}
         frames['0'] = [

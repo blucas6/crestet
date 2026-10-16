@@ -39,7 +39,8 @@ class Plant(entity.Entity):
         '''Different growth glyphs'''
         self.growth_glyph = '*'
         '''Growth glyph'''
-        self.sprout_glyphs = ['.', ',', '`']
+        #self.sprout_glyphs = ['.', ',', '`']
+        self.sprout_glyphs = ['.']
         '''Different sprout glyphs'''
         self.sprout_glyph = '.'
         '''Sprout glyph'''

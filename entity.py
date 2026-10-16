@@ -333,10 +333,10 @@ class Entity:
             if ent.name == 'Upstair' or ent.name == 'Downstair':
                 # make sure there is a level to go to
                 if newz >= len(levelmanager.Levels):
-                    messager.add_message("There is nothing above you.")
+                    messager.add_notif("There is nothing above you.", self.pos())
                     return
                 elif newz < 0:
-                    messager.add_message("There is nothing below you.")
+                    messager.add_notif("There is nothing below you.", self.pos())
                     return
                 # check if there is a monster/barrel above you
                 entitylayer = levelmanager.Levels[newz].EntityLayer
@@ -351,16 +351,16 @@ class Entity:
                 else:
                     if levelmanager.move_entity_z(self, newz, [self.row,self.col]):
                         if ent.name == 'Upstair':
-                            messager.add_message('You walk up the stairs.')
+                            messager.add_notif('You walk up the stairs.', self.pos())
                         else:
-                            messager.add_message('You walk down the stairs.')
+                            messager.add_notif('You walk down the stairs.', self.pos())
                         self.energy -= self.speed
                         return
         # stairwell not on this space
         if incrementz > 0:
-            messager.add_message("Can't go up here.")
+            messager.add_notif("Can't go up here.", self.pos())
         else:
-            messager.add_message("Can't go down here.")
+            messager.add_notif("Can't go down here.", self.pos())
 
     def handle_inventory(self, levelmanager, messager, animator, event):
         '''Talks to the inventory component'''

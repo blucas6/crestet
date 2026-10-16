@@ -1,5 +1,10 @@
 import entity
 
+class Notif:
+    def __init__(self, msg, pos):
+        self.msg = msg
+        self.pos = pos
+
 class Messager:
     '''
     Message queue to hold messages generated in game
@@ -14,7 +19,7 @@ class Messager:
         '''
         self.MsgQueue = []
 
-    def pop_message(self, blocking=True):
+    def pop_notif(self, blocking=True):
         '''
         If messages are in the queue, get the messages by FIFO
         '''
@@ -28,78 +33,107 @@ class Messager:
                 self.MsgQueue = []
             return msg
         return ''
+    
+    def add_text(self, msg):
+        self.MsgQueue.append(Notif(msg, []))
 
-    def add_message(self, msg):
+    def add_notif(self, msg, pos):
         '''
         Adds a msg to the msg queue
         '''
-        self.MsgQueue.append(msg)
+        self.MsgQueue.append(Notif(msg, pos))
     
     def add_damage_message(self, attackentity, defendentity):
         if attackentity.name == 'Player':
-            self.MsgQueue.append(f'You hit the {defendentity.name}.')
+            msg = f'You hit the {defendentity.name}.'
+            pos = attackentity.pos()
         elif defendentity.name == 'Player':
-            self.MsgQueue.append(f'The {attackentity.name} hits you.')
+            msg = f'The {attackentity.name} hits you.'
+            pos = defendentity.pos()
         else:
-            self.MsgQueue.append(f'The {attackentity.name} hits the {defendentity.name}.')
+            msg = f'The {attackentity.name} hits the {defendentity.name}.'
+            pos = attackentity.pos()
+        self.add_notif(msg, pos)
     
     def add_kill_message(self, attackentity, defendentity):
         if attackentity.name == 'Player':
-            self.MsgQueue.append(f'You kill the {defendentity.name}!')
+            msg = f'You kill the {defendentity.name}!'
+            pos = attackentity.pos()
         elif defendentity.name == 'Player':
-            self.MsgQueue.append(f'The {attackentity.name} kills you!')
+            msg = f'The {attackentity.name} kills you!'
+            pos = defendentity.pos()
         else:
-            self.MsgQueue.append(f'The {attackentity.name} kills the {defendentity.name}!')
+            msg = f'The {attackentity.name} kills the {defendentity.name}!'
+            pos = attackentity.pos()
+        self.add_notif(msg, pos)
 
     def add_charge_message(self, attackentity, defendentity):
         if attackentity.name == 'Player':
-            self.MsgQueue.append(f'You charge the {defendentity.name}')
+            msg = f'You charge the {defendentity.name}'
+            pos = attackentity.pos()
         elif defendentity.name == 'Player':
-            self.MsgQueue.append(f'The {attackentity.name} charges you!')
+            msg = f'The {attackentity.name} charges you!'
+            pos = defendentity.pos()
         else:
-            self.MsgQueue.append(f'The {attackentity.name} charges the {defendentity.name}.')
+            msg = f'The {attackentity.name} charges the {defendentity.name}.'
+            pos = attackentity.pos()
+        self.add_notif(msg, pos)
 
-    def add_eat_message(self, entitya, entityb):
-        if entitya.name == 'Player':
-            self.MsgQueue.append(f'You eat the {entityb.name}.')
-        elif entityb.name == 'Player':
-            self.MsgQueue.append(f'The {entitya.name} eats you.')
+    def add_eat_message(self, entity_eats, entity_eaten):
+        if entity_eats.name == 'Player':
+            msg = f'You eat the {entity_eaten.name}.'
+            pos = entity_eats.pos()
+        elif entity_eaten.name == 'Player':
+            msg = f'The {entity_eats.name} eats you.'
+            pos = entity_eaten.pos()
         else:
-            self.MsgQueue.append(f'The {entitya.name} eats the {entityb.name}.')
+            msg = f'The {entity_eats.name} eats the {entity_eaten.name}.'
+            pos = entity_eats.pos()
+        self.add_notif(msg, pos)
 
-    def add_level_up_message(self, entitya):
-        if entitya.name == 'Player':
-            self.MsgQueue.append(f'You level up!')
+    def add_level_up_message(self, ent):
+        if ent.name == 'Player':
+            msg = f'You level up!'
         else:
-            self.MsgQueue.append(f'The {entitya.name} levels up!')
+            msg = f'The {ent.name} levels up!'
+        self.add_notif(msg, ent.pos())
 
-    def add_status_message(self, entitya, status):
+    def add_status_message(self, ent, status):
         if status == entity.StatusEffect.FROZEN:
-            if entitya.name == 'Player':
-                self.MsgQueue.append(f'You freeze!')
+            if ent.name == 'Player':
+                msg = f'You freeze!'
             else:
-                self.MsgQueue.append(f'The {entitya.name} freezes!')
+                msg = f'The {ent.name} freezes!'
         elif status == entity.StatusEffect.BLIND:
-            if entitya.name == 'Player':
-                self.MsgQueue.append(f'You are blinded!')
+            if ent.name == 'Player':
+                msg = f'You are blinded!'
             else:
-                self.MsgQueue.append(f'The {entitya.name} is blinded!')
+                msg = f'The {ent.name} is blinded!'
+        self.add_notif(msg, ent.pos())
     
-    def add_break_message(self, entitya, entityb):
-        if entitya.name == 'Player':
-            self.MsgQueue.append(f'You break the {entityb.name}.')
-        elif entityb.name == 'Player':
-            self.MsgQueue.append(f'The {entitya.name} breaks you!')
+    def add_break_message(self, entity_attack, entity_defend):
+        if entity_attack.name == 'Player':
+            msg = f'You break the {entity_defend.name}.'
+            pos = entity_attack.pos()
+        elif entity_defend.name == 'Player':
+            msg = f'The {entity_defend.name} breaks you!'
+            pos = entity_defend.pos()
         else:
-            self.MsgQueue.append(f'The {entitya.name} breaks the {entityb.name}.')
+            msg = f'The {entity_attack.name} breaks the {entity_defend.name}.'
+            pos = entity_defend.pos()
+        self.add_notif(msg, pos)
 
-    def add_miss_message(self, entitya, entityb):
-        if entitya.name == 'Player':
-            self.MsgQueue.append(f'You miss the {entityb.name}.')
-        elif entityb.name == 'Player':
-            self.MsgQueue.append(f'The {entitya.name} misses you.')
+    def add_miss_message(self, entity_attack, entity_defend):
+        if entity_attack.name == 'Player':
+            msg = f'You miss the {entity_defend.name}.'
+            pos = entity_attack.pos()
+        elif entity_defend.name == 'Player':
+            msg = f'The {entity_attack.name} misses you.'
+            pos = entity_defend.pos()
         else:
-            self.MsgQueue.append(f'The {entitya.name} misses the {entityb.name}.')
+            msg = f'The {entity_attack.name} misses the {entity_defend.name}.'
+            pos = entity_attack.pos()
+        self.add_notif(msg, pos)
 
 
 
