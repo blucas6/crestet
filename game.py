@@ -255,10 +255,10 @@ class Game:
             pos = self.LevelManager.Player.pos()
             if self.win():
                 self.StateMachine.new_state('endgame')
-                self.Messager.add_notif('You won!', pos)
+                self.Messager.add_text('You won!')
             elif self.lose():
                 self.StateMachine.new_state('endgame')
-                self.Messager.add_notif('You died!', pos)
+                self.Messager.add_text('You died!')
 
         # update all menus
         self.update_menus()
@@ -356,7 +356,7 @@ class Game:
 
     def messages(self):
         '''Deal with messages in the queue'''
-        self.MenuManager.MessageMenu.update(self.LevelManager.Player.Brain.fovpoints, self.LevelManager.currentz)
+        self.MenuManager.MessageMenu.update(self.LevelManager.Player.Brain.fovpoints, self.LevelManager.currentz, self.LevelManager.Player.status)
         if self.Messager.MsgQueue:
             # still more messages to process, msg queue should never be full if
             # non blocking mode is on

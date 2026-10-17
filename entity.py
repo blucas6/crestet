@@ -191,7 +191,7 @@ class Entity:
     def on_init(self, *_):
         pass
 
-    def apply_status(self, messager, status_effect):
+    def apply_status(self, messager, status_effect, levelmanager):
         '''Add a status effect to the entity'''
         if status_effect in self.status:
             return
@@ -199,7 +199,7 @@ class Entity:
         if status_effect == StatusEffect.BLIND and not hasattr(self, 'eyes'):
             return
         Logger.info(f'Applying status effect: {status_effect}')
-        messager.add_status_message(self, status_effect)
+        messager.add_status_message(levelmanager.currentz, self, status_effect)
         self.status[status_effect], bg_color = status_effect.status_lookup()
         if bg_color is not None:
             self.color = color.Color().toggle_bg(self.color, bg_color)
@@ -333,14 +333,17 @@ class Entity:
             if ent.name == 'Upstair' or ent.name == 'Downstair':
                 # make sure there is a level to go to
                 if newz >= len(levelmanager.Levels):
-                    messager.add_notif("There is nothing above you.", self.pos())
+                    messager.add_level_fail_message(levelmanager.currentz,
+                                                    self, 1)
                     return
                 elif newz < 0:
-                    messager.add_notif("There is nothing below you.", self.pos())
+                    messager.add_level_fail_message(levelmanager.currentz,
+                                                    self, -1)
                     return
                 # check if there is a monster/barrel above you
                 entitylayer = levelmanager.Levels[newz].EntityLayer
                 _,an_entity = utility.get_max_entity(entitylayer[self.row][self.col])
+                # fight on stairwell
                 if ((an_entity.layer == Layer.MONSTER_LAYER or
                     an_entity.layer == Layer.BARREL_LAYER) and
                     hasattr(self, 'Combat')):
@@ -348,19 +351,15 @@ class Entity:
                     self.energy -= self.speed
                     self.Combat.attack_melee(self, levelmanager, animator, messager, an_entity, rng)
                     return
+                # success
                 else:
                     if levelmanager.move_entity_z(self, newz, [self.row,self.col]):
-                        if ent.name == 'Upstair':
-                            messager.add_notif('You walk up the stairs.', self.pos())
-                        else:
-                            messager.add_notif('You walk down the stairs.', self.pos())
+                        messager.add_stair_message(levelmanager.currentz,
+                                                   self, incrementz)
                         self.energy -= self.speed
                         return
         # stairwell not on this space
-        if incrementz > 0:
-            messager.add_notif("Can't go up here.", self.pos())
-        else:
-            messager.add_notif("Can't go down here.", self.pos())
+        messager.add_stair_fail_message(levelmanager.currentz, self, incrementz)
 
     def handle_inventory(self, levelmanager, messager, animator, event):
         '''Talks to the inventory component'''
@@ -400,8 +399,8 @@ class Entity:
     
     def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event, rng):
         '''Pass an event for the entity to preform a certain action'''
-        if self.z == levelmanager.currentz:
-            Logger.info(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
+        #if self.z == levelmanager.currentz:
+        Logger.info(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
 
         if not isinstance(event, str):
             return
