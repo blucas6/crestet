@@ -39,5 +39,5 @@ class Peck(entity.Entity):
         '''Abilities get applied on damage'''
         entitylayer = levelmanager.Levels[z].EntityLayer
         for ent in entitylayer[row][col]:
-            ent.apply_status(messager, entity.StatusEffect.BLIND)
+            ent.apply_status(messager, entity.StatusEffect.BLIND, levelmanager)
 

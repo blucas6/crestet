@@ -29,7 +29,7 @@ class DepthMenu(Menu):
     def update(self, z):
         '''Updates the level index'''
         super().update()
-        self.text[0] = f'Current Level: {z+1}'
+        self.text[0] = f'Floor: {z+1}'
 
 class HealthMenu(Menu):
     '''Displays the health bar'''
@@ -66,22 +66,19 @@ class MessageMenu(Menu):
         self.msg = ''
         self.blocking = blocking
 
-    def update(self, fovpoints, levelz):
+    def update(self, fovpoints, levelz, status):
         '''Get the latest message'''
         super().update()
         if not self.msg:
             msgtext = ''
             # get the length of the next message and try to add it
             while (self.Messager.MsgQueue and
-                len(msgtext) + len(self.Messager.MsgQueue[0].msg) + 1 < self.cols):
+            len(msgtext) + len(self.Messager.MsgQueue[0].msg) + 1 < self.cols):
 
                 notif = self.Messager.pop_notif(self.blocking)
-                # display messages that are text (no position)
-                # or messages that are in the FOV
-                if (not notif.pos or
-                    (notif.pos[2] == levelz and
-                     (notif.pos[0],notif.pos[1]) in fovpoints)):
-                    self.msg = notif.msg
+                msg = self.Messager.show_notif(notif, fovpoints, levelz, status)
+                if msg:
+                    self.msg = msg
                     msgtext += self.msg + ' '
             if self.Messager.MsgQueue:
                 msgtext += '--more--'

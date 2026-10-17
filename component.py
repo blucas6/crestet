@@ -129,12 +129,12 @@ class Combat:
         if hasattr(victim, 'Health'):
             # missed
             if not success:
-                messager.add_miss_message(parent, victim)
+                messager.add_miss_message(levelmanager.currentz, parent, victim)
                 return
 
             # only create a notification for actual attacks
             if dmg_type == 'melee' or dmg_type == 'range':
-                messager.add_damage_message(parent, victim)
+                messager.add_damage_message(levelmanager.currentz, parent, victim)
 
             # send damage to the victim Combat component for defense
             if hasattr(victim, 'Combat') and hasattr(victim, 'Inventory'):
@@ -144,28 +144,28 @@ class Combat:
             # check for kill
             if victim.Health.change_health(-damage):
                 victim.death(levelmanager, animator, messager)
-                messager.add_kill_message(parent, victim)
+                messager.add_kill_message(levelmanager.currentz, parent, victim)
                 # gain xp
                 if hasattr(parent, 'Leveling') and hasattr(victim, 'xp'):
-                    parent.Leveling.gain_xp(victim.xp, parent, messager)
+                    parent.Leveling.gain_xp(victim.xp, parent, messager, levelmanager)
 
         # or victim must be breakable
         elif hasattr(victim, 'Breakable'):
             # missed
             if not success:
-                messager.add_miss_message(parent, victim)
+                messager.add_miss_message(levelmanager.currentz, parent, victim)
                 return
 
             Logger.info(f'{parent} hitting {victim} : {damage}')
 
             # only create a notification for actual attacks
             if dmg_type == 'melee' or dmg_type == 'range':
-                messager.add_damage_message(parent, victim)
+                messager.add_damage_message(levelmanager.currentz, parent, victim)
 
             # check for break
             if victim.Breakable.change_dmg(damage):
                 victim.death(levelmanager, animator, messager)
-                messager.add_break_message(parent, victim)
+                messager.add_break_message(levelmanager.currentz, parent, victim)
 
 class Breakable:
     '''Objects that can break (instead of dying)'''
@@ -202,10 +202,10 @@ class Leveling:
         self.scale_factor = 2
         '''How much the next level will increase by'''
 
-    def level_up(self, parent_entity, messager):
+    def level_up(self, parent_entity, messager, levelmanager):
         '''Activates when the entity goes to the next level'''
         self.curr_level += 1
-        messager.add_level_up_message(parent_entity)
+        messager.add_level_up_message(levelmanager.currentz, parent_entity)
         # increase max health
         if hasattr(parent_entity, 'Health'):
             parent_entity.Health.maxhealth += self.curr_level
@@ -213,13 +213,13 @@ class Leveling:
         if hasattr(parent_entity, 'Health'):
             parent_entity.Health.restore_max_health()
 
-    def gain_xp(self, xp, parent_entity, messager):
+    def gain_xp(self, xp, parent_entity, messager, levelmanager):
         '''Send experience points to the component'''
         self.xp += xp
         while self.xp >= self.nextlv:
             self.xp -= self.nextlv
             self.nextlv *= self.scale_factor
-            self.level_up(parent_entity, messager)
+            self.level_up(parent_entity, messager, levelmanager)
 
 class Interact:
     def __init__(self):
@@ -245,7 +245,7 @@ class Edible:
         '''Called when another entity eats this entity'''
         if hasattr(entity_eater, 'Health'):
             entity_eater.Health.change_health(self.nutrition)
-            messager.add_eat_message(entity_eater, self.parent_entity)
+            messager.add_eat_message(levelmanager.currentz, entity_eater, self.parent_entity)
             if not hasattr(self.parent_entity, 'PlantStage'):
                 levelmanager.remove_entity(self.parent_entity)
 

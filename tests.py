@@ -13,6 +13,7 @@ import environment
 import config
 import json
 import logging
+import monster
 
 # configure the logger here since not running from main
 logging.basicConfig(
@@ -73,7 +74,7 @@ class TestSuite(unittest.TestCase):
         data['1']['items'] = 0
         data['1']['runes'] = 0
         data['1']['mons'] = False
-        data['0']['plants'] = 0
+        data['1']['plants'] = 0
 
         with open(config.SIM_LEVEL_CONFIG, 'w+') as jfile:
             json.dump(data, jfile, indent=4)
@@ -322,7 +323,7 @@ class TestSuite(unittest.TestCase):
             player.Brain.mentalmap, lightlayer, menumanager, player.status
         )
         self.assertEqual('0', screenbuffer[r][c])
-        player.apply_status(messager, entity.StatusEffect.BLIND)
+        player.apply_status(messager, entity.StatusEffect.BLIND, levelmanager)
         self.loop('.')
         screenbuffer, _ = display.prepare_buffers(
             player.Brain.mentalmap, lightlayer, menumanager, player.status
@@ -346,12 +347,94 @@ class TestSuite(unittest.TestCase):
             player.Brain.mentalmap, lightlayer, menumanager, player.status
         )
         self.assertEqual(')', screenbuffer[r][c])
-        player.apply_status(messager, entity.StatusEffect.BLIND)
+        player.apply_status(messager, entity.StatusEffect.BLIND, levelmanager)
         self.loop('.')
         screenbuffer, _ = display.prepare_buffers(
             player.Brain.mentalmap, lightlayer, menumanager, player.status
         )
         self.assertEqual(')', screenbuffer[r][c])
+
+    def test_above_level_message(self):
+        '''Checks that a message created above the current level is not added to the message queue'''
+        player = TestSuite.environment.Game.LevelManager.Player
+        levelmanager = TestSuite.environment.Game.LevelManager
+        messager = TestSuite.environment.Game.Messager
+        animator = TestSuite.environment.Game.Animator
+
+        row = 1
+        col = 1
+        mon = monster.Jelly()
+        levelmanager.place_entity(1, mon, (row,col))
+        self.loop('6')
+        self.assertEqual(len(messager.MsgQueue), 0)
+        mon.death(levelmanager, animator, messager)
+        self.assertEqual(len(messager.MsgQueue), 0)
+        self.loop('6')
+        self.assertEqual(len(messager.MsgQueue), 0)
+
+    def test_inside_fov_message(self):
+        '''Checks message is published for inside FOV messages'''
+        player = TestSuite.environment.Game.LevelManager.Player
+        levelmanager = TestSuite.environment.Game.LevelManager
+        animator = TestSuite.environment.Game.Animator
+        messager = TestSuite.environment.Game.Messager
+        messagemenu = TestSuite.environment.Game.MenuManager.MessageMenu
+
+        seen = 'The Jelly explodes!'
+        mon = monster.Jelly()
+        levelmanager.place_entity(0, mon, (4,7))
+        self.loop('6')
+        self.loop('4')
+        mon.death(levelmanager, animator, messager)
+        self.assertEqual(len(messager.MsgQueue), 1)
+        self.loop('6')
+        self.assertEqual(messagemenu.msg, seen)
+        self.assertEqual(len(messager.MsgQueue), 0)
+
+    def test_outside_fov_message(self):
+        '''Checks alternate message is published for outside FOV messages'''
+        player = TestSuite.environment.Game.LevelManager.Player
+        levelmanager = TestSuite.environment.Game.LevelManager
+        animator = TestSuite.environment.Game.Animator
+        messager = TestSuite.environment.Game.Messager
+        messagemenu = TestSuite.environment.Game.MenuManager.MessageMenu
+
+        unseen = 'You hear a burst!'
+        mon = monster.Jelly()
+        levelmanager.place_entity(0, mon, (4,7))
+        levelmanager.place_entity(0, wall.Sandstone(), (1,3))
+        levelmanager.place_entity(0, wall.Sandstone(), (2,3))
+        levelmanager.place_entity(0, wall.Sandstone(), (3,3))
+        levelmanager.place_entity(0, wall.Sandstone(), (4,3))
+        levelmanager.place_entity(0, wall.Sandstone(), (4,2))
+        levelmanager.place_entity(0, wall.Sandstone(), (4,1))
+        self.loop('6')
+        self.loop('4')
+        mon.death(levelmanager, animator, messager)
+        self.assertEqual(len(messager.MsgQueue), 1)
+        self.loop('6')
+        self.assertEqual(messagemenu.msg, unseen)
+        self.assertEqual(len(messager.MsgQueue), 0)
+
+    def test_blind_message(self):
+        '''Checks alternate is published while blind'''
+        player = TestSuite.environment.Game.LevelManager.Player
+        levelmanager = TestSuite.environment.Game.LevelManager
+        animator = TestSuite.environment.Game.Animator
+        messager = TestSuite.environment.Game.Messager
+        messagemenu = TestSuite.environment.Game.MenuManager.MessageMenu
+
+        unseen = 'You hear a burst!'
+        mon = monster.Jelly()
+        levelmanager.place_entity(0, mon, (4,7))
+        player.apply_status(messager, entity.StatusEffect.BLIND, levelmanager)
+        self.loop('6')
+        self.loop('4')
+        mon.death(levelmanager, animator, messager)
+        self.assertEqual(len(messager.MsgQueue), 1)
+        self.loop('6')
+        self.assertEqual(messagemenu.msg, unseen)
+        self.assertEqual(len(messager.MsgQueue), 0)
 
 
 if __name__ == '__main__':
@@ -364,3 +447,4 @@ if __name__ == '__main__':
     # reset args to not interfere with unittest args
     sys.argv = [sys.argv[0]] + unknown
     unittest.main()
+

@@ -22,7 +22,7 @@ class SnowRune(entity.Entity):
         self.damage = 1
 
     def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
-        messager.add_notif('Ice freezes the air!', self.pos())
+        messager.add_notif(levelmanager.currentz, 'Ice freezes the air!', self.pos())
 
         entitylayer = levelmanager.Levels[z].EntityLayer
         objr,objc = utility.find_last_position(cmd[0], row, col, entitylayer)
@@ -46,7 +46,7 @@ class SnowRune(entity.Entity):
             if hasattr(parent, 'Combat'):
                 parent.Combat.deal_damage(parent, levelmanager, animator,
                                         messager, ent, True, self.damage, 'ice')
-            ent.apply_status(messager, entity.StatusEffect.FROZEN)
+            ent.apply_status(messager, entity.StatusEffect.FROZEN, levelmanager)
         return True
 
 class EmberRune(entity.Entity):
@@ -62,7 +62,7 @@ class EmberRune(entity.Entity):
         self.damage = 2
 
     def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
-        messager.add_notif('Flames shoot out!', self.pos())
+        messager.add_notif(levelmanager.currentz, 'Flames shoot out!', self.pos())
 
         entitylayer = levelmanager.Levels[z].EntityLayer
         objr,objc = utility.find_last_position(cmd[0], row, col, entitylayer)
