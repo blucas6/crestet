@@ -399,8 +399,8 @@ class Entity:
     
     def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event, rng):
         '''Pass an event for the entity to preform a certain action'''
-        #if self.z == levelmanager.currentz:
-        Logger.info(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
+        if self.z == levelmanager.currentz:
+            Logger.info(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
 
         if not isinstance(event, str):
             return
