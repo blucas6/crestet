@@ -2,6 +2,11 @@ import color as clr
 import utility
 import tower
 import entity
+import engine
+import config
+import logging
+
+Logger = logging.getLogger(__name__)
 
 class Display:
     '''Utility class to display screens with an engine class'''
@@ -24,16 +29,36 @@ class Display:
         '''Controls whether the engine cursor is on or not'''
         self.cursor_position = [0,0]
         '''Current position of the cursor on the level (not the screen position)'''
+        self.displayon = True
+        self.Engine = engine.Engine()
 
-    def init(self, termrows, termcols, levelorigin):
+    def init(self, usedisplay, levelorigin, timedelay: int=0):
         '''Setup the buffers'''
+        self.displayon = usedisplay
+        if self.displayon:
+            self.Engine.init(timedelay)
+            self.termrows = self.Engine.termrows
+            self.termcols = self.Engine.termcols
         # create buffers
-        self.termrows = termrows
-        self.termcols = termcols
         self.clear_buffers()
         # colors must be accessed after engine has been initialized
         self.unknowncolor = clr.Color().white
         self.levelorigin = levelorigin
+
+    def pause_engine(self, delay):
+        # do not call engine pause if the display is off
+        if self.displayon:
+            self.Engine.pause(delay)
+
+    def close_engine(self):
+        if self.displayon:
+            self.Engine.end()
+
+    def clear_cursors(self):
+        if self.cursor_on:
+            if self.displayon:
+                self.Engine.toggle_cursor(0)
+            self.cursor_on = False
 
     def clear_buffers(self):
         '''Creates empty buffers'''
@@ -41,23 +66,6 @@ class Display:
                                     for _ in range(self.termrows-1)]
         self.colorbuffer = [[clr.Color().white for _ in range(self.termcols-1)] 
                                     for _ in range(self.termrows-1)]
-
-    def prepare_buffers(self, entitylayer, lightlayer, menumanager, player_status):
-        '''Build the buffers to send to the engine'''
-
-        self.clear_buffers()
-
-        # go through entity layer
-        self.render_entitylayer(entitylayer)
-
-        # go through light layer
-        if entity.StatusEffect.BLIND not in player_status:
-            self.render_lightlayer(entitylayer, lightlayer)
-        
-        # add menus
-        self.render_menus(menumanager)
-
-        return self.screenbuffer, self.colorbuffer
 
     def render_menus(self, menumanager):
         '''Go through all menus and add their text buffers to the screen'''
@@ -120,17 +128,114 @@ class Display:
         '''Helper function to convert an entity position to a screen position'''
         return r+self.levelorigin[0], c+self.levelorigin[1]
 
-    def add_animation_frame(self, screenbuffer, colorbuffer, anim, key):
+    def get_new_buffer(self, buffer):
+        return [[item for item in row] for row in buffer]
+
+    def output(self, screenbuffer, colorbuffer):
+        if self.displayon and self.Engine.frame_ready():
+            self.Engine.output(screenchars=screenbuffer,
+                               screencolors=colorbuffer)
+
+    def cursor_upkeep(self):
+        if self.displayon and self.cursor_on:
+            self.Engine.toggle_cursor(config.CURSOR_HIGHLIGHT)
+            cursor_position = self.level_to_screen_pos(
+                    *self.cursor_position)
+            self.Engine.move_cursor(cursor_position)
+
+    def render(self, entitylayer, lightlayer, menumanager):
+        '''
+        Render the current game state to the screen
+
+        Tests depend on buffers being created even if displaying
+        is turned off
+        '''
+
+        Logger.info('RENDER')
+
+        self.clear_buffers()
+
+        # go through entity layer
+        self.render_entitylayer(entitylayer)
+
+        # go through light layer
+        self.render_lightlayer(entitylayer, lightlayer)
+        
+        # add menus
+        self.render_menus(menumanager)
+
+        # display through engine
+        self.output(self.screenbuffer, self.colorbuffer)
+
+        # update cursor
+        self.cursor_upkeep()
+
+    def add_animation_frame(self, screenbuffer, colorbuffer, frame, pos, color, fovpoints):
         '''Add the glyphs for the animation to the screen'''
-        ar, ac = anim.origin[0], anim.origin[1]
         # add frame array to the screen
-        for r,row in enumerate(anim.frames[key]):
+        for r,row in enumerate(frame):
             for c,col in enumerate(row):
                 if not col:
                     continue
-                rw, cl = self.level_to_screen_pos(ar+r,ac+c)
-                screenbuffer[rw][cl] = col
-                colorbuffer[rw][cl] = anim.color
+                elif (pos[0]+r,pos[1]+c) in fovpoints:
+                    rw, cl = self.level_to_screen_pos(pos[0]+r, pos[1]+c)
+                    screenbuffer[rw][cl] = col
+                    colorbuffer[rw][cl] = color
 
-    def get_new_buffer(self, buffer):
-        return [[item for item in row] for row in buffer]
+    def get_animation_frames(self, animator, levelz, fovpoints):
+        '''
+        Takes in the animation queue to produce a list of modified frame 
+        buffers to display
+        '''
+        loaded_frames = []
+        loaded_colors = []
+        time_delays = []
+
+        # go through each animation
+        for anim in animator.AnimationQueue:
+            if anim.pos[2] != levelz:
+                continue
+            for num in anim.frames.keys():
+                # reset buffers
+                tmp_screenbuffer = self.get_new_buffer(self.screenbuffer)
+                tmp_colorbuffer = self.get_new_buffer(self.colorbuffer) 
+                self.add_animation_frame(tmp_screenbuffer,
+                                         tmp_colorbuffer,
+                                         anim.frames[num],
+                                         anim.pos,
+                                         anim.color,
+                                         fovpoints)
+                loaded_frames.append(tmp_screenbuffer)
+                loaded_colors.append(tmp_colorbuffer)
+                time_delays.append(anim.delay)
+                
+        return loaded_frames, loaded_colors, time_delays
+    
+    def display_animation_frames(self, frames, colors, delays):
+        '''
+        Frames: list of modified frame buffers (the animations)
+        Colors: the modified color buffer
+        Delays: pause time for each animation frame effect
+        '''
+        for frame,cframe,delay in zip(frames, colors, delays):
+            # display through engine
+            self.output(frame, cframe)
+            self.pause_engine(delay)
+
+    def play_animations(self, animator, levelz, fovpoints):
+        '''Display animations queued'''
+
+        # refreshing the screen unnecessarily every entity update will
+        # cause massive slow downs
+        if animator.AnimationQueue:
+            lframes, lcolors, tdelays = self.get_animation_frames(animator,
+                                                          levelz, fovpoints)
+            self.display_animation_frames(lframes, lcolors, tdelays)
+
+            # done with all animations
+            animator.clearQueue()
+
+            # output original screen
+            self.output(self.screenbuffer, self.colorbuffer)
+
+

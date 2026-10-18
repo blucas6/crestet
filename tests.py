@@ -94,8 +94,10 @@ class TestSuite(unittest.TestCase):
         # if not running with a display, still configure it so unit tests can
         # check the display buffer
         if not TestSuite.display:
-            termrows, termcols = config.LEVELROWS+config.LEVELORIGIN[0], config.LEVELCOLS+config.LEVELORIGIN[1]
-            TestSuite.environment.Game.Display.init(termrows, termcols, config.LEVELORIGIN)
+            display = TestSuite.environment.Game.Display
+            display.termrows = config.LEVELROWS + config.LEVELORIGIN[0]
+            display.termcols = config.LEVELCOLS + config.LEVELORIGIN[1]
+            display.init(TestSuite.display, config.LEVELORIGIN)
 
     @classmethod
     def tearDownClass(cls):
@@ -108,6 +110,8 @@ class TestSuite(unittest.TestCase):
         Logger.info('')
         Logger.info(f'EXECUTING: {self._testMethodName}')
         TestSuite.environment.reset(new_seed=True)
+        messager = TestSuite.environment.Game.Messager
+        messager.add_text(f'{self._testMethodName}')
 
     def loop(self, action=''):
         '''Runs a single loop of the game, with rendering'''
@@ -270,18 +274,12 @@ class TestSuite(unittest.TestCase):
         r,c = display.level_to_screen_pos(row, col)
         levelmanager.place_entity(0, tower.Barrel(), (row,col))
         self.loop('.')
-        screenbuffer, _ = display.prepare_buffers(
-            player.Brain.mentalmap, lightlayer, menumanager, player.status
-        )
-        self.assertEqual(display.unknownglyph, screenbuffer[r][c])
+        self.assertEqual(display.unknownglyph, display.screenbuffer[r][c])
         for _ in range(2):
             self.loop(6)
         for _ in range(2):
             self.loop(4)
-        screenbuffer, _ = display.prepare_buffers(
-            player.Brain.mentalmap, lightlayer, menumanager, player.status
-        )
-        self.assertEqual('0', screenbuffer[r][c])
+        self.assertEqual('0', display.screenbuffer[r][c])
 
     def test_fov_hidden_object(self):
         '''Checks that the FOV will not reveal hidden objects'''
@@ -300,11 +298,8 @@ class TestSuite(unittest.TestCase):
             self.loop(6)
         for _ in range(2):
             self.loop(4)
-        screenbuffer, _ = display.prepare_buffers(
-            player.Brain.mentalmap, lightlayer, menumanager, player.status
-        )
         r,c = display.level_to_screen_pos(row, col)
-        self.assertEqual(display.unknownglyph, screenbuffer[r][c])
+        self.assertEqual(display.unknownglyph, display.screenbuffer[r][c])
 
     def test_fov_blind_barrel(self):
         '''Checks that barrels will be hidden when blinded'''
@@ -319,16 +314,10 @@ class TestSuite(unittest.TestCase):
         r,c = display.level_to_screen_pos(row, col)
         levelmanager.place_entity(0, tower.Barrel(), (row,col))
         self.loop('.')
-        screenbuffer, _ = display.prepare_buffers(
-            player.Brain.mentalmap, lightlayer, menumanager, player.status
-        )
-        self.assertEqual('0', screenbuffer[r][c])
+        self.assertEqual('0', display.screenbuffer[r][c])
         player.apply_status(messager, entity.StatusEffect.BLIND, levelmanager)
         self.loop('.')
-        screenbuffer, _ = display.prepare_buffers(
-            player.Brain.mentalmap, lightlayer, menumanager, player.status
-        )
-        self.assertEqual(' ', screenbuffer[r][c])
+        self.assertEqual(' ', display.screenbuffer[r][c])
 
     def test_fov_blind_object_memory(self):
         '''Checks that objects will be remembered when blinded'''
@@ -343,16 +332,10 @@ class TestSuite(unittest.TestCase):
         r,c = display.level_to_screen_pos(row, col)
         levelmanager.place_entity(0, item.Dart(), (row,col))
         self.loop('.')
-        screenbuffer, _ = display.prepare_buffers(
-            player.Brain.mentalmap, lightlayer, menumanager, player.status
-        )
-        self.assertEqual(')', screenbuffer[r][c])
+        self.assertEqual(')', display.screenbuffer[r][c])
         player.apply_status(messager, entity.StatusEffect.BLIND, levelmanager)
         self.loop('.')
-        screenbuffer, _ = display.prepare_buffers(
-            player.Brain.mentalmap, lightlayer, menumanager, player.status
-        )
-        self.assertEqual(')', screenbuffer[r][c])
+        self.assertEqual(')', display.screenbuffer[r][c])
 
     def test_above_level_message(self):
         '''Checks that a message created above the current level is not added to the message queue'''
@@ -384,7 +367,6 @@ class TestSuite(unittest.TestCase):
         mon = monster.Jelly()
         levelmanager.place_entity(0, mon, (4,7))
         self.loop('6')
-        self.loop('4')
         mon.death(levelmanager, animator, messager)
         self.assertEqual(len(messager.MsgQueue), 1)
         self.loop('6')
@@ -409,7 +391,6 @@ class TestSuite(unittest.TestCase):
         levelmanager.place_entity(0, wall.Sandstone(), (4,2))
         levelmanager.place_entity(0, wall.Sandstone(), (4,1))
         self.loop('6')
-        self.loop('4')
         mon.death(levelmanager, animator, messager)
         self.assertEqual(len(messager.MsgQueue), 1)
         self.loop('6')
@@ -429,13 +410,90 @@ class TestSuite(unittest.TestCase):
         levelmanager.place_entity(0, mon, (4,7))
         player.apply_status(messager, entity.StatusEffect.BLIND, levelmanager)
         self.loop('6')
-        self.loop('4')
         mon.death(levelmanager, animator, messager)
         self.assertEqual(len(messager.MsgQueue), 1)
         self.loop('6')
         self.assertEqual(messagemenu.msg, unseen)
         self.assertEqual(len(messager.MsgQueue), 0)
 
+    def test_animation_valid(self):
+        '''Checks that animations are produced correctly'''
+        levelmanager = TestSuite.environment.Game.LevelManager
+        player = TestSuite.environment.Game.LevelManager.Player
+        animator = TestSuite.environment.Game.Animator
+        display = TestSuite.environment.Game.Display
+        messager = TestSuite.environment.Game.Messager
+
+        origin = [4,7]
+        mon = monster.Jelly()
+        levelmanager.place_entity(0, mon, origin)
+        self.loop('6')
+        mon.death(levelmanager, animator, messager)
+        lframes, lcolors, tdelays = display.get_animation_frames(animator,
+                                                levelmanager.currentz,
+                                                player.Brain.fovpoints)
+        pos = display.level_to_screen_pos(*origin)
+        frame = lframes[1]
+        explosion = [
+            row[pos[1]-1:pos[1]+2] for row in frame[pos[0]-1:pos[0]+2]
+        ]
+        real_explosion = [
+            ['/', '-', '\\'],
+            ['|', ' ', '|'],
+            ['\\','-', '/']
+        ]
+        self.loop('4')
+        self.assertEqual(real_explosion, explosion)
+
+    def test_animation_above_level(self):
+        '''Checks that outside current level animations are rejected'''
+        levelmanager = TestSuite.environment.Game.LevelManager
+        player = TestSuite.environment.Game.LevelManager.Player
+        animator = TestSuite.environment.Game.Animator
+        display = TestSuite.environment.Game.Display
+        messager = TestSuite.environment.Game.Messager
+
+        origin = [4,7]
+        mon = monster.Jelly()
+        levelmanager.place_entity(1, mon, origin)
+        self.loop('6')
+        mon.death(levelmanager, animator, messager)
+        lframes, lcolors, tdelays = display.get_animation_frames(animator,
+                                                levelmanager.currentz,
+                                                player.Brain.fovpoints)
+        pos = display.level_to_screen_pos(*origin)
+        self.loop('4')
+        self.assertEqual([], lframes)
+
+    def test_animation_fov(self):
+        '''Checks that animations only get displayed inside FOV'''
+        levelmanager = TestSuite.environment.Game.LevelManager
+        animator = TestSuite.environment.Game.Animator
+        display = TestSuite.environment.Game.Display
+        messager = TestSuite.environment.Game.Messager
+        player = TestSuite.environment.Game.LevelManager.Player
+        player.Brain.sightrange = 3
+
+        origin = [3,4]
+        mon = monster.Jelly()
+        levelmanager.place_entity(0, mon, origin)
+        self.loop('4')
+        mon.death(levelmanager, animator, messager)
+        lframes, lcolors, tdelays = display.get_animation_frames(animator,
+                                                levelmanager.currentz,
+                                                player.Brain.fovpoints)
+        pos = display.level_to_screen_pos(*origin)
+        frame = lframes[1]
+        explosion = [
+            row[pos[1]-1:pos[1]+2] for row in frame[pos[0]-1:pos[0]+2]
+        ]
+        real_explosion = [
+            ['/', ' ', ' '],
+            ['|', ' ', ' '],
+            [' ',' ', ' ']
+        ]
+        self.loop('4')
+        self.assertEqual(real_explosion, explosion)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False)

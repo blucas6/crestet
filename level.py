@@ -149,7 +149,7 @@ class LevelManager:
             return self.Levels[self.currentz]
         return None
 
-    def update_level(self, level, energy, animator, messager, menumanager, statemachine, currentturn):
+    def update_level(self, level, energy, display, animator, messager, menumanager, statemachine, currentturn):
         '''Updates all entities on a single level with a given amount of energy'''
         if not level:
             return
@@ -185,7 +185,8 @@ class LevelManager:
                         currlistsize = len(entitylist)
                         if entity.name == 'Newt':
                             Logger.info(f'Current turn: {currentturn} {entity} {entity.turn}')
-                        done = self.update_entity(animator,
+                        done = self.update_entity(display,
+                                                  animator,
                                                   messager,
                                                   menumanager,
                                                   statemachine,
@@ -200,7 +201,7 @@ class LevelManager:
                         else:
                             index += 1
 
-    def update_player(self, animator, messager, menumanager, statemachine, event, rng):
+    def update_player(self, display, animator, messager, menumanager, statemachine, event, rng):
         '''Updates the player and returns the energy used'''
         Logger.info(f'-------- TURN UPDATE ({self.Player.turn + 1}) ---------')
         self.Player.energy = 100
@@ -210,6 +211,12 @@ class LevelManager:
         self.Player.do_action(self, animator, messager, menumanager, statemachine, event, rng)
         self.Player.turn += 1
 
+        # update the level the player is on
+        self.currentz = self.Player.z
+
+        # play animations from the turn
+        display.play_animations(animator, self.currentz, self.Player.Brain.fovpoints)
+
         # calculate how much energy the player used
         energy = 100 - self.Player.energy
         if energy == 100:
@@ -217,22 +224,19 @@ class LevelManager:
             energy = self.Player.speed
         return energy
 
-    def update_all(self, animator, messager, menumanager, statemachine, energy, currentturn):
+    def update_all(self, display, animator, messager, menumanager, statemachine, energy, currentturn):
         '''Go through all entities and update them'''
 
         timing.Timing.start('Game Loop')
 
         Logger.info(f'-- UPDATE ALL {currentturn} --')
 
-        # update the level the player is on
-        self.currentz = self.Player.z
-
         for level in self.Levels:
-            self.update_level(level, energy, animator, messager, menumanager, statemachine, currentturn)
+            self.update_level(level, energy, display, animator, messager, menumanager, statemachine, currentturn)
 
         timing.Timing.end()
 
-    def update_entity(self, animator, messager, menumanager, statemachine, entity, currentturn):
+    def update_entity(self, display, animator, messager, menumanager, statemachine, entity, currentturn):
         '''Update a single entity'''
         if entity.turn > currentturn:
             return True
@@ -240,6 +244,10 @@ class LevelManager:
         entity.update_state(self)
         entity.update_status()
         entity.take_turn(self, animator, messager, menumanager, statemachine, self.RNG) 
+        # play animations from the turn
+        display.play_animations(animator, self.currentz, self.Player.Brain.fovpoints)
+
+        # increment turn only when done with all actions
         energyend = entity.energy
         if entity.energy == 0 or energystart == energyend:
             entity.turn += 1

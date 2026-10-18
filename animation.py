@@ -1,11 +1,16 @@
 import color
 
+class AnimationFrame:
+    def __init__(self, frame, delay=0.01):
+        self.frame = frame
+        self.delay = delay
+
 class Animation:
     '''
     Holds all data for a single animation
     '''
-    def __init__(self, origin, frames: dict, color, delay=0.01):
-        self.origin = origin 
+    def __init__(self, pos, frames: dict, color, delay=0.01):
+        self.pos = pos
         '''Position of the animation relative to the map'''
         self.frames = frames
         '''Dictionary of an array of frames to display'''
@@ -13,8 +18,6 @@ class Animation:
         '''Color of the animation'''
         self.delay = delay
         '''Delay between frames (engine will sleep)'''
-        self.finalframe = False
-        '''Animation will stay on its final frame at the end of the sequence'''
 
 class Animator:
     '''
@@ -24,11 +27,13 @@ class Animator:
         self.AnimationQueue = []
         '''Queue of animation objects'''
 
-    def queueUp(self, animation: Animation):
+    def queueUp(self, levelmanager, animation: Animation):
         '''
         Queue an animation object to be displayed
+        Only queue current level animations
         '''
-        self.AnimationQueue.append(animation)
+        if levelmanager.currentz == animation.pos[2]:
+            self.AnimationQueue.append(animation)
     
     def clearQueue(self):
         '''

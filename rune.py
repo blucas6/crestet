@@ -36,10 +36,10 @@ class SnowRune(entity.Entity):
             frames[str(idx)] = [['' for _ in row] for row in grid]
             for jdx,pt in enumerate(pts[:idx+1]):
                 frames[str(idx)][pt[0]][pt[1]] = '*'
-        origin = [0,0]
+        origin = [0, 0, self.z, self.idx]
         delay = config.THROW_ANIM_DELAY
         anim = animation.Animation(origin, frames, color.Color().blue, delay=delay)
-        animator.queueUp(anim)
+        animator.queueUp(levelmanager, anim)
 
         # deal damage
         for ent in entitylayer[objr][objc]:
@@ -76,10 +76,10 @@ class EmberRune(entity.Entity):
             frames[str(idx)] = [['' for _ in row] for row in grid]
             for jdx,pt in enumerate(pts[:idx+1]):
                 frames[str(idx)][pt[0]][pt[1]] = '*'
-        origin = [0,0]
+        origin = [0, 0, self.z, self.idx]
         delay = config.THROW_ANIM_DELAY
         anim = animation.Animation(origin, frames, color.Color().red, delay=delay)
-        animator.queueUp(anim)
+        animator.queueUp(levelmanager, anim)
 
         # deal damage
         for ent in entitylayer[objr][objc]:

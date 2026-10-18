@@ -91,10 +91,10 @@ class Combat:
         for idx,pt in enumerate(pts):
             frames[str(idx)] = [['' for _ in row] for row in grid]
             frames[str(idx)][pt[0]][pt[1]] = projectile.glyph
-        origin = [0,0]
+        origin = [0, 0, z, 0]
         delay = config.THROW_ANIM_DELAY
         anim = animation.Animation(origin, frames, projectile.color, delay=delay)
-        animator.queueUp(anim)
+        animator.queueUp(levelmanager, anim)
         Logger.info(f'throwing object')
         return success, objr,objc
 

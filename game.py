@@ -19,6 +19,7 @@ import menu
 import animation
 import utility
 import logging
+import entity
 
 Logger = logging.getLogger(__name__)
 
@@ -50,8 +51,6 @@ class Game:
         '''Controls the state of the game'''
         self.Display = display.Display()
         '''Utility class to organize displaying to the engine'''
-        self.Engine = engine.Engine()
-        '''Connection to for displaying and events'''
         self.LevelManager = level.LevelManager()
         '''Handles the levels'''
         self.MenuManager = menu.MenuManager()
@@ -78,15 +77,14 @@ class Game:
         '''
         Sets up the display for outputting to the screen
         '''
-        if self.usedisplay:
-            # initialize engine
-            self.Engine.init(timedelay)
-            # setup display
-            self.Display.init(self.Engine.termrows, self.Engine.termcols,
-                              levelorigin=config.LEVELORIGIN)
-        else:
+        if not self.usedisplay:
             # need to initialize colors without curses module
             color.Color(display=False)
+
+        # setup display
+        self.Display.init(self.usedisplay,
+                          levelorigin=config.LEVELORIGIN,
+                          timedelay=timedelay)
 
     def game_setup(self):
         '''
@@ -110,7 +108,7 @@ class Game:
             Logger.info(f'  Running: {self.running}')
             Logger.info(f'  Seed: {self.seed}')
             Logger.info(f'  Messages Will Block: {self.messageblocking}')
-            Logger.info(f'  Display: {self.usedisplay}')
+            Logger.info(f'  Display: {self.Display.displayon}')
             Logger.info(f'  Turn: {self.turn}')
             Logger.info(f'  Player FOV: {self.playerFOV}')
             Logger.info(f'  Timing: {tt.Timing.allowTiming}')
@@ -136,7 +134,7 @@ class Game:
 
             # run loop a bunch
             for _ in range(config.PRE_LOOPS):
-                self.loop(25, '.')
+                self.loop(energy=25, event='.')
 
             # reset all turn counters
             self.turn = 0
@@ -158,9 +156,9 @@ class Game:
         if not self.running:
             return
         try:
-            self.render()
+            self.display_out()
             while self.running:
-                event = self.Engine.read_input()
+                event = self.Display.Engine.read_input()
                 self.game_loop(event)
             self.end()
         except Exception as ex:
@@ -183,17 +181,17 @@ class Game:
 
             # update the player before the rest of the game
             energy = self.LevelManager.update_player(
-                    self.Animator, self.Messager, self.MenuManager,
-                    self.StateMachine, event, self.RNG)
+                    self.Display, self.Animator, self.Messager,
+                    self.MenuManager, self.StateMachine, event, self.RNG)
 
             # render player move
-            self.render()
+            self.display_out()
 
             # update the game
             self.loop(energy, event)
         # output screen buffer to terminal
         if eventtype != state.Event.NA:
-            self.render()
+            self.display_out()
 
     def process_events(self, event):
         '''
@@ -205,9 +203,7 @@ class Game:
             # do not check for events if running
             eventtype = state.Event.EVENT
             event = ' '
-            # do not call engine pause if the display is off
-            if self.usedisplay:
-                self.Engine.pause(config.CHARGE_FRAME_DELAY)
+            self.Display.pause_engine(config.CHARGE_FRAME_DELAY)
         return eventtype,event
 
     def clear_state(self):
@@ -219,9 +215,7 @@ class Game:
         # update inventory menu
         self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
         # clear any engine cursors
-        if self.Display.cursor_on:
-            self.Engine.toggle_cursor(0)
-            self.Display.cursor_on = False
+        self.Display.clear_cursors()
         # clear viewing level 
         self.viewing_level = -1
 
@@ -240,7 +234,7 @@ class Game:
             self.StateMachine.callback(self.StateMachine, self.MenuManager, event)
         else:
             # update all entities
-            self.LevelManager.update_all(self.Animator, self.Messager, self.MenuManager, self.StateMachine, energy, self.turn)
+            self.LevelManager.update_all(self.Display, self.Animator, self.Messager, self.MenuManager, self.StateMachine, energy, self.turn)
 
             # end the player charge, get back into playing mode
             if (self.StateMachine.GameState == state.GameState.RUNNING and
@@ -288,13 +282,8 @@ class Game:
         # update inventory menu
         self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
 
-    def render(self):
-        '''Render the current game state to the screen'''
-        if not self.usedisplay:
-            return
-
-        # do animations before the screen changes 
-        self.animations(self.Display.screenbuffer, self.Display.colorbuffer)
+    def display_out(self):
+        player = self.LevelManager.Player
 
         if self.StateMachine.GameState == state.GameState.VIEWING:
             currlevel = self.LevelManager.Levels[self.viewing_level]
@@ -304,7 +293,7 @@ class Game:
         # get the either the entire level or the FOV
         if (self.StateMachine.GameState != state.GameState.VIEWING and
             self.playerFOV):
-            entitylayer = self.LevelManager.Player.Brain.mentalmap
+            entitylayer = player.Brain.mentalmap
             if not entitylayer and currlevel:
                 entitylayer = currlevel.EntityLayer
         elif currlevel:
@@ -313,23 +302,13 @@ class Game:
             entitylayer = []
 
         # make sure there is a level to grab from
-        if currlevel:
+        # make sure player is not blind
+        if currlevel and entity.StatusEffect.BLIND not in player.status:
             lightlayer = currlevel.LightLayer
         else:
             lightlayer = []
 
-        screenbuffer,colorbuffer = self.Display.prepare_buffers(
-                            entitylayer, lightlayer, self.MenuManager,
-                            self.LevelManager.Player.status)
-        # display through engine
-        if self.usedisplay and self.Engine.frame_ready():
-            # output
-            self.Engine.output(screenchars=screenbuffer,screencolors=colorbuffer)
-
-        if self.Display.cursor_on:
-            self.Engine.toggle_cursor(config.CURSOR_HIGHLIGHT)
-            cursor_position = self.Display.level_to_screen_pos(*self.Display.cursor_position)
-            self.Engine.move_cursor(cursor_position)
+        self.Display.render(entitylayer, lightlayer, self.MenuManager)
 
     def win(self):
         '''Returns true if the game has been won'''
@@ -346,8 +325,7 @@ class Game:
     def end(self, errorex=None, stack=''):
         '''Called when the game ends'''
         self.running = False
-        if self.usedisplay:
-            self.Engine.end()
+        self.Display.close_engine()
         tt.Timing.show()
         if errorex:
             error_str = f'\n**Critical Failure**\n{type(errorex).__name__}: {errorex}\n\n{stack}' 
@@ -363,33 +341,6 @@ class Game:
             self.StateMachine.new_state('msgQFull')
         else:
             self.StateMachine.new_state('msgQEmpty')
-
-    def animations(self, original_screenbuffer, original_colorbuffer):
-        '''Display animations queued'''
-        if not self.Animator.AnimationQueue:
-            return
-
-        # go through each animation
-        for anim in self.Animator.AnimationQueue:
-            for num in anim.frames.keys():
-                # reset buffers
-                screenbuffer = self.Display.get_new_buffer(original_screenbuffer)
-                colorbuffer = self.Display.get_new_buffer(original_colorbuffer) 
-                self.Display.add_animation_frame(screenbuffer, colorbuffer, anim, num)
-                # display through engine
-                if self.Engine.frame_ready():
-                    # output
-                    self.Engine.output(screenchars=screenbuffer,
-                                        screencolors=colorbuffer)
-                self.Engine.pause(anim.delay)
-            if anim.finalframe:
-                # get copy buffers to reset to after each frame
-                screenbuffer = self.Display.get_new_buffer(original_screenbuffer)
-                colorbuffer = self.Display.get_new_buffer(original_colorbuffer) 
-                self.Display.add_animation_frame(screenbuffer, colorbuffer,
-                                             anim, list(anim.frames.keys())[-1])
-        # done with all animations
-        self.Animator.clearQueue()
 
     def observation_event(self, event):
         if not event.isdigit():
