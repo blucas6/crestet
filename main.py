@@ -1,6 +1,7 @@
 import curses
 import argparse
 import timing
+import simulator
 import game
 import training
 import logging
@@ -34,11 +35,11 @@ if __name__ == '__main__':
         training.start()
         training.run()
     elif args.profiling:
-        profiling = timing.Profiling(seed=args.seed, display=args.display, timing=True)
+        profiling = simulator.Profiling(seed=args.seed, display=args.display, timing=True)
         profiling.start()
         profiling.run()
     elif args.combat:
-        combat = timing.CombatTest(seed=args.seed, display=args.display, timing=False)
+        combat = simulator.CombatTest(seed=args.seed, display=args.display, timing=False)
         combat.start()
         combat.run()
     else:

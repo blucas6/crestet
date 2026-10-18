@@ -1,4 +1,5 @@
 import environment
+import traceback
 import timing
 import time
 import matplotlib.pyplot as plt
@@ -213,9 +214,9 @@ class CombatTest:
             # end and show graphs
             self.end()
             self.plot()
-        except Exception as e:
+        except Exception as ex:
             self.end()
-            print(f'ERROR: {e}')
+            print(f'ERROR: {type(ex).__name__}: {ex}\n\n {traceback.format_exc()}')
 
     def plot(self):
         '''Show the results in a grapha'''
@@ -305,43 +306,50 @@ class Profiling:
 
     def run(self):
         '''Run the profiling and gather results'''
-
-        if not self.environment.Game.running:
-            return
-        
-        num_levels = range(len(self.levels_per_stage))
-        iteratable = num_levels if self.display else tqdm.tqdm(num_levels)
-        
-        for stage in iteratable:
-            # update the configuration
-            self.update_level_amount(self.levels_per_stage[stage])
-            # generate a new game
-            self.environment.reset(new_seed=True)
-
-            if self.display:
-                self.environment.render()
-                time.sleep(self.turn_delay_secs)
-
-            for _ in range(self.actions_per_game):
-                if not self.environment.Game.running:
-                    break
-                
-                # random moves
-                actions = [1, 2, 3, 4, 6, 7, 8, 9]
-                self.environment.Game.game_loop(str(actions[random.randint(0,len(actions)-1)]))
+        try:
+            if not self.environment.Game.running:
+                return
+            
+            num_levels = range(len(self.levels_per_stage))
+            iteratable = num_levels if self.display else tqdm.tqdm(num_levels)
+            
+            for stage in iteratable:
+                # update the configuration
+                self.update_level_amount(self.levels_per_stage[stage])
+                # generate a new game
+                self.environment.reset(new_seed=True)
 
                 if self.display:
+                    self.environment.render()
                     time.sleep(self.turn_delay_secs)
 
-            # get timing data
-            timing.Timing.show()
-            if 'Game Loop' in timing.Timing.final_measurements:
-                self.fps_per_stage.append(timing.Timing.final_measurements['Game Loop'])
-            else:
-                self.fps_per_stage.append(0)
+                for _ in range(self.actions_per_game):
+                    if not self.environment.Game.running:
+                        break
+                    
+                    # random moves
+                    actions = [1, 2, 3, 4, 6, 7, 8, 9]
+                    self.environment.Game.game_loop(str(actions[random.randint(0,len(actions)-1)]))
 
+                    if self.display:
+                        time.sleep(self.turn_delay_secs)
+
+                # get timing data
+                timing.Timing.show()
+                if 'Game Loop' in timing.Timing.final_measurements:
+                    self.fps_per_stage.append(timing.Timing.final_measurements['Game Loop'])
+                else:
+                    self.fps_per_stage.append(0)
+
+            self.environment.end()
+            self.plot()
+        except Exception as ex:
+            self.end()
+            print(f'ERROR: {type(ex).__name__}: {ex}\n\n {traceback.format_exc()}')
+
+    def end(self):
+        '''End the environment'''
         self.environment.end()
-        self.plot()
 
     def plot(self):
         '''Plot the FPS per game'''

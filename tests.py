@@ -91,14 +91,6 @@ class TestSuite(unittest.TestCase):
             print('FAILED to start the environment')
             exit()
 
-        # if not running with a display, still configure it so unit tests can
-        # check the display buffer
-        if not TestSuite.display:
-            display = TestSuite.environment.Game.Display
-            display.termrows = config.LEVELROWS + config.LEVELORIGIN[0]
-            display.termcols = config.LEVELCOLS + config.LEVELORIGIN[1]
-            display.init(TestSuite.display, config.LEVELORIGIN)
-
     @classmethod
     def tearDownClass(cls):
         '''Clean up the environment at the end'''

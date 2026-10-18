@@ -39,6 +39,11 @@ class Display:
             self.Engine.init(timedelay)
             self.termrows = self.Engine.termrows
             self.termcols = self.Engine.termcols
+        # if not running with a display, still create the buffers
+        # use just the level size for the buffers
+        else:
+            self.termrows = config.LEVELROWS + config.LEVELORIGIN[0]
+            self.termcols = config.LEVELCOLS + config.LEVELORIGIN[1]
         # create buffers
         self.clear_buffers()
         # colors must be accessed after engine has been initialized
