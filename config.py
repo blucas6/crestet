@@ -12,6 +12,9 @@ CHARGE_FRAME_DELAY = 0.01
 EXPLOSION_ANIM_DELAY = 0.05
 '''Jelly explosion animation'''
 
+DEFAULT_ANIM_DELAY = 0.01
+'''Default animation delay'''
+
 
 ### LEVEL
 LEVELORIGIN = (2,2)

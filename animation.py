@@ -9,10 +9,17 @@ class Animation:
     '''
     Holds all data for a single animation
     '''
-    def __init__(self, pos, frames: dict, color, delay=0.01):
+    def __init__(self, pos, frames: list, color, delays=[]):
         self.pos = pos
         '''Position of the animation relative to the map'''
-        self.frames = frames
+
+        self.animation_frames = []
+        if not delays:
+            self.delays = [config.DEFAULT_ANIM_DELAY for _ in frames]
+        for frame,delay in zip(frames,delays):
+            af = AnimationFrame(frame, delay)
+            self.animation_frames.append(af)
+
         '''Dictionary of an array of frames to display'''
         self.color = color
         '''Color of the animation'''

@@ -87,13 +87,18 @@ class Combat:
 
         # create the animation
         grid,pts = utility.get_path_pts(entitylayer, start_row, start_col, objr, objc)
-        frames = {}
+        frames = []
+        delays = []
         for idx,pt in enumerate(pts):
-            frames[str(idx)] = [['' for _ in row] for row in grid]
-            frames[str(idx)][pt[0]][pt[1]] = projectile.glyph
+            frame = [['' for _ in row] for row in grid]
+            frame[pt[0]][pt[1]] = projectile.glyph
+            frames.append(frame)
+            delays.append(config.THROW_ANIM_DELAY)
         origin = [0, 0, z, 0]
-        delay = config.THROW_ANIM_DELAY
-        anim = animation.Animation(origin, frames, projectile.color, delay=delay)
+        anim = animation.Animation(pos=origin,
+                                   frames=frames,
+                                   color=projectile.color,
+                                   delays=delays)
         animator.queueUp(levelmanager, anim)
         Logger.info(f'throwing object')
         return success, objr,objc

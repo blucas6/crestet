@@ -200,19 +200,19 @@ class Display:
         for anim in animator.AnimationQueue:
             if anim.pos[2] != levelz:
                 continue
-            for num in anim.frames.keys():
+            for animframe in anim.animation_frames:
                 # reset buffers
                 tmp_screenbuffer = self.get_new_buffer(self.screenbuffer)
                 tmp_colorbuffer = self.get_new_buffer(self.colorbuffer) 
                 self.add_animation_frame(tmp_screenbuffer,
                                          tmp_colorbuffer,
-                                         anim.frames[num],
+                                         animframe.frame,
                                          anim.pos,
                                          anim.color,
                                          fovpoints)
                 loaded_frames.append(tmp_screenbuffer)
                 loaded_colors.append(tmp_colorbuffer)
-                time_delays.append(anim.delay)
+                time_delays.append(animframe.delay)
                 
         return loaded_frames, loaded_colors, time_delays
     

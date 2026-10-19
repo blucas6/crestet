@@ -31,14 +31,19 @@ class SnowRune(entity.Entity):
 
         # create the animation
         pts = pts[1:]
-        frames = {}
+        frames = []
+        delays = []
         for idx,pt in enumerate(pts):
-            frames[str(idx)] = [['' for _ in row] for row in grid]
+            frame = [['' for _ in row] for row in grid]
             for jdx,pt in enumerate(pts[:idx+1]):
-                frames[str(idx)][pt[0]][pt[1]] = '*'
+                frame[pt[0]][pt[1]] = '*'
+            frames.append(frame)
+            delays.append(config.THROW_ANIM_DELAY)
         origin = [0, 0, self.z, self.idx]
-        delay = config.THROW_ANIM_DELAY
-        anim = animation.Animation(origin, frames, color.Color().blue, delay=delay)
+        anim = animation.Animation(pos=origin,
+                                   frames=frames,
+                                   color=color.Color().blue,
+                                   delays=delays)
         animator.queueUp(levelmanager, anim)
 
         # deal damage
@@ -71,14 +76,19 @@ class EmberRune(entity.Entity):
 
         # create the animation
         pts = pts[1:]
-        frames = {}
+        frames = []
+        delays = []
         for idx,pt in enumerate(pts):
-            frames[str(idx)] = [['' for _ in row] for row in grid]
+            frame = [['' for _ in row] for row in grid]
             for jdx,pt in enumerate(pts[:idx+1]):
-                frames[str(idx)][pt[0]][pt[1]] = '*'
+                frame[pt[0]][pt[1]] = '*'
+            frames.append(frame)
+            delays.append(config.THROW_ANIM_DELAY)
         origin = [0, 0, self.z, self.idx]
-        delay = config.THROW_ANIM_DELAY
-        anim = animation.Animation(origin, frames, color.Color().red, delay=delay)
+        anim = animation.Animation(pos=origin,
+                                   frames=frames,
+                                   color=color.Color().red,
+                                   delays=delays)
         animator.queueUp(levelmanager, anim)
 
         # deal damage
