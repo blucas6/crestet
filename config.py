@@ -12,11 +12,14 @@ CHARGE_FRAME_DELAY = 0.01
 EXPLOSION_ANIM_DELAY = 0.05
 '''Jelly explosion animation'''
 
+DEFAULT_ANIM_DELAY = 0.01
+'''Default animation delay'''
+
 
 ### LEVEL
 LEVELORIGIN = (2,2)
 '''Where the levels are displayed on the screen'''
-LEVELROWS = 13
+LEVELROWS = 14
 '''Amount of rows in the level grid'''
 LEVELCOLS = 30
 '''Amount of columns in the level grid'''

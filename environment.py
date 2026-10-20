@@ -284,7 +284,7 @@ class Environment:
 
     def render(self):
         '''Renders the environment visually for evaluation purposes'''
-        self.Game.render()
+        self.Game.display_out()
 
     def end(self):
         '''Close the game environment'''

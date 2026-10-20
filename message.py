@@ -144,14 +144,14 @@ class Messager:
         if status == entity.StatusEffect.FROZEN:
             if ent.name == 'Player':
                 msg = f'You freeze!'
-                unseen = ''
+                unseen = 'You freeze!'
             else:
                 msg = f'The {ent.name} freezes!'
                 unseen = 'It freezes!'
         elif status == entity.StatusEffect.BLIND:
             if ent.name == 'Player':
                 msg = f'You are blinded!'
-                unseen = '_'
+                unseen = 'You are blinded!'
             else:
                 msg = f'The {ent.name} is blinded!'
                 unseen = 'It gets blinded!'

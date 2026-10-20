@@ -178,24 +178,25 @@ class Jelly(e.Entity):
         super().death(levelmanager)
         messager.add_burst_message(levelmanager.currentz, self)
         # queue animation
-        frames = {}
-        frames['0'] = [
+        frames = []
+        frames.append([
             ['','' ,''],
             ['','*',''],
             ['','' ,'']
-        ]
-        frames['1'] = [
+        ])
+        frames.append([
             ['/' ,'-', '\\'],
             ['|',' ' ,'|'],
             ['\\' ,'-', '/']
-        ]
-        origin = [self.row-1,self.col-1]
+        ])
+        delays = [config.DEFAULT_ANIM_DELAY, config.EXPLOSION_ANIM_DELAY]
+        origin = [self.row-1, self.col-1, self.z, self.idx]
         anim = animation.Animation(
-            origin=origin,
+            pos=origin,
             frames=frames, 
             color=color.Color().blue,
-            delay=config.EXPLOSION_ANIM_DELAY)
-        animator.queueUp(anim)
+            delays=delays)
+        animator.queueUp(levelmanager, anim)
         # spread damage
         points = utility.get_one_layer_pts((self.row,self.col),
                                            levelmanager.levelrows,
