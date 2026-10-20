@@ -6,12 +6,13 @@ import color
 import utility
 import algo
 import logging
+import typeid
 
 Logger = logging.getLogger(__name__)
 
 class SnowRune(entity.Entity):
     def __init__(self):
-        super().__init__(typeid=20,
+        super().__init__(typeid=typeid.TID.SNOW,
                          name='Snow Rune',
                          glyph='?',
                          color=color.Color().blue,
@@ -56,7 +57,7 @@ class SnowRune(entity.Entity):
 
 class EmberRune(entity.Entity):
     def __init__(self):
-        super().__init__(typeid=19,
+        super().__init__(typeid=typeid.TID.EMBER,
                          name='Ember Rune',
                          glyph='?',
                          color=color.Color().red,

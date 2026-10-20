@@ -1,11 +1,13 @@
 import entity as e
+import utility
 import color
 import component
+import typeid
 
 class Arrow(e.Entity):
     spawn = True
     def __init__(self):
-        super().__init__(typeid=18,
+        super().__init__(typeid=typeid.TID.WOOD,
                          name='Arrow',
                          glyph=')',
                          color=color.Color().blue,
@@ -23,7 +25,7 @@ class Arrow(e.Entity):
 
 class Fruit(e.Entity):
     def __init__(self):
-        super().__init__(typeid=10,
+        super().__init__(typeid=typeid.TID.FRUIT,
                          name='Fruit',
                          glyph='&',
                          color=color.Color().green,
@@ -33,7 +35,7 @@ class Fruit(e.Entity):
 
 class Wood(e.Entity):
     def __init__(self):
-        super().__init__(typeid=11,
+        super().__init__(typeid=typeid.TID.WOOD,
                          name='Wood',
                          glyph='#',
                          color=color.Color().yellow,
@@ -52,7 +54,7 @@ class Wood(e.Entity):
 class Sword(e.Entity):
     spawn = True
     def __init__(self):
-        super().__init__(typeid=13,
+        super().__init__(typeid=typeid.TID.SWORD,
                          name='Sword',
                          glyph='/',
                          color=color.Color().grey,
@@ -64,7 +66,7 @@ class Sword(e.Entity):
 class Dart(e.Entity):
     spawn = True
     def __init__(self):
-        super().__init__(typeid=15,
+        super().__init__(typeid=typeid.TID.DART,
                          name='Dart',
                          glyph=')',
                          color=color.Color().red,
@@ -82,7 +84,7 @@ class Dart(e.Entity):
 class Gambeson(e.Entity):
     spawn = True
     def __init__(self):
-        super().__init__(typeid=24,
+        super().__init__(typeid=typeid.TID.GAMBESON,
                          name='Gambeson',
                          glyph='[',
                          color=color.Color().white,

@@ -64,6 +64,7 @@ class Environment:
         '''Returns a 1d np array of size "obs_size"'''
         # myobs = self.get_level_observation()
         # myobs = self.get_curr_inventory()
+        # print(myobs)
         
         obs = np.zeros(2)
         return obs

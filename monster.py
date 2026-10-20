@@ -1,4 +1,5 @@
 import entity as e
+import typeid
 import animation
 import config
 import color
@@ -14,7 +15,7 @@ Logger = logging.getLogger(__name__)
 class Raven(e.Entity):
     difficulty = 3
     def __init__(self):
-        super().__init__(typeid=26,
+        super().__init__(typeid=typeid.TID.RAVEN,
                          name='Raven',
                          glyph='r',
                          color=color.Color().blue,
@@ -58,7 +59,7 @@ class Goblin(e.Entity):
     '''
     difficulty = 2
     def __init__(self):
-        super().__init__(typeid=17,
+        super().__init__(typeid=typeid.TID.GOBLIN,
                          name='Goblin',
                          glyph='g',
                          color=color.Color().green,
@@ -104,7 +105,7 @@ class Human(e.Entity):
     Human
     '''
     def __init__(self):
-        super().__init__(typeid=7,
+        super().__init__(typeid=typeid.TID.HUMAN,
                          name='Human',
                          glyph='@',
                          color=color.Color().white,
@@ -118,7 +119,7 @@ class Newt(e.Entity):
     '''
     difficulty = 1
     def __init__(self):
-        super().__init__(typeid=8,
+        super().__init__(typeid=typeid.TID.NEWT,
                          name='Newt',
                          glyph='n',
                          color=color.Color().yellow,
@@ -160,7 +161,7 @@ class Jelly(e.Entity):
     '''
     difficulty = 0
     def __init__(self):
-        super().__init__(typeid=9,
+        super().__init__(typeid=typeid.TID.JELLY,
                          name='Jelly',
                          glyph='j',
                          color=color.Color().blue,

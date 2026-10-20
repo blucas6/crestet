@@ -1,10 +1,12 @@
 import entity
 import color
 import component
+import utility
+import typeid
 
 class Bite(entity.Entity):
     def __init__(self):
-        super().__init__(typeid=12,
+        super().__init__(typeid=typeid.TID.BITE,
                          name='Bite',
                          glyph='X',
                          color=color.Color().magenta,
@@ -15,7 +17,7 @@ class Bite(entity.Entity):
 
 class Fist(entity.Entity):
     def __init__(self):
-        super().__init__(typeid=25,
+        super().__init__(typeid=typeid.TID.FIST,
                          name='Fist',
                          glyph='X',
                          color=color.Color().magenta,
@@ -26,7 +28,7 @@ class Fist(entity.Entity):
 
 class Peck(entity.Entity):
     def __init__(self):
-        super().__init__(typeid=27,
+        super().__init__(typeid=typeid.TID.PECK,
                          name='Peck',
                          glyph='X',
                          color=color.Color().magenta,

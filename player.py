@@ -10,12 +10,13 @@ import enum
 import component
 import entity as e
 import logging
+import typeid
 
 Logger = logging.getLogger(__name__)
 
 class Player(e.Entity):
     def __init__(self):
-        super().__init__(typeid=1,
+        super().__init__(typeid=typeid.TID.PLAYER,
                          name='Player',
                          glyph='@',
                          color=color.Color().white,

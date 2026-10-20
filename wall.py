@@ -1,12 +1,14 @@
 import entity
 import color
+import utility
+import typeid
 
 '''░ ▒ ▓'''
 
 class Sandstone(entity.Entity):
     '''Wall entity'''
     def __init__(self):
-        super().__init__(typeid=21,
+        super().__init__(typeid=typeid.TID.SANDSTONE,
                          name='Sandstone',
                          glyph='░',
                          color=color.Color().grey,
@@ -16,7 +18,7 @@ class Sandstone(entity.Entity):
 class Limestone(entity.Entity):
     '''Wall entity'''
     def __init__(self):
-        super().__init__(typeid=2,
+        super().__init__(typeid=typeid.TID.LIMESTONE,
                          name='Limestone',
                          glyph='▓',
                          color=color.Color().grey,
@@ -26,7 +28,7 @@ class Limestone(entity.Entity):
 '''
 class Quarrystone(entity.Entity):
     def __init__(self):
-        super().__init__(typeid=22,
+        super().__init__(typeid=typeid.TID.QUARRYSTONE,
                          name='Quarrystone',
                          glyph='#',
                          color=color.Color().grey,
@@ -35,7 +37,7 @@ class Quarrystone(entity.Entity):
 '''
 class Rubble(entity.Entity):
     def __init__(self):
-        super().__init__(typeid=23,
+        super().__init__(typeid=typeid.TID.RUBBLE,
                          name='Rubble',
                          glyph='#',
                          color=color.Color().grey,

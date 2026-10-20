@@ -4,12 +4,13 @@ import utility
 import color
 import component
 import logging
+import typeid
 
 Logger = logging.getLogger(__name__)
 
 class UnknownEntity(entity.Entity):
     def __init__(self):
-        super().__init__(typeid=99,
+        super().__init__(typeid=typeid.TID.UNKNOWN,
                          name='Unknown',
                          glyph='!',
                          color=color.Color().magenta,
@@ -17,7 +18,7 @@ class UnknownEntity(entity.Entity):
                          size=entity.Size.SMALL)
 class UnknownStructure(entity.Entity):
     def __init__(self):
-        super().__init__(typeid=98,
+        super().__init__(typeid=typeid.TID.UNKNOWNSTRUCT,
                          name='Unknown',
                          glyph='▒',
                          color=color.Color().white,
@@ -27,7 +28,7 @@ class UnknownStructure(entity.Entity):
 class Barrel(entity.Entity):
     '''Barrel entity'''
     def __init__(self):
-        super().__init__(typeid=16,
+        super().__init__(typeid=typeid.TID.BARREL,
                          name='Barrel',
                          glyph='0',
                          color=color.Color().yellow,
@@ -43,7 +44,7 @@ class Barrel(entity.Entity):
 class Floor(entity.Entity):
     '''Floor entity'''
     def __init__(self):
-        super().__init__(typeid=3,
+        super().__init__(typeid=typeid.TID.FLOOR,
                          name='Floor',
                          glyph='.',
                          color=color.Color().white,
@@ -53,7 +54,7 @@ class Floor(entity.Entity):
 class StairUp(entity.Entity):
     '''Up stair entity'''
     def __init__(self):
-        super().__init__(typeid=4,
+        super().__init__(typeid=typeid.TID.STAIRUP,
                          name='Upstair',
                          glyph='<',
                          color=color.Color().white,
@@ -63,7 +64,7 @@ class StairUp(entity.Entity):
 class StairDown(entity.Entity):
     '''Down stair entity'''
     def __init__(self):
-        super().__init__(typeid=5,
+        super().__init__(typeid=typeid.TID.STAIRDOWN,
                          name='Downstair',
                          glyph='>',
                          color=color.Color().white,
@@ -73,7 +74,7 @@ class StairDown(entity.Entity):
 class Light(entity.Entity):
     '''Light entity'''
     def __init__(self):
-        super().__init__(typeid=6,
+        super().__init__(typeid=typeid.TID.LIGHT,
                          name='Light',
                          glyph='+',
                          color=color.Color().bright_yellow,

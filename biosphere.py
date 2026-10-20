@@ -1,4 +1,5 @@
 import item
+import typeid
 import component
 import utility
 import entity
@@ -17,7 +18,7 @@ class PlantStage(enum.IntEnum):
 
 class Plant(entity.Entity):
     def __init__(self):
-        super().__init__(typeid=80,
+        super().__init__(typeid=typeid.TID.PLANT,
                          name='Plant',
                          glyph='.',
                          color=color.Color().green,

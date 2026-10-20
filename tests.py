@@ -1,4 +1,6 @@
 import unittest
+import inspect
+import typeid
 import entity
 import brain
 import sys
@@ -486,6 +488,7 @@ class TestSuite(unittest.TestCase):
         ]
         self.loop('4')
         self.assertEqual(real_explosion, explosion)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False)
