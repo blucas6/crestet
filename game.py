@@ -215,7 +215,7 @@ class Game:
         # update inventory menu
         self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
         # clear any engine cursors
-        self.Display.clear_cursors()
+        self.Display.clear_cursor()
         # clear viewing level 
         self.viewing_level = -1
 

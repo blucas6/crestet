@@ -33,7 +33,7 @@ class Display:
         self.Engine = engine.Engine()
 
     def init(self, usedisplay, levelorigin, timedelay: int=0):
-        '''Setup the buffers'''
+        '''Set up the display buffers and the engine'''
         self.displayon = usedisplay
         if self.displayon:
             self.Engine.init(timedelay)
@@ -51,15 +51,18 @@ class Display:
         self.levelorigin = levelorigin
 
     def pause_engine(self, delay):
+        '''Sleep the engine'''
         # do not call engine pause if the display is off
         if self.displayon:
             self.Engine.pause(delay)
 
     def close_engine(self):
+        '''Reset the terminal back to normal'''
         if self.displayon:
             self.Engine.end()
 
-    def clear_cursors(self):
+    def clear_cursor(self):
+        '''Clear the activated cursor'''
         if self.cursor_on:
             if self.displayon:
                 self.Engine.toggle_cursor(0)
@@ -134,14 +137,17 @@ class Display:
         return r+self.levelorigin[0], c+self.levelorigin[1]
 
     def get_new_buffer(self, buffer):
+        '''Copy helper'''
         return [[item for item in row] for row in buffer]
 
     def output(self, screenbuffer, colorbuffer):
+        '''Send buffers to engine to display'''
         if self.displayon and self.Engine.frame_ready():
             self.Engine.output(screenchars=screenbuffer,
                                screencolors=colorbuffer)
 
     def cursor_upkeep(self):
+        '''After the new screen is displayed, put the cursor back'''
         if self.displayon and self.cursor_on:
             self.Engine.toggle_cursor(config.CURSOR_HIGHLIGHT)
             cursor_position = self.level_to_screen_pos(
@@ -151,12 +157,7 @@ class Display:
     def render(self, entitylayer, lightlayer, menumanager):
         '''
         Render the current game state to the screen
-
-        Tests depend on buffers being created even if displaying
-        is turned off
         '''
-
-        Logger.info('RENDER')
 
         self.clear_buffers()
 
@@ -177,11 +178,11 @@ class Display:
 
     def add_animation_frame(self, screenbuffer, colorbuffer, frame, pos, color, fovpoints):
         '''Add the glyphs for the animation to the screen'''
-        # add frame array to the screen
         for r,row in enumerate(frame):
             for c,col in enumerate(row):
                 if not col:
                     continue
+                # add frame to the buffer
                 elif (pos[0]+r,pos[1]+c) in fovpoints:
                     rw, cl = self.level_to_screen_pos(pos[0]+r, pos[1]+c)
                     screenbuffer[rw][cl] = col

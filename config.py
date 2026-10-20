@@ -21,13 +21,13 @@ LEVELORIGIN = (2,2)
 '''Where the levels are displayed on the screen'''
 LEVELROWS = 14
 '''Amount of rows in the level grid'''
-LEVELCOLS = 35
+LEVELCOLS = 30
 '''Amount of columns in the level grid'''
 MAX_RETRIES = 1000
 '''Amount of retries during generation for randomness'''
 LEVELMAX_ENTITIES = 10
 '''Maximum entities on a square'''
-PRE_LOOPS = 0
+PRE_LOOPS = 100
 '''Amount of game loops to run before starting the game'''
 
 ## PLAYER
