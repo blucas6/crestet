@@ -70,6 +70,8 @@ class Messager:
         # or it's on the current level
         if not notif.pos or notif.pos[2] == levelz:
             self.MsgQueue.append(notif)
+        else:
+            Logger.info(f'Message filtered: {pos} {msg}')
     
     def add_damage_message(self, levelz, attackentity, defendentity):
         if attackentity.name == 'Player':

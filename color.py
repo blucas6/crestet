@@ -16,7 +16,11 @@ class Color:
         return cls._instance
 
     def toggle_bg(self, curr_color, bg=None):
-        '''Enables or disables a specific background color'''
+        '''
+        Enables or disables a specific background color
+        bg: background color to apply
+        curr_color: current color of the glyph
+        '''
         if bg == Color().blue:
             # apply
             if curr_color == Color().yellow:
@@ -25,6 +29,10 @@ class Color:
                 return Color().green_cyan
             elif curr_color == Color().blue:
                 return Color().blue_cyan
+            elif curr_color == Color().red:
+                return Color().red_cyan
+            elif curr_color == Color().grey:
+                return Color().grey_cyan
             # unapply
             elif curr_color == Color().yellow_cyan:
                 return Color().yellow
@@ -32,9 +40,12 @@ class Color:
                 return Color().green
             elif curr_color == Color().blue_cyan:
                 return Color().blue
+            elif curr_color == Color().red_cyan:
+                return Color().red
+            elif curr_color == Color().grey_cyan:
+                return Color().grey
         Logger.warning(f'No support for color: {curr_color}')
         return curr_color
-
     
     def __init__(self, display=True):
         '''
@@ -62,6 +73,8 @@ class Color:
             self.blue_cyan      = None
             self.white_grey     = None
             self.grey_white     = None
+            self.red_cyan       = None
+            self.grey_cyan      = None
 
             self._initialized = True
             if display:
@@ -92,6 +105,8 @@ class Color:
         curses.init_pair(19, curses.COLOR_BLUE, curses.COLOR_CYAN)
         curses.init_pair(20, curses.COLOR_WHITE, curses.COLOR_BLACK+8)
         curses.init_pair(21, curses.COLOR_BLACK+8, curses.COLOR_WHITE)
+        curses.init_pair(22, curses.COLOR_RED, curses.COLOR_CYAN)
+        curses.init_pair(23, curses.COLOR_BLACK+8, curses.COLOR_CYAN)
         self.black = curses.color_pair(1)
         self.red = curses.color_pair(2)
         self.green = curses.color_pair(3)
@@ -113,6 +128,8 @@ class Color:
         self.blue_cyan = curses.color_pair(19)
         self.white_grey = curses.color_pair(20)
         self.grey_white = curses.color_pair(21)
+        self.red_cyan = curses.color_pair(22)
+        self.grey_cyan = curses.color_pair(23)
 
 def show_colors(stdscr):
     curses.start_color()

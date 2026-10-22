@@ -295,6 +295,11 @@ class LevelManager:
 
         entity = self.remove_entity(entity)
 
+        # need to update the global Z index immediately
+        # message queue filters based on Z index
+        if entity.name == 'Player':
+            self.currentz = newz
+
         self.place_entity(level.z, entity, newpos)
 
         entity.on_zchange(level)

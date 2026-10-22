@@ -30,7 +30,7 @@ class Player(e.Entity):
         '''How far the FOV will check, also enables eye status effects'''
         self.blockinglayer = e.Layer.MONSTER_LAYER
         '''For FOV, highest level (exclusive) to see through'''
-        self.speed = e.Speed.AVERAGE
+        self.speed = e.Speed.MEDIUM
         '''Speed component'''
         self.Health = component.Health(health=config.PLAYERHEALTH)
         '''Health component'''

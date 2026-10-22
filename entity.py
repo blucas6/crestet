@@ -43,13 +43,14 @@ class MoveAction(enum.Enum):
 
 class Speed(enum.IntEnum):
     '''Corresponding energy costs for movements'''
-    CRAWLING = 64
-    VERY_SLOW = 51
-    SLOW = 37
-    AVERAGE = 26
-    MEDIUM = 15
-    FAST = 9
-    VERY_FAST = 4
+    CRAWLING = 38
+    VERY_SLOW = 30
+    SLOW = 23
+    AVERAGE = 17
+    MEDIUM = 12
+    SPEEDY = 7
+    FAST = 4
+    VERY_FAST = 2
     HYPER = 1
 
 class Layer(enum.IntEnum):

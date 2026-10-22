@@ -22,6 +22,8 @@ class TID(IntEnum):
     BITE            = 31
     FIST            = 32
     PECK            = 33
+    CLAW            = 34
+    LICK            = 35
 
     PLANT           = 41
 
@@ -37,6 +39,8 @@ class TID(IntEnum):
     NEWT            = 103
     JELLY           = 104
     HUMAN           = 105
+    LYNX            = 106
+    SNAIL           = 107
 
     EMBER           = 1001
     SNOW            = 1002
