@@ -30,7 +30,7 @@ class Snail(e.Entity):
         self.speed = e.Speed.CRAWLING
         self.Combat = component.Combat()
         self.Inventory = component.Inventory()
-        self.Inventory.equip(ability.Bite())
+        self.Inventory.equip(ability.Lick())
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
         '''Uses brain to select an action'''

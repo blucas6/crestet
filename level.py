@@ -205,7 +205,7 @@ class LevelManager:
         '''Updates the player and returns the energy used'''
         Logger.info(f'-------- TURN UPDATE ({self.Player.turn + 1}) ---------')
         self.Player.energy = 100
-        self.Player.update_status()
+        self.Player.update_status(self, messager, animator)
         self.Player.update_state(self)
         Logger.info(f'Player status: {self.Player.status}')
         self.Player.do_action(self, animator, messager, menumanager, statemachine, event, rng)
@@ -242,7 +242,7 @@ class LevelManager:
             return True
         energystart = entity.energy
         entity.update_state(self)
-        entity.update_status()
+        entity.update_status(self, messager, animator)
         entity.take_turn(self, animator, messager, menumanager, statemachine, self.RNG) 
         # play animations from the turn
         display.play_animations(animator, self.currentz, self.Player.Brain.fovpoints)
@@ -316,9 +316,11 @@ class LevelManager:
         idx = entity.idx
         z = entity.z
         level = self.Levels[z]
+        Logger.warning(f'Entitylist before: {level.EntityLayer[r][c]}')
         # decrement the index for the other entities on the square
         for ix in range(idx, len(level.EntityLayer[r][c])):
             level.EntityLayer[r][c][ix].idx -= 1
+        Logger.warning(f'Entitylist after: {level.EntityLayer[r][c]}')
         return level.EntityLayer[r][c].pop(idx)
 
     def reset_turns(self, turn):

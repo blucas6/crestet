@@ -14,6 +14,7 @@ class StatusEffect(enum.Enum):
     NONE = 0
     FROZEN = 1
     BLIND = 2
+    POISON = 3
 
     def status_lookup(self):
         '''
@@ -26,6 +27,9 @@ class StatusEffect(enum.Enum):
             return 8, color.Color().blue
         elif self == StatusEffect.BLIND:
             return 18, None
+        elif self == StatusEffect.POISON:
+            return 8, None
+        return 0, None
 
 class AttackType(enum.Enum):
     '''Possible attack options'''
@@ -208,16 +212,37 @@ class Entity:
     def unapply_status(self, status_effect):
         '''Remove a status effect from an entity'''
         _, bg_color = status_effect.status_lookup()
-        self.color = color.Color().toggle_bg(self.color, bg_color)
+        if bg_color is not None:
+            self.color = color.Color().toggle_bg(self.color, bg_color)
 
-    def update_status(self):
+    def update_status(self, levelmanager, messager, animator):
         '''Triggers every turn, updates each status effect'''
-        if self.status.keys():
-            for status_effect in self.status.keys():
-                self.status[status_effect] -= 1
-                if self.status[status_effect] <= 0:
-                    self.unapply_status(status_effect)
-            self.status = {status: timer for status,timer in self.status.items() if timer > 0}
+        for status_effect in self.status.keys():
+            self.status_effect_upkeep(status_effect)
+            if status_effect == StatusEffect.POISON and hasattr(self, 'Health'):
+                if self.Health.change_health(-1):
+                    self.death(levelmanager, animator, messager)
+                frames = []
+                frames.append([
+                    ['*'],
+                ])
+                anim = animation.Animation(
+                    pos=self.pos(),
+                    frames=frames,
+                    color=color.Color().green,
+                    delays=[config.POISON_ANIM_DELAY]
+                )
+                animator.queueUp(levelmanager, anim)
+        self.status = {status: timer for status,timer in self.status.items() if timer > 0}
+
+    def status_effect_upkeep(self, status_effect):
+        '''
+        Subtracts a turn from the active status effects
+        Removes the status effect coloring upon expiration
+        '''
+        self.status[status_effect] -= 1
+        if self.status[status_effect] <= 0:
+            self.unapply_status(status_effect)
 
     def update_state(self, *_):
         '''Gets called after initialization'''
@@ -400,6 +425,10 @@ class Entity:
     
     def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event, rng):
         '''Pass an event for the entity to preform a certain action'''
+
+        if hasattr(self, 'Health') and not self.Health.alive:
+            return
+
         if self.z == levelmanager.currentz:
             Logger.info(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
 

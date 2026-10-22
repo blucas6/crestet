@@ -12,8 +12,11 @@ CHARGE_FRAME_DELAY = 0.01
 EXPLOSION_ANIM_DELAY = 0.05
 '''Jelly explosion animation'''
 
-DEFAULT_ANIM_DELAY = 0.01
+DEFAULT_ANIM_DELAY = 1
 '''Default animation delay'''
+
+POISON_ANIM_DELAY = 0.1
+'''Poison tick animation'''
 
 
 ### LEVEL

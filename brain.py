@@ -308,7 +308,7 @@ class FOVBrain(Brain):
         for r,c in pts:
             maxlayer = utility.get_max_layer(level.EntityLayer[r][c])
             # save only objects/stairs that are visible
-            if maxlayer < entity.Layer.BARREL_LAYER:
+            if maxlayer and maxlayer < entity.Layer.BARREL_LAYER:
                 self.objectmap[r][c] = []
                 for ent in level.EntityLayer[r][c]:
                     if (ent.layer == entity.Layer.OBJECT_LAYER or

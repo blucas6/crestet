@@ -16,6 +16,13 @@ class Lick(entity.Entity):
         self.Attack = component.Attack(name='Lick', damage=1)
         self.ItemType = component.ItemType.ABILITY
 
+    def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
+        entitylayer = levelmanager.Levels[z].EntityLayer
+        for ent in entitylayer[row][col]:
+            # cannot be poisoned if you have no health
+            if hasattr(ent, 'Health'):
+                ent.apply_status(messager, entity.StatusEffect.POISON, levelmanager)
+
 class Claw(entity.Entity):
     def __init__(self):
         super().__init__(typeid=typeid.TID.CLAW,

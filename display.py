@@ -234,6 +234,7 @@ class Display:
         # refreshing the screen unnecessarily every entity update will
         # cause massive slow downs
         if animator.AnimationQueue:
+            Logger.info('PLAYING ANIMATIONS')
             lframes, lcolors, tdelays = self.get_animation_frames(animator,
                                                           levelz, fovpoints)
             self.display_animation_frames(lframes, lcolors, tdelays)
