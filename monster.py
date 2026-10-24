@@ -51,7 +51,11 @@ class Snail(e.Entity):
             ),
             rng
         )
-        
+    
+    def death(self, levelmanager, animator, messager):
+        super().death(levelmanager)
+        shell = item.TurtleShell()
+        levelmanager.place_entity(self.z, shell, (self.row,self.col))
 
 class Lynx(e.Entity):
     difficulty = 4

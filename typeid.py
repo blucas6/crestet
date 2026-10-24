@@ -33,6 +33,7 @@ class TID(IntEnum):
     SWORD           = 54
     DART            = 55
     GAMBESON        = 56
+    TURTLE_SHELL    = 57
 
     RAVEN           = 101
     GOBLIN          = 102

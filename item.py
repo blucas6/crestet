@@ -4,10 +4,21 @@ import color
 import component
 import typeid
 
+
+class TurtleShell(e.Entity):
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.TURTLE_SHELL,
+                         name='Turtle Shell',
+                         glyph='æ',
+                         color=color.Color().grey,
+                         layer=e.Layer.OBJECT_LAYER,
+                         size=e.Size.SMALL)
+        self.ItemType = component.ItemType.HAND
+
 class Arrow(e.Entity):
     spawn = True
     def __init__(self):
-        super().__init__(typeid=typeid.TID.WOOD,
+        super().__init__(typeid=typeid.TID.ARROW,
                          name='Arrow',
                          glyph=')',
                          color=color.Color().blue,

@@ -28,7 +28,7 @@ class StatusEffect(enum.Enum):
         elif self == StatusEffect.BLIND:
             return 18, None
         elif self == StatusEffect.POISON:
-            return 8, None
+            return 3, None
         return 0, None
 
 class AttackType(enum.Enum):
@@ -224,7 +224,7 @@ class Entity:
                     self.death(levelmanager, animator, messager)
                 frames = []
                 frames.append([
-                    ['*'],
+                    ['@'],
                 ])
                 anim = animation.Animation(
                     pos=self.pos(),

@@ -33,6 +33,8 @@ class Color:
                 return Color().red_cyan
             elif curr_color == Color().grey:
                 return Color().grey_cyan
+            elif curr_color == Color().white:
+                return Color().white_cyan
             # unapply
             elif curr_color == Color().yellow_cyan:
                 return Color().yellow
@@ -44,6 +46,8 @@ class Color:
                 return Color().red
             elif curr_color == Color().grey_cyan:
                 return Color().grey
+            elif curr_color == Color().white_cyan:
+                return Color().white
         Logger.warning(f'No support for color: {curr_color}')
         return curr_color
     
@@ -75,6 +79,7 @@ class Color:
             self.grey_white     = None
             self.red_cyan       = None
             self.grey_cyan      = None
+            self.white_cyan     = None
 
             self._initialized = True
             if display:
@@ -107,6 +112,7 @@ class Color:
         curses.init_pair(21, curses.COLOR_BLACK+8, curses.COLOR_WHITE)
         curses.init_pair(22, curses.COLOR_RED, curses.COLOR_CYAN)
         curses.init_pair(23, curses.COLOR_BLACK+8, curses.COLOR_CYAN)
+        curses.init_pair(24, curses.COLOR_WHITE, curses.COLOR_CYAN)
         self.black = curses.color_pair(1)
         self.red = curses.color_pair(2)
         self.green = curses.color_pair(3)
@@ -130,6 +136,7 @@ class Color:
         self.grey_white = curses.color_pair(21)
         self.red_cyan = curses.color_pair(22)
         self.grey_cyan = curses.color_pair(23)
+        self.white_cyan = curses.color_pair(24)
 
 def show_colors(stdscr):
     curses.start_color()
