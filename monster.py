@@ -138,6 +138,10 @@ class Raven(e.Entity):
             rng
         )
 
+    def death(self, levelmanager, animator, messager):
+        super().death(levelmanager)
+        utility.corpse_drop(levelmanager, item.Corpse(), self.color, self.name, self.pos())
+
 class Goblin(e.Entity):
     '''
     Goblin creature
@@ -184,6 +188,10 @@ class Goblin(e.Entity):
             ),
             rng
         )
+
+    def death(self, levelmanager, animator, messager):
+        super().death(levelmanager)
+        utility.corpse_drop(levelmanager, item.Corpse(), self.color, self.name, self.pos())
 
 class Human(e.Entity):
     '''
@@ -240,6 +248,10 @@ class Newt(e.Entity):
             rng
         )
 
+    def death(self, levelmanager, animator, messager):
+        super().death(levelmanager)
+        utility.corpse_drop(levelmanager, item.Corpse(), self.color, self.name, self.pos())
+
 class Jelly(e.Entity):
     '''
     Floating jelly creature
@@ -275,7 +287,7 @@ class Jelly(e.Entity):
             ['|',' ' ,'|'],
             ['\\' ,'-', '/']
         ])
-        delays = [config.DEFAULT_ANIM_DELAY, config.EXPLOSION_ANIM_DELAY]
+        delays = [config.EXPLOSION_ANIM_DELAY, config.EXPLOSION_ANIM_DELAY]
         origin = [self.row-1, self.col-1, self.z, self.idx]
         anim = animation.Animation(
             pos=origin,

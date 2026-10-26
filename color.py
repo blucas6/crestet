@@ -48,6 +48,7 @@ class Color:
                 return Color().grey
             elif curr_color == Color().white_cyan:
                 return Color().white
+
         Logger.warning(f'No support for color: {curr_color}')
         return curr_color
     

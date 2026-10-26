@@ -34,6 +34,7 @@ class TID(IntEnum):
     DART            = 55
     GAMBESON        = 56
     TURTLE_SHELL    = 57
+    CORPSE          = 58
 
     RAVEN           = 101
     GOBLIN          = 102

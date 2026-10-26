@@ -4,6 +4,16 @@ import color
 import component
 import typeid
 
+class Corpse(e.Entity):
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.CORPSE,
+                         name='Corpse',
+                         glyph='%',
+                         color=color.Color().white,
+                         layer=e.Layer.OBJECT_LAYER,
+                         size=e.Size.MEDIUM)
+        self.ItemType = component.ItemType.HAND
+
 
 class TurtleShell(e.Entity):
     def __init__(self):
