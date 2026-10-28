@@ -54,8 +54,11 @@ class Snail(e.Entity):
     
     def death(self, levelmanager, animator, messager):
         super().death(levelmanager)
-        shell = item.TurtleShell()
-        levelmanager.place_entity(self.z, shell, (self.row,self.col))
+        if levelmanager.RNG.randint(0,1) == 0:
+            shell = item.TurtleShell()
+            levelmanager.place_entity(self.z, shell, (self.row,self.col))
+        else:
+            utility.corpse_drop(levelmanager, item.Corpse(), self.color, self.name, self.pos())
 
 class Lynx(e.Entity):
     difficulty = 4
@@ -96,6 +99,14 @@ class Lynx(e.Entity):
             ),
             rng
         )
+
+    def death(self, levelmanager, animator, messager):
+        super().death(levelmanager)
+        if levelmanager.RNG.randint(0,1) == 0:
+            stone = item.PreciousStone()
+            levelmanager.place_entity(self.z, stone, (self.row,self.col))
+        else:
+            utility.corpse_drop(levelmanager, item.Corpse(), self.color, self.name, self.pos())
 
 class Raven(e.Entity):
     difficulty = 3
