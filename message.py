@@ -70,6 +70,8 @@ class Messager:
         # or it's on the current level
         if not notif.pos or notif.pos[2] == levelz:
             self.MsgQueue.append(notif)
+        else:
+            Logger.info(f'Message filtered: {pos} {msg}')
     
     def add_damage_message(self, levelz, attackentity, defendentity):
         if attackentity.name == 'Player':
@@ -143,18 +145,25 @@ class Messager:
     def add_status_message(self, levelz, ent, status):
         if status == entity.StatusEffect.FROZEN:
             if ent.name == 'Player':
-                msg = f'You freeze!'
+                msg = 'You freeze!'
                 unseen = 'You freeze!'
             else:
                 msg = f'The {ent.name} freezes!'
                 unseen = 'It freezes!'
         elif status == entity.StatusEffect.BLIND:
             if ent.name == 'Player':
-                msg = f'You are blinded!'
+                msg = 'You are blinded!'
                 unseen = 'You are blinded!'
             else:
                 msg = f'The {ent.name} is blinded!'
                 unseen = 'It gets blinded!'
+        elif status == entity.StatusEffect.POISON:
+            if ent.name == 'Player':
+                msg = 'You get poisoned!'
+                unseen = 'You get poisoned!'
+            else:
+                msg = f'The {ent.name} is poisoned!'
+                unseen = 'It gets poisoned!'
         self.add_notif(levelz, msg, ent.pos(), unseen)
     
     def add_break_message(self, levelz, entity_attack, entity_defend):

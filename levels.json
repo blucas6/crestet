@@ -37,7 +37,7 @@
       "min_barrels": 20,
       "lights": true,
       "items": 5,
-      "runes": 1,
+      "runes": 10,
       "mons": true,
       "plants": 10
    },

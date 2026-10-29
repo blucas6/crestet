@@ -23,7 +23,7 @@ class SnowRune(entity.Entity):
         self.damage = 1
 
     def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
-        messager.add_notif(levelmanager.currentz, 'Ice freezes the air!', self.pos())
+        messager.add_notif(levelmanager.currentz, 'Ice freezes the air!', parent.pos())
 
         entitylayer = levelmanager.Levels[z].EntityLayer
         objr,objc = utility.find_last_position(cmd[0], row, col, entitylayer)
@@ -40,7 +40,7 @@ class SnowRune(entity.Entity):
                 frame[pt[0]][pt[1]] = '*'
             frames.append(frame)
             delays.append(config.THROW_ANIM_DELAY)
-        origin = [0, 0, self.z, self.idx]
+        origin = [0, 0, parent.z, parent.idx]
         anim = animation.Animation(pos=origin,
                                    frames=frames,
                                    color=color.Color().blue,
@@ -68,7 +68,7 @@ class EmberRune(entity.Entity):
         self.damage = 2
 
     def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
-        messager.add_notif(levelmanager.currentz, 'Flames shoot out!', self.pos())
+        messager.add_notif(levelmanager.currentz, 'Flames shoot out!', parent.pos())
 
         entitylayer = levelmanager.Levels[z].EntityLayer
         objr,objc = utility.find_last_position(cmd[0], row, col, entitylayer)
@@ -85,7 +85,7 @@ class EmberRune(entity.Entity):
                 frame[pt[0]][pt[1]] = '*'
             frames.append(frame)
             delays.append(config.THROW_ANIM_DELAY)
-        origin = [0, 0, self.z, self.idx]
+        origin = [0, 0, parent.z, parent.idx]
         anim = animation.Animation(pos=origin,
                                    frames=frames,
                                    color=color.Color().red,

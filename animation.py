@@ -3,7 +3,7 @@ import config
 
 class AnimationFrame:
     '''Data structure to hold a single animation frame'''
-    def __init__(self, frame, delay=0.01):
+    def __init__(self, frame, delay=config.DEFAULT_ANIM_DELAY):
         # probably will add color buffer here in the future
         # that way animations can have many colors
         self.frame = frame

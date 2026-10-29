@@ -12,6 +12,102 @@ import brain
 
 Logger = logging.getLogger(__name__)
 
+class Snail(e.Entity):
+    difficulty = 4
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.SNAIL,
+                         name='Snail',
+                         glyph='s',
+                         color=color.Color().grey,
+                         layer=e.Layer.MONSTER_LAYER,
+                         size=e.Size.MEDIUM)
+        self.Health = component.Health(health=config.SNAIL_HEALTH)
+        self.eyes = config.SNAIL_SIGHTRANGE
+        self.xp = config.SNAIL_XP
+        self.Brain = brain.SimpleBrain(sightrange=self.eyes,
+                                     blockinglayer=e.Layer.MONSTER_LAYER,
+                                     attacks=[e.AttackType.MELEE])
+        self.speed = e.Speed.CRAWLING
+        self.Combat = component.Combat()
+        self.Inventory = component.Inventory()
+        self.Inventory.equip(ability.Lick())
+
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
+        '''Uses brain to select an action'''
+        self.do_action(
+            levelmanager,
+            animator,
+            messager,
+            menumanager,
+            statemachine,
+            self.Brain.get_action(
+                levelmanager.Levels[self.z],
+                [self.row,self.col],
+                self.energy,
+                rng,
+                self.speed,
+                self.status,
+                self.Inventory
+            ),
+            rng
+        )
+    
+    def death(self, levelmanager, animator, messager):
+        super().death(levelmanager)
+        if levelmanager.RNG.randint(0,1) == 0:
+            shell = item.TurtleShell()
+            levelmanager.place_entity(self.z, shell, (self.row,self.col))
+        else:
+            utility.corpse_drop(levelmanager, item.Corpse(), self.color, self.name, self.pos())
+
+class Lynx(e.Entity):
+    difficulty = 4
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.LYNX,
+                         name='Lynx',
+                         glyph='f',
+                         color=color.Color().red,
+                         layer=e.Layer.MONSTER_LAYER,
+                         size=e.Size.MEDIUM)
+        self.Health = component.Health(health=config.LYNX_HEALTH)
+        self.eyes = config.LYNX_SIGHTRANGE
+        self.xp = config.LYNX_XP
+        self.Brain = brain.SimpleBrain(sightrange=self.eyes,
+                                     blockinglayer=e.Layer.MONSTER_LAYER,
+                                     attacks=[e.AttackType.MELEE])
+        self.speed = e.Speed.AVERAGE
+        self.Combat = component.Combat()
+        self.Inventory = component.Inventory()
+        self.Inventory.equip(ability.Claw())
+
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
+        '''Uses brain to select an action'''
+        self.do_action(
+            levelmanager,
+            animator,
+            messager,
+            menumanager,
+            statemachine,
+            self.Brain.get_action(
+                levelmanager.Levels[self.z],
+                [self.row,self.col],
+                self.energy,
+                rng,
+                self.speed,
+                self.status,
+                self.Inventory
+            ),
+            rng
+        )
+
+    def death(self, levelmanager, animator, messager):
+        super().death(levelmanager)
+        if levelmanager.RNG.randint(0,1) == 0:
+            stone = item.PreciousStone()
+            levelmanager.place_entity(self.z, stone, (self.row,self.col))
+        else:
+            utility.corpse_drop(levelmanager, item.Corpse(), self.color, self.name, self.pos())
+
 class Raven(e.Entity):
     difficulty = 3
     def __init__(self):
@@ -52,6 +148,10 @@ class Raven(e.Entity):
             ),
             rng
         )
+
+    def death(self, levelmanager, animator, messager):
+        super().death(levelmanager)
+        utility.corpse_drop(levelmanager, item.Corpse(), self.color, self.name, self.pos())
 
 class Goblin(e.Entity):
     '''
@@ -99,6 +199,10 @@ class Goblin(e.Entity):
             ),
             rng
         )
+
+    def death(self, levelmanager, animator, messager):
+        super().death(levelmanager)
+        utility.corpse_drop(levelmanager, item.Corpse(), self.color, self.name, self.pos())
 
 class Human(e.Entity):
     '''
@@ -155,6 +259,10 @@ class Newt(e.Entity):
             rng
         )
 
+    def death(self, levelmanager, animator, messager):
+        super().death(levelmanager)
+        utility.corpse_drop(levelmanager, item.Corpse(), self.color, self.name, self.pos())
+
 class Jelly(e.Entity):
     '''
     Floating jelly creature
@@ -190,7 +298,7 @@ class Jelly(e.Entity):
             ['|',' ' ,'|'],
             ['\\' ,'-', '/']
         ])
-        delays = [config.DEFAULT_ANIM_DELAY, config.EXPLOSION_ANIM_DELAY]
+        delays = [config.EXPLOSION_ANIM_DELAY, config.EXPLOSION_ANIM_DELAY]
         origin = [self.row-1, self.col-1, self.z, self.idx]
         anim = animation.Animation(
             pos=origin,

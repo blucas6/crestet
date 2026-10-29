@@ -1,13 +1,43 @@
 import entity as e
-import utility
 import color
 import component
 import typeid
 
+class Corpse(e.Entity):
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.CORPSE,
+                         name='Corpse',
+                         glyph='%',
+                         color=color.Color().white,
+                         layer=e.Layer.OBJECT_LAYER,
+                         size=e.Size.MEDIUM)
+        self.ItemType = component.ItemType.HAND
+
+class PreciousStone(e.Entity):
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.PRECIOUS_STONE,
+                         name='Precious Stone',
+                         glyph='`',
+                         color=color.Color().grey,
+                         layer=e.Layer.OBJECT_LAYER,
+                         size=e.Size.VERY_SMALL)
+        self.ItemType = component.ItemType.QUIVER
+
+
+class TurtleShell(e.Entity):
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.TURTLE_SHELL,
+                         name='Turtle Shell',
+                         glyph='æ',
+                         color=color.Color().grey,
+                         layer=e.Layer.OBJECT_LAYER,
+                         size=e.Size.SMALL)
+        self.ItemType = component.ItemType.HAND
+
 class Arrow(e.Entity):
     spawn = True
     def __init__(self):
-        super().__init__(typeid=typeid.TID.WOOD,
+        super().__init__(typeid=typeid.TID.ARROW,
                          name='Arrow',
                          glyph=')',
                          color=color.Color().blue,

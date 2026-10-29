@@ -109,6 +109,7 @@ class CombatTest:
         data['0']['items'] = 0
         data['0']['runes'] = 0
         data['0']['mons'] = False
+        data['0']['plants'] = 0
         data['1']['floor'] = True
         data['1']['outer_walls'] = True
         data['1']['upstair'] = False
@@ -119,6 +120,7 @@ class CombatTest:
         data['1']['items'] = 0
         data['1']['runes'] = 0
         data['1']['mons'] = False
+        data['1']['plants'] = 0
 
         if not os.path.exists(os.path.dirname(config.SIM_LEVEL_CONFIG)):
             os.makedirs(os.path.dirname(config.SIM_LEVEL_CONFIG))

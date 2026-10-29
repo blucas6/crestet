@@ -7,6 +7,11 @@ Logger = logging.getLogger(__name__)
 ONE_LAYER_CIRCLE = [(1,-1),(1,0),(1,1),(0,-1),(0,0),(0,1),(-1,-1),(-1,0),(-1,1)]
 ONE_LAYER_CROSS = [(0,0), (-1,0), (1,0), (0,-1), (0,1)]
 
+def corpse_drop(levelmanager, corpse, color, name, pos):
+    corpse.color = color
+    corpse.name = name + ' ' + corpse.name
+    levelmanager.place_entity(pos[2], corpse, (pos[0],pos[1]))
+
 def get_one_layer_pts(pos, rows, cols, shape='circle'):
     '''
     Pass in a position to return all points around that position

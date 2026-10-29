@@ -226,6 +226,15 @@ class Game:
 
         Logger.info(f'GAMESTATE: {self.StateMachine.GameState}')
 
+        # check for ending the game
+        if not self.StateMachine.GameState == state.GameState.END:
+            if self.win():
+                self.StateMachine.new_state('endgame')
+                self.Messager.add_text('You won!')
+            elif self.lose():
+                self.StateMachine.new_state('endgame')
+                self.Messager.add_text('You died!')
+
         # increment the turn
         self.turn += 1
 
@@ -243,16 +252,6 @@ class Game:
 
         # update player FOV
         self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
-
-        # check for ending the game
-        if not self.StateMachine.GameState == state.GameState.END:
-            pos = self.LevelManager.Player.pos()
-            if self.win():
-                self.StateMachine.new_state('endgame')
-                self.Messager.add_text('You won!')
-            elif self.lose():
-                self.StateMachine.new_state('endgame')
-                self.Messager.add_text('You died!')
 
         # update all menus
         self.update_menus()
@@ -303,6 +302,7 @@ class Game:
 
         # make sure there is a level to grab from
         # make sure player is not blind
+        # display handles the light coloring
         if currlevel and entity.StatusEffect.BLIND not in player.status:
             lightlayer = currlevel.LightLayer
         else:
@@ -318,6 +318,7 @@ class Game:
 
     def lose(self):
         '''Returns if the game is lost'''
+        Logger.info(f'CHECK FOR LOSE: {self.LevelManager.Player.Health.alive}')
         if not self.LevelManager.Player.Health.alive:
             return True
         return False 

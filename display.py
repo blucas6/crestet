@@ -111,10 +111,16 @@ class Display:
                     glyph = entitylayer[r][c][0].glyph
                     color = entitylayer[r][c][0].color
                 else:
-                    idx = max(range(len(entitylayer[r][c])),
-                            key=lambda i:entitylayer[r][c][i].layer)
-                    glyph = entitylayer[r][c][idx].glyph
-                    color = entitylayer[r][c][idx].color
+                    _,ent = utility.get_max_entity(entitylayer[r][c])
+                    glyph = ent.glyph
+                    color = ent.color
+                    if ent.layer < entity.Layer.BARREL_LAYER:
+                        objects = [e for e in entitylayer[r][c] if e.layer > entity.Layer.FLOOR_LAYER and e.layer < entity.Layer.BARREL_LAYER]
+                        if len(objects) > 1:
+                            color = clr.Color().toggle_bg(
+                                    ent.color,
+                                    clr.Color().blue
+                            )
                 if not self.bounds_check(self.screenbuffer, rw, cl):
                     continue
                 # add glyph
@@ -234,6 +240,7 @@ class Display:
         # refreshing the screen unnecessarily every entity update will
         # cause massive slow downs
         if animator.AnimationQueue:
+            Logger.info('PLAYING ANIMATIONS')
             lframes, lcolors, tdelays = self.get_animation_frames(animator,
                                                           levelz, fovpoints)
             self.display_animation_frames(lframes, lcolors, tdelays)

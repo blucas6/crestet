@@ -306,10 +306,10 @@ class FOVBrain(Brain):
         else:
             pts = fovpts
         for r,c in pts:
+            self.objectmap[r][c] = []
             maxlayer = utility.get_max_layer(level.EntityLayer[r][c])
             # save only objects/stairs that are visible
             if maxlayer < entity.Layer.BARREL_LAYER:
-                self.objectmap[r][c] = []
                 for ent in level.EntityLayer[r][c]:
                     if (ent.layer == entity.Layer.OBJECT_LAYER or
                         ent.layer == entity.Layer.STAIR_LAYER):
@@ -327,9 +327,9 @@ class FOVBrain(Brain):
             return
         for r,c in fovpts:
             maxlayer = utility.get_max_layer(level.EntityLayer[r][c])
-            # save only objects/stairs that are visible
             if maxlayer == entity.Layer.WALL_LAYER:
                 self.wallmap[r][c] = []
                 for ent in level.EntityLayer[r][c]:
                     if ent.layer == entity.Layer.WALL_LAYER:
                         self.wallmap[r][c].append(ent)
+

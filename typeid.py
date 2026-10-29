@@ -22,6 +22,8 @@ class TID(IntEnum):
     BITE            = 31
     FIST            = 32
     PECK            = 33
+    CLAW            = 34
+    LICK            = 35
 
     PLANT           = 41
 
@@ -31,12 +33,17 @@ class TID(IntEnum):
     SWORD           = 54
     DART            = 55
     GAMBESON        = 56
+    TURTLE_SHELL    = 57
+    PRECIOUS_STONE  = 58
+    CORPSE          = 59
 
     RAVEN           = 101
     GOBLIN          = 102
     NEWT            = 103
     JELLY           = 104
     HUMAN           = 105
+    LYNX            = 106
+    SNAIL           = 107
 
     EMBER           = 1001
     SNOW            = 1002

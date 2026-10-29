@@ -12,8 +12,11 @@ CHARGE_FRAME_DELAY = 0.01
 EXPLOSION_ANIM_DELAY = 0.05
 '''Jelly explosion animation'''
 
-DEFAULT_ANIM_DELAY = 0.01
+DEFAULT_ANIM_DELAY = 1
 '''Default animation delay'''
+
+POISON_ANIM_DELAY = 0.1
+'''Poison tick animation'''
 
 
 ### LEVEL
@@ -27,7 +30,7 @@ MAX_RETRIES = 1000
 '''Amount of retries during generation for randomness'''
 LEVELMAX_ENTITIES = 10
 '''Maximum entities on a square'''
-PRE_LOOPS = 100
+PRE_LOOPS = 1
 '''Amount of game loops to run before starting the game'''
 
 ## PLAYER
@@ -62,7 +65,17 @@ GOBLIN_XP = 1
 ## RAVEN
 RAVEN_HEALTH = 2
 RAVEN_SIGHTRANGE = 8
-RAVEN_XP = 2
+RAVEN_XP = 1
+
+## LYNX
+LYNX_HEALTH = 8
+LYNX_SIGHTRANGE = 6
+LYNX_XP = 2
+
+## SNAIL
+SNAIL_HEALTH = 20
+SNAIL_SIGHTRANGE = 4
+SNAIL_XP = 2
 
 ### MENUS
 STATUSMENU_ORIGIN = (18,20)
@@ -83,3 +96,6 @@ CURSOR_HIGHLIGHT = 2
 
 ### SIMULATORS
 SIM_LEVEL_CONFIG = '.tmp/levels.json'
+
+### MISC
+ABILITY_GLYPH = '!'
