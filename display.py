@@ -1,5 +1,5 @@
-import color as clr
 import utility
+import color
 import tower
 import entity
 import engine
@@ -13,11 +13,11 @@ class Display:
     def __init__(self):
         self.screenbuffer: list[list[str]] = list
         '''2D buffer the size of the terminal for outputting to engine'''
-        self.colorbuffer: list[list[clr.Color]] = list
+        self.colorbuffer: list[list[int]] = list
         '''2D buffer the size of the terminal for outputting to engine'''
         self.unknownglyph = ' '
         '''Glyph to show unexplored area'''
-        self.unknowncolor = None
+        self.unknowncolor = -1
         '''Color of unknown area'''
         self.levelorigin = (-1,-1)
         '''Where the levels are placed on the screen'''
@@ -46,8 +46,6 @@ class Display:
             self.termcols = config.LEVELCOLS + config.LEVELORIGIN[1]
         # create buffers
         self.clear_buffers()
-        # colors must be accessed after engine has been initialized
-        self.unknowncolor = clr.Color().white
         self.levelorigin = levelorigin
 
     def pause_engine(self, delay):
@@ -72,7 +70,7 @@ class Display:
         '''Creates empty buffers'''
         self.screenbuffer = [[' ' for _ in range(self.termcols-1)] 
                                     for _ in range(self.termrows-1)]
-        self.colorbuffer = [[clr.Color().white for _ in range(self.termcols-1)] 
+        self.colorbuffer = [[self.Engine.gc(color.COLOR.BLACK) for _ in range(self.termcols-1)] 
                                     for _ in range(self.termrows-1)]
 
     def render_menus(self, menumanager):
@@ -84,11 +82,10 @@ class Display:
                     cl = c+menu.origin[1]
                     if rw < len(self.screenbuffer) and cl < len(self.screenbuffer[rw]):
                         self.screenbuffer[rw][cl] = ch
-                        self.colorbuffer[rw][cl] = clr.Color().white
+                        self.colorbuffer[rw][cl] = self.Engine.gc(color.COLOR.WHITE)
 
     def render_lightlayer(self, entitylayer, lightlayer):
         '''Add light highlighting to the screen'''
-        color = clr.Color().bright_yellow
         for r,row in enumerate(lightlayer):
             for c,_ in enumerate(row):
                 if lightlayer[r][c] and entitylayer[r][c]:
@@ -96,31 +93,31 @@ class Display:
                     rw, cl = self.level_to_screen_pos(r,c)
                     # only make non monsters glow
                     if ent.layer != entity.Layer.MONSTER_LAYER:
-                        self.colorbuffer[rw][cl] = color
+                        self.colorbuffer[rw][cl] = self.Engine.gc(color.COLOR.BRIGHT_YELLOW)
 
     def render_entitylayer(self, entitylayer):
         '''Go through the entity layer and add it to the screen'''
         for r,row in enumerate(entitylayer):
             for c,col in enumerate(row):
                 rw, cl = self.level_to_screen_pos(r,c)
+                fg = self.unknowncolor
+                bg = -1
                 # find top most entity
                 if not entitylayer[r][c]:
                     glyph = self.unknownglyph
-                    color = self.unknowncolor
                 elif len(entitylayer[r][c]) == 1:
                     glyph = entitylayer[r][c][0].glyph
-                    color = entitylayer[r][c][0].color
+                    fg = entitylayer[r][c][0].fg
+                    bg = entitylayer[r][c][0].bg
                 else:
                     _,ent = utility.get_max_entity(entitylayer[r][c])
                     glyph = ent.glyph
-                    color = ent.color
+                    fg = ent.fg
+                    bg = ent.bg
                     if ent.layer < entity.Layer.BARREL_LAYER:
                         objects = [e for e in entitylayer[r][c] if e.layer > entity.Layer.FLOOR_LAYER and e.layer < entity.Layer.BARREL_LAYER]
                         if len(objects) > 1:
-                            color = clr.Color().toggle_bg(
-                                    ent.color,
-                                    clr.Color().blue
-                            )
+                            bg = color.COLOR.BLUE
                 if not self.bounds_check(self.screenbuffer, rw, cl):
                     continue
                 # add glyph
@@ -128,7 +125,7 @@ class Display:
                 if not self.bounds_check(self.colorbuffer, rw, cl):
                     continue
                 # add color
-                self.colorbuffer[rw][cl] = color
+                self.colorbuffer[rw][cl] = self.Engine.gc(fg, bg, rw, cl)
 
     def bounds_check(self, buffer, r, c):
         '''
@@ -182,7 +179,7 @@ class Display:
         # update cursor
         self.cursor_upkeep()
 
-    def add_animation_frame(self, screenbuffer, colorbuffer, frame, pos, color, fovpoints):
+    def add_animation_frame(self, screenbuffer, colorbuffer, frame, pos, fg, bg, fovpoints):
         '''Add the glyphs for the animation to the screen'''
         for r,row in enumerate(frame):
             for c,col in enumerate(row):
@@ -192,7 +189,7 @@ class Display:
                 elif (pos[0]+r,pos[1]+c) in fovpoints:
                     rw, cl = self.level_to_screen_pos(pos[0]+r, pos[1]+c)
                     screenbuffer[rw][cl] = col
-                    colorbuffer[rw][cl] = color
+                    colorbuffer[rw][cl] = self.Engine.gc(fg, bg) 
 
     def get_animation_frames(self, animator, levelz, fovpoints):
         '''
@@ -215,7 +212,8 @@ class Display:
                                          tmp_colorbuffer,
                                          animframe.frame,
                                          anim.pos,
-                                         anim.color,
+                                         anim.fg,
+                                         anim.bg,
                                          fovpoints)
                 loaded_frames.append(tmp_screenbuffer)
                 loaded_colors.append(tmp_colorbuffer)

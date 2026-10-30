@@ -84,7 +84,7 @@ class LevelManager:
         level = self.Levels[z]
 
         if not self.is_entity_pos_valid(level, entity, pos, overwrite=overwrite):
-            Logger.error(f'Error: Entity {entity.name} cannot be placed: {pos} z:{z}')
+            #Logger.error(f'Error: Entity {entity.name} cannot be placed: {pos} z:{z}')
             return False
         
         r = pos[0]

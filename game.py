@@ -12,8 +12,6 @@ import display
 import curses.ascii
 import random
 import secrets
-import color
-import curses
 import enum
 import menu
 import animation
@@ -77,10 +75,6 @@ class Game:
         '''
         Sets up the display for outputting to the screen
         '''
-        if not self.usedisplay:
-            # need to initialize colors without curses module
-            color.Color(display=False)
-
         # setup display
         self.Display.init(self.usedisplay,
                           levelorigin=config.LEVELORIGIN,

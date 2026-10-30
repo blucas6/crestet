@@ -1,9 +1,9 @@
 import item
+import color
 import typeid
 import component
 import utility
 import entity
-import color
 import logging
 import enum
 
@@ -21,9 +21,9 @@ class Plant(entity.Entity):
         super().__init__(typeid=typeid.TID.PLANT,
                          name='Plant',
                          glyph='.',
-                         color=color.Color().green,
                          layer=entity.Layer.PLANT_LAYER,
-                         size=entity.Size.VERY_SMALL)
+                         size=entity.Size.VERY_SMALL,
+                         fg=color.COLOR.GREEN)
         self.PlantStage = PlantStage.SPROUT
         '''Current plant stage'''
         self.nutrients = 0
@@ -80,13 +80,13 @@ class Plant(entity.Entity):
             self.PlantStage = PlantStage.SPROUT
             self.name = 'Sprout'
             self.glyph = self.sprout_glyph
-            self.color = color.Color().green
+            self.fg = color.COLOR.GREEN
             self.Edible = None
         elif plantstage == PlantStage.DECAY:
             self.PlantStage = PlantStage.DECAY
             self.name = 'Ripe Fruit'
             self.glyph = '&'
-            self.color = color.Color().grey
+            self.fg = color.COLOR.GREY
             self.Edible = component.Edible(self, nutrition=1)
             self.nutrients = 0
 

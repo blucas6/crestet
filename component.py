@@ -97,8 +97,8 @@ class Combat:
         origin = [0, 0, z, 0]
         anim = animation.Animation(pos=origin,
                                    frames=frames,
-                                   color=projectile.color,
-                                   delays=delays)
+                                   delays=delays,
+                                   fg=projectile.fg)
         animator.queueUp(levelmanager, anim)
         Logger.info(f'throwing object')
         return success, objr,objc
@@ -452,7 +452,6 @@ class Inventory:
 
     def collect(self, entity):
         '''Entrance for items being added into the inventory'''
-        Logger.info(f'Collecting: {entity}')
 
         # try to add it to the correct slot
         if hasattr(entity, 'ItemType') and entity.ItemType == ItemType.QUIVER:

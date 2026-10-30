@@ -1,143 +1,24 @@
 import curses
-import logging
+from enum import IntEnum, unique
 
-Logger = logging.getLogger(__name__)
-
-class Color:
-    '''
-    Color class sets up the colors for the curses interface
-    '''
-    _instance = None
-    
-    def __new__(cls, *args, **kwargs):
-        if not cls._instance:
-            cls._instance = super().__new__(cls)
-            cls._instance._initialized = False
-        return cls._instance
-
-    def toggle_bg(self, curr_color, bg=None):
-        '''
-        Enables or disables a specific background color
-        bg: background color to apply
-        curr_color: current color of the glyph
-        '''
-        if bg == Color().blue:
-            # apply
-            if curr_color == Color().yellow:
-                return Color().yellow_cyan
-            elif curr_color == Color().green:
-                return Color().green_cyan
-            elif curr_color == Color().blue:
-                return Color().blue_cyan
-            elif curr_color == Color().red:
-                return Color().red_cyan
-            elif curr_color == Color().grey:
-                return Color().grey_cyan
-            elif curr_color == Color().white:
-                return Color().white_cyan
-            # unapply
-            elif curr_color == Color().yellow_cyan:
-                return Color().yellow
-            elif curr_color == Color().green_cyan:
-                return Color().green
-            elif curr_color == Color().blue_cyan:
-                return Color().blue
-            elif curr_color == Color().red_cyan:
-                return Color().red
-            elif curr_color == Color().grey_cyan:
-                return Color().grey
-            elif curr_color == Color().white_cyan:
-                return Color().white
-
-        Logger.warning(f'No support for color: {curr_color}')
-        return curr_color
-    
-    def __init__(self, display=True):
-        '''
-        Set up the color pairs for the curses interface
-        '''
-        if not self._initialized:
-            self.black          = None
-            self.red            = None 
-            self.green          = None 
-            self.yellow         = None 
-            self.blue           = None 
-            self.magenta        = None 
-            self.cyan           = None 
-            self.white          = None 
-            self.grey           = None 
-            self.bright_red     = None 
-            self.bright_green   = None 
-            self.bright_yellow  = None 
-            self.bright_blue    = None 
-            self.bright_pink    = None 
-            self.bright_cyan    = None 
-            self.bright_white   = None 
-            self.yellow_cyan    = None
-            self.green_cyan     = None
-            self.blue_cyan      = None
-            self.white_grey     = None
-            self.grey_white     = None
-            self.red_cyan       = None
-            self.grey_cyan      = None
-            self.white_cyan     = None
-
-            self._initialized = True
-            if display:
-                self.curses_colors()
-
-    def curses_colors(self):
-        '''
-        Create the color pairs for the curses module
-        '''
-        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_BLACK)
-        curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
-        curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        curses.init_pair(4, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-        curses.init_pair(5, curses.COLOR_BLUE, curses.COLOR_BLACK)
-        curses.init_pair(6, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
-        curses.init_pair(7, curses.COLOR_CYAN, curses.COLOR_BLACK)
-        curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        curses.init_pair(9, curses.COLOR_BLACK+8, curses.COLOR_BLACK)
-        curses.init_pair(10, curses.COLOR_RED+8, curses.COLOR_BLACK)
-        curses.init_pair(11, curses.COLOR_GREEN+8, curses.COLOR_BLACK)
-        curses.init_pair(12, curses.COLOR_YELLOW+8, curses.COLOR_BLACK)
-        curses.init_pair(13, curses.COLOR_BLUE+8, curses.COLOR_BLACK)
-        curses.init_pair(14, curses.COLOR_MAGENTA+8, curses.COLOR_BLACK)
-        curses.init_pair(15, curses.COLOR_CYAN+8, curses.COLOR_BLACK)
-        curses.init_pair(16, curses.COLOR_WHITE+8, curses.COLOR_BLACK)
-        curses.init_pair(17, curses.COLOR_YELLOW, curses.COLOR_CYAN)
-        curses.init_pair(18, curses.COLOR_GREEN, curses.COLOR_CYAN)
-        curses.init_pair(19, curses.COLOR_BLUE, curses.COLOR_CYAN)
-        curses.init_pair(20, curses.COLOR_WHITE, curses.COLOR_BLACK+8)
-        curses.init_pair(21, curses.COLOR_BLACK+8, curses.COLOR_WHITE)
-        curses.init_pair(22, curses.COLOR_RED, curses.COLOR_CYAN)
-        curses.init_pair(23, curses.COLOR_BLACK+8, curses.COLOR_CYAN)
-        curses.init_pair(24, curses.COLOR_WHITE, curses.COLOR_CYAN)
-        self.black = curses.color_pair(1)
-        self.red = curses.color_pair(2)
-        self.green = curses.color_pair(3)
-        self.yellow = curses.color_pair(4)
-        self.blue = curses.color_pair(5)
-        self.magenta = curses.color_pair(6)
-        self.cyan = curses.color_pair(7)
-        self.white = curses.color_pair(8)
-        self.grey = curses.color_pair(9)
-        self.bright_red = curses.color_pair(10)
-        self.bright_green = curses.color_pair(11)
-        self.bright_yellow = curses.color_pair(12)
-        self.bright_blue = curses.color_pair(13)
-        self.bright_pink = curses.color_pair(14)
-        self.bright_cyan = curses.color_pair(15)
-        self.bright_white = curses.color_pair(16)
-        self.yellow_cyan = curses.color_pair(17)
-        self.green_cyan = curses.color_pair(18)
-        self.blue_cyan = curses.color_pair(19)
-        self.white_grey = curses.color_pair(20)
-        self.grey_white = curses.color_pair(21)
-        self.red_cyan = curses.color_pair(22)
-        self.grey_cyan = curses.color_pair(23)
-        self.white_cyan = curses.color_pair(24)
+@unique
+class COLOR(IntEnum):
+    BLACK = curses.COLOR_BLACK
+    RED = curses.COLOR_RED
+    GREEN = curses.COLOR_GREEN
+    YELLOW = curses.COLOR_YELLOW
+    BLUE = curses.COLOR_BLUE
+    MAGENTA = curses.COLOR_MAGENTA
+    CYAN = curses.COLOR_CYAN
+    WHITE = curses.COLOR_WHITE
+    GREY = curses.COLOR_BLACK+8
+    BRIGHT_RED = curses.COLOR_RED+8
+    BRIGHT_GREEN = curses.COLOR_GREEN+8
+    BRIGHT_YELLOW = curses.COLOR_YELLOW+8
+    BRIGHT_BLUE = curses.COLOR_BLUE+8
+    PINK = curses.COLOR_MAGENTA+8
+    BRIGHT_CYAN = curses.COLOR_CYAN+8
+    BRIGHT_WHITE = curses.COLOR_WHITE+8
 
 def show_colors(stdscr):
     curses.start_color()
