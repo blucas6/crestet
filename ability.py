@@ -10,9 +10,9 @@ class Lick(entity.Entity):
         super().__init__(typeid=typeid.TID.LICK,
                          name='Lick',
                          glyph=config.ABILITY_GLYPH,
-                         color=color.Color().magenta,
                          layer=entity.Layer.OBJECT_LAYER,
-                         size=entity.Size.VERY_SMALL)
+                         size=entity.Size.VERY_SMALL,
+                         fg=color.COLOR.PINK)
         self.Attack = component.Attack(name='Lick', damage=1)
         self.ItemType = component.ItemType.ABILITY
 
@@ -28,9 +28,9 @@ class Claw(entity.Entity):
         super().__init__(typeid=typeid.TID.CLAW,
                          name='Claw',
                          glyph=config.ABILITY_GLYPH,
-                         color=color.Color().magenta,
                          layer=entity.Layer.OBJECT_LAYER,
-                         size=entity.Size.VERY_SMALL)
+                         size=entity.Size.VERY_SMALL,
+                         fg=color.COLOR.PINK)
         self.Attack = component.Attack(name='Claw', damage=4)
         self.ItemType = component.ItemType.ABILITY
 
@@ -39,9 +39,9 @@ class Bite(entity.Entity):
         super().__init__(typeid=typeid.TID.BITE,
                          name='Bite',
                          glyph=config.ABILITY_GLYPH,
-                         color=color.Color().magenta,
                          layer=entity.Layer.OBJECT_LAYER,
-                         size=entity.Size.VERY_SMALL)
+                         size=entity.Size.VERY_SMALL,
+                         fg=color.COLOR.PINK)
         self.Attack = component.Attack(name='Bite', damage=2)
         self.ItemType = component.ItemType.ABILITY
 
@@ -50,9 +50,9 @@ class Fist(entity.Entity):
         super().__init__(typeid=typeid.TID.FIST,
                          name='Fist',
                          glyph=config.ABILITY_GLYPH,
-                         color=color.Color().magenta,
                          layer=entity.Layer.OBJECT_LAYER,
-                         size=entity.Size.VERY_SMALL)
+                         size=entity.Size.VERY_SMALL,
+                         fg=color.COLOR.PINK)
         self.Attack = component.Attack(name='Fist', damage=1)
         self.ItemType = component.ItemType.ABILITY
 
@@ -61,9 +61,9 @@ class Peck(entity.Entity):
         super().__init__(typeid=typeid.TID.PECK,
                          name='Peck',
                          glyph=config.ABILITY_GLYPH,
-                         color=color.Color().magenta,
                          layer=entity.Layer.OBJECT_LAYER,
-                         size=entity.Size.VERY_SMALL)
+                         size=entity.Size.VERY_SMALL,
+                         fg=color.COLOR.PINK)
         self.Attack = component.Attack(name='Peck', damage=2)
         self.ItemType = component.ItemType.ABILITY
 

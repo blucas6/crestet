@@ -1,4 +1,3 @@
-import color
 import brain
 import tower
 import ability
@@ -11,6 +10,7 @@ import component
 import entity as e
 import logging
 import typeid
+import color
 
 Logger = logging.getLogger(__name__)
 
@@ -19,9 +19,9 @@ class Player(e.Entity):
         super().__init__(typeid=typeid.TID.PLAYER,
                          name='Player',
                          glyph='@',
-                         color=color.Color().white,
                          layer=e.Layer.MONSTER_LAYER,
-                         size=e.Size.LARGE)
+                         size=e.Size.LARGE,
+                         fg=color.COLOR.WHITE)
         self.levelrows = 0
         '''Rows for mental map'''
         self.levelcols = 0

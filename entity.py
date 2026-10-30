@@ -4,8 +4,8 @@ import config
 import utility
 import algo
 import enum
-import color
 import logging
+import color
 
 Logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class StatusEffect(enum.Enum):
         if self == StatusEffect.NONE:
             return 0, None
         elif self == StatusEffect.FROZEN:
-            return 8, color.Color().blue
+            return 8, color.COLOR.BLUE
         elif self == StatusEffect.BLIND:
             return 18, None
         elif self == StatusEffect.POISON:
@@ -100,7 +100,7 @@ class Entity:
     _id_gen = itertools.count(1)
     '''ID counter for all entities'''
 
-    def __init__(self, typeid, name, glyph, color, layer, size):
+    def __init__(self, typeid, name, glyph, layer, size, fg, bg=-1):
         self.id = next(Entity._id_gen)
         '''Unique ID'''
         self.typeid = typeid
@@ -109,8 +109,10 @@ class Entity:
         '''Name of entity'''
         self.glyph = glyph
         '''Glyph for display'''
-        self.color = color
-        '''Color for display'''
+        self.fg = fg
+        '''Foreground color'''
+        self.bg = bg
+        '''Background color'''
         self.row = -1
         '''Row position'''
         self.col = -1
@@ -205,15 +207,9 @@ class Entity:
             return
         Logger.info(f'Applying status effect: {status_effect}')
         messager.add_status_message(levelmanager.currentz, self, status_effect)
-        self.status[status_effect], bg_color = status_effect.status_lookup()
-        if bg_color is not None:
-            self.color = color.Color().toggle_bg(self.color, bg_color)
-
-    def unapply_status(self, status_effect):
-        '''Remove a status effect from an entity'''
-        _, bg_color = status_effect.status_lookup()
-        if bg_color is not None:
-            self.color = color.Color().toggle_bg(self.color, bg_color)
+        self.status[status_effect], newbg = status_effect.status_lookup()
+        if newbg is not None:
+            self.bg = newbg
 
     def update_status(self, levelmanager, messager, animator):
         '''Triggers every turn, updates each status effect'''
@@ -229,8 +225,8 @@ class Entity:
                 anim = animation.Animation(
                     pos=self.pos(),
                     frames=frames,
-                    color=color.Color().green,
-                    delays=[config.POISON_ANIM_DELAY]
+                    delays=[config.POISON_ANIM_DELAY],
+                    fg=color.COLOR.GREEN,
                 )
                 animator.queueUp(levelmanager, anim)
         self.status = {status: timer for status,timer in self.status.items() if timer > 0}
@@ -242,7 +238,7 @@ class Entity:
         '''
         self.status[status_effect] -= 1
         if self.status[status_effect] <= 0:
-            self.unapply_status(status_effect)
+            self.bg = -1
 
     def update_state(self, *_):
         '''Gets called after initialization'''

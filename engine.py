@@ -1,6 +1,5 @@
 import curses
 import sys
-import color
 import time
 import os
 import logging
@@ -23,6 +22,29 @@ class Engine:
         '''Current frame counter'''
         self.initialized = False
         '''Keeps track of object initialization of the curses module'''
+        self.color_pairs = {}
+        self._next_color = 1
+
+    def gc(self, fg, bg=-1, rw=-1, cl=-1):
+        if not self.initialized:
+            Logger.error('Engine gc() called before initialization!')
+            return None
+        if not bg:
+            bg = -1
+        key = (fg, bg)
+        if not key in self.color_pairs:
+            try:
+                if fg >= curses.COLORS:
+                    fg -= 8
+                if bg >= curses.COLORS:
+                    bg -= 8
+                curses.init_pair(self._next_color, fg, bg)
+                self.color_pairs[key] = curses.color_pair(self._next_color)
+                self._next_color += 1
+            except:
+                Logger.error(f'Engine invalid color pair! -> {fg} {bg} {rw} {cl}')
+                return None
+        return self.color_pairs[key]
 
     def frame_ready(self):
         '''
@@ -43,7 +65,7 @@ class Engine:
         curses.cbreak()
         self.stdscr.keypad(True)
         curses.start_color()
-        #curses.use_default_colors()
+        curses.use_default_colors()
         self.termrows, self.termcols = self.stdscr.getmaxyx()
         curses.curs_set(0)
         self.stdscr.nodelay(True)
@@ -80,10 +102,11 @@ class Engine:
             self.stdscr.erase()
             for r,row in enumerate(screenchars):
                 for c,chr in enumerate(row):
+                    thecolor = -1
                     if r < len(screencolors) and c < len(screencolors[r]):
                         thecolor = screencolors[r][c]
-                    else:
-                        thecolor = color.Color().magenta
+                    if not thecolor:
+                        thecolor = self.gc(curses.COLOR_MAGENTA)
                     self.stdscr.addch(r, c, chr, thecolor)
             self.stdscr.refresh()
         except Exception as e:

@@ -8,9 +8,9 @@ class Corpse(e.Entity):
         super().__init__(typeid=typeid.TID.CORPSE,
                          name='Corpse',
                          glyph='%',
-                         color=color.Color().white,
                          layer=e.Layer.OBJECT_LAYER,
-                         size=e.Size.MEDIUM)
+                         size=e.Size.MEDIUM,
+                         fg=color.COLOR.WHITE)
         self.ItemType = component.ItemType.HAND
 
 class PreciousStone(e.Entity):
@@ -18,9 +18,9 @@ class PreciousStone(e.Entity):
         super().__init__(typeid=typeid.TID.PRECIOUS_STONE,
                          name='Precious Stone',
                          glyph='`',
-                         color=color.Color().grey,
                          layer=e.Layer.OBJECT_LAYER,
-                         size=e.Size.VERY_SMALL)
+                         size=e.Size.VERY_SMALL,
+                         fg=color.COLOR.GREY)
         self.ItemType = component.ItemType.QUIVER
 
 
@@ -29,9 +29,9 @@ class TurtleShell(e.Entity):
         super().__init__(typeid=typeid.TID.TURTLE_SHELL,
                          name='Turtle Shell',
                          glyph='æ',
-                         color=color.Color().grey,
                          layer=e.Layer.OBJECT_LAYER,
-                         size=e.Size.SMALL)
+                         size=e.Size.SMALL,
+                         fg=color.COLOR.GREY)
         self.ItemType = component.ItemType.HAND
 
 class Arrow(e.Entity):
@@ -40,9 +40,9 @@ class Arrow(e.Entity):
         super().__init__(typeid=typeid.TID.ARROW,
                          name='Arrow',
                          glyph=')',
-                         color=color.Color().blue,
                          layer=e.Layer.OBJECT_LAYER,
-                         size=e.Size.VERY_SMALL)
+                         size=e.Size.VERY_SMALL,
+                         fg=color.COLOR.CYAN)
         self.ItemType = component.ItemType.QUIVER
         self.Group = component.Group(
                 parent = self,
@@ -58,9 +58,9 @@ class Fruit(e.Entity):
         super().__init__(typeid=typeid.TID.FRUIT,
                          name='Fruit',
                          glyph='&',
-                         color=color.Color().green,
                          layer=e.Layer.OBJECT_LAYER,
-                         size=e.Size.VERY_SMALL)
+                         size=e.Size.VERY_SMALL,
+                         fg=color.COLOR.GREEN)
         self.Edible = component.Edible(self, nutrition=5)
 
 class Wood(e.Entity):
@@ -68,9 +68,9 @@ class Wood(e.Entity):
         super().__init__(typeid=typeid.TID.WOOD,
                          name='Wood',
                          glyph='#',
-                         color=color.Color().yellow,
                          layer=e.Layer.OBJECT_LAYER,
-                         size=e.Size.SMALL)
+                         size=e.Size.SMALL,
+                         fg=color.COLOR.YELLOW)
         self.Attack = component.Attack(name='Wood', damage=1)
         self.ItemType = component.ItemType.HAND
         self.Group = component.Group(
@@ -87,9 +87,9 @@ class Sword(e.Entity):
         super().__init__(typeid=typeid.TID.SWORD,
                          name='Sword',
                          glyph='/',
-                         color=color.Color().grey,
                          layer=e.Layer.OBJECT_LAYER,
-                         size=e.Size.SMALL)
+                         size=e.Size.SMALL,
+                         fg=color.COLOR.GREY)
         self.Attack = component.Attack(name='Sword', damage=2)
         self.ItemType = component.ItemType.HAND
 
@@ -99,9 +99,9 @@ class Dart(e.Entity):
         super().__init__(typeid=typeid.TID.DART,
                          name='Dart',
                          glyph=')',
-                         color=color.Color().red,
                          layer=e.Layer.OBJECT_LAYER,
-                         size=e.Size.VERY_SMALL)
+                         size=e.Size.VERY_SMALL,
+                         fg=color.COLOR.RED)
         self.ItemType = component.ItemType.QUIVER
         self.Group = component.Group(
                 parent = self,
@@ -117,8 +117,9 @@ class Gambeson(e.Entity):
         super().__init__(typeid=typeid.TID.GAMBESON,
                          name='Gambeson',
                          glyph='[',
-                         color=color.Color().white,
                          layer=e.Layer.OBJECT_LAYER,
-                         size=e.Size.SMALL)
+                         size=e.Size.SMALL,
+                         fg=color.COLOR.WHITE)
         self.ItemType = component.ItemType.BODY
         self.armor = 1
+
