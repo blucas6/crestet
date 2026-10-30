@@ -19,9 +19,7 @@ class Lick(entity.Entity):
     def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
         entitylayer = levelmanager.Levels[z].EntityLayer
         for ent in entitylayer[row][col]:
-            # cannot be poisoned if you have no health
-            if hasattr(ent, 'Health'):
-                ent.apply_status(messager, entity.StatusEffect.POISON, levelmanager)
+            ent.apply_status(messager, entity.StatusEffect.POISON, levelmanager)
 
 class Claw(entity.Entity):
     def __init__(self):

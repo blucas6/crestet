@@ -28,7 +28,7 @@ class StatusEffect(enum.Enum):
         elif self == StatusEffect.BLIND:
             return 18, None
         elif self == StatusEffect.POISON:
-            return 3, None
+            return 4, None
         return 0, None
 
 class AttackType(enum.Enum):
@@ -205,6 +205,9 @@ class Entity:
         # can't be blinded with no eyes
         if status_effect == StatusEffect.BLIND and not hasattr(self, 'eyes'):
             return
+        # can't be poisoned with no health
+        if status_effect == StatusEffect.POISON and not hasattr(self, 'Health'):
+            return
         Logger.info(f'Applying status effect: {status_effect}')
         messager.add_status_message(levelmanager.currentz, self, status_effect)
         self.status[status_effect], newbg = status_effect.status_lookup()
@@ -220,13 +223,14 @@ class Entity:
                     self.death(levelmanager, animator, messager)
                 frames = []
                 frames.append([
-                    ['@'],
+                    [self.glyph],
                 ])
                 anim = animation.Animation(
                     pos=self.pos(),
                     frames=frames,
                     delays=[config.POISON_ANIM_DELAY],
-                    fg=color.COLOR.GREEN,
+                    fg=self.fg,
+                    bg=color.COLOR.GREEN
                 )
                 animator.queueUp(levelmanager, anim)
         self.status = {status: timer for status,timer in self.status.items() if timer > 0}
