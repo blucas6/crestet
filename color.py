@@ -3,6 +3,7 @@ from enum import IntEnum, unique
 
 @unique
 class COLOR(IntEnum):
+    '''Color enums'''
     BLACK = curses.COLOR_BLACK
     RED = curses.COLOR_RED
     GREEN = curses.COLOR_GREEN
@@ -21,6 +22,7 @@ class COLOR(IntEnum):
     BRIGHT_WHITE = curses.COLOR_WHITE+8
 
 def show_colors(stdscr):
+    '''Display this terminals color capabilities'''
     curses.start_color()
     curses.use_default_colors()
     numcolors = curses.COLORS

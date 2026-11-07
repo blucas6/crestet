@@ -316,11 +316,9 @@ class LevelManager:
         idx = entity.idx
         z = entity.z
         level = self.Levels[z]
-        Logger.warning(f'Entitylist before: {level.EntityLayer[r][c]}')
         # decrement the index for the other entities on the square
         for ix in range(idx, len(level.EntityLayer[r][c])):
             level.EntityLayer[r][c][ix].idx -= 1
-        Logger.warning(f'Entitylist after: {level.EntityLayer[r][c]}')
         return level.EntityLayer[r][c].pop(idx)
 
     def reset_turns(self, turn):

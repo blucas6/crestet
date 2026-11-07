@@ -26,6 +26,7 @@ class Engine:
         self._next_color = 1
 
     def gc(self, fg, bg=-1, rw=-1, cl=-1):
+        '''Get a color pair by lazy loading'''
         if not self.initialized:
             Logger.error('Engine gc() called before initialization!')
             return None
@@ -61,15 +62,15 @@ class Engine:
         Required to call at engine startup, returns size of terminal
         '''
         self.stdscr = curses.initscr()
-        curses.noecho()
-        curses.cbreak()
         self.stdscr.keypad(True)
-        curses.start_color()
-        curses.use_default_colors()
         self.termrows, self.termcols = self.stdscr.getmaxyx()
-        curses.curs_set(0)
         self.stdscr.nodelay(True)
         self.stdscr.timeout(self.inputtimeout)
+        curses.noecho()
+        curses.cbreak()
+        curses.start_color()
+        curses.use_default_colors()
+        curses.curs_set(0)
         if timedelay > 0:
             self.framedelay = timedelay
         if sys.platform == 'win32':
