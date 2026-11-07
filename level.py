@@ -84,7 +84,7 @@ class LevelManager:
         level = self.Levels[z]
 
         if not self.is_entity_pos_valid(level, entity, pos, overwrite=overwrite):
-            Logger.error(f'Error: Entity {entity.name} cannot be placed: {pos} z:{z}')
+            #Logger.error(f'Error: Entity {entity.name} cannot be placed: {pos} z:{z}')
             return False
         
         r = pos[0]
@@ -316,11 +316,9 @@ class LevelManager:
         idx = entity.idx
         z = entity.z
         level = self.Levels[z]
-        Logger.warning(f'Entitylist before: {level.EntityLayer[r][c]}')
         # decrement the index for the other entities on the square
         for ix in range(idx, len(level.EntityLayer[r][c])):
             level.EntityLayer[r][c][ix].idx -= 1
-        Logger.warning(f'Entitylist after: {level.EntityLayer[r][c]}')
         return level.EntityLayer[r][c].pop(idx)
 
     def reset_turns(self, turn):

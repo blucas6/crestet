@@ -1,8 +1,8 @@
 import entity
 import config
+import color
 import animation
 import component
-import color
 import utility
 import algo
 import logging
@@ -15,9 +15,9 @@ class SnowRune(entity.Entity):
         super().__init__(typeid=typeid.TID.SNOW,
                          name='Snow Rune',
                          glyph='?',
-                         color=color.Color().blue,
                          layer=entity.Layer.OBJECT_LAYER,
-                         size=entity.Size.VERY_SMALL)
+                         size=entity.Size.VERY_SMALL,
+                         fg=color.COLOR.BLUE)
         self.ItemType = component.ItemType.NOEQUIP
         self.ApplyInfo = component.ApplyInfo.DIRECTION
         self.damage = 1
@@ -43,8 +43,8 @@ class SnowRune(entity.Entity):
         origin = [0, 0, parent.z, parent.idx]
         anim = animation.Animation(pos=origin,
                                    frames=frames,
-                                   color=color.Color().blue,
-                                   delays=delays)
+                                   delays=delays,
+                                   fg=color.COLOR.BLUE)
         animator.queueUp(levelmanager, anim)
 
         # deal damage
@@ -60,9 +60,9 @@ class EmberRune(entity.Entity):
         super().__init__(typeid=typeid.TID.EMBER,
                          name='Ember Rune',
                          glyph='?',
-                         color=color.Color().red,
                          layer=entity.Layer.OBJECT_LAYER,
-                         size=entity.Size.VERY_SMALL)
+                         size=entity.Size.VERY_SMALL,
+                         fg=color.COLOR.RED)
         self.ItemType = component.ItemType.NOEQUIP
         self.ApplyInfo = component.ApplyInfo.DIRECTION
         self.damage = 2
@@ -88,8 +88,8 @@ class EmberRune(entity.Entity):
         origin = [0, 0, parent.z, parent.idx]
         anim = animation.Animation(pos=origin,
                                    frames=frames,
-                                   color=color.Color().red,
-                                   delays=delays)
+                                   delays=delays,
+                                   fg=color.COLOR.RED)
         animator.queueUp(levelmanager, anim)
 
         # deal damage

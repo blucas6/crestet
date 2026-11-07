@@ -1,8 +1,8 @@
 import entity as e
+import color
 import typeid
 import animation
 import config
-import color
 import component
 import utility
 import item
@@ -18,9 +18,9 @@ class Snail(e.Entity):
         super().__init__(typeid=typeid.TID.SNAIL,
                          name='Snail',
                          glyph='s',
-                         color=color.Color().grey,
                          layer=e.Layer.MONSTER_LAYER,
-                         size=e.Size.MEDIUM)
+                         size=e.Size.MEDIUM,
+                         fg=color.COLOR.GREY)
         self.Health = component.Health(health=config.SNAIL_HEALTH)
         self.eyes = config.SNAIL_SIGHTRANGE
         self.xp = config.SNAIL_XP
@@ -58,7 +58,7 @@ class Snail(e.Entity):
             shell = item.TurtleShell()
             levelmanager.place_entity(self.z, shell, (self.row,self.col))
         else:
-            utility.corpse_drop(levelmanager, item.Corpse(), self.color, self.name, self.pos())
+            utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
 
 class Lynx(e.Entity):
     difficulty = 4
@@ -66,9 +66,9 @@ class Lynx(e.Entity):
         super().__init__(typeid=typeid.TID.LYNX,
                          name='Lynx',
                          glyph='f',
-                         color=color.Color().red,
                          layer=e.Layer.MONSTER_LAYER,
-                         size=e.Size.MEDIUM)
+                         size=e.Size.MEDIUM,
+                         fg=color.COLOR.RED)
         self.Health = component.Health(health=config.LYNX_HEALTH)
         self.eyes = config.LYNX_SIGHTRANGE
         self.xp = config.LYNX_XP
@@ -106,7 +106,7 @@ class Lynx(e.Entity):
             stone = item.PreciousStone()
             levelmanager.place_entity(self.z, stone, (self.row,self.col))
         else:
-            utility.corpse_drop(levelmanager, item.Corpse(), self.color, self.name, self.pos())
+            utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
 
 class Raven(e.Entity):
     difficulty = 3
@@ -114,9 +114,9 @@ class Raven(e.Entity):
         super().__init__(typeid=typeid.TID.RAVEN,
                          name='Raven',
                          glyph='r',
-                         color=color.Color().blue,
                          layer=e.Layer.MONSTER_LAYER,
-                         size=e.Size.SMALL)
+                         size=e.Size.SMALL,
+                         fg=color.COLOR.BLUE)
         self.eyes = config.RAVEN_SIGHTRANGE
         self.Health = component.Health(health=config.RAVEN_HEALTH)
         self.Brain = brain.SimpleBrain(sightrange=self.eyes,
@@ -151,7 +151,7 @@ class Raven(e.Entity):
 
     def death(self, levelmanager, animator, messager):
         super().death(levelmanager)
-        utility.corpse_drop(levelmanager, item.Corpse(), self.color, self.name, self.pos())
+        utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
 
 class Goblin(e.Entity):
     '''
@@ -162,9 +162,9 @@ class Goblin(e.Entity):
         super().__init__(typeid=typeid.TID.GOBLIN,
                          name='Goblin',
                          glyph='g',
-                         color=color.Color().green,
                          layer=e.Layer.MONSTER_LAYER,
-                         size=e.Size.MEDIUM)
+                         size=e.Size.MEDIUM,
+                         fg=color.COLOR.GREEN)
         self.eyes = config.GOBLIN_SIGHTRANGE
         self.Health = component.Health(health=config.GOBLIN_HEALTH)
         self.Brain = brain.SimpleBrain(sightrange=self.eyes,
@@ -202,7 +202,7 @@ class Goblin(e.Entity):
 
     def death(self, levelmanager, animator, messager):
         super().death(levelmanager)
-        utility.corpse_drop(levelmanager, item.Corpse(), self.color, self.name, self.pos())
+        utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
 
 class Human(e.Entity):
     '''
@@ -212,9 +212,9 @@ class Human(e.Entity):
         super().__init__(typeid=typeid.TID.HUMAN,
                          name='Human',
                          glyph='@',
-                         color=color.Color().white,
                          layer=e.Layer.MONSTER_LAYER,
-                         size=e.Size.MEDIUM)
+                         size=e.Size.MEDIUM,
+                         fg=color.COLOR.WHITE)
         self.Interact = component.Interact()
 
 class Newt(e.Entity):
@@ -226,9 +226,9 @@ class Newt(e.Entity):
         super().__init__(typeid=typeid.TID.NEWT,
                          name='Newt',
                          glyph='n',
-                         color=color.Color().yellow,
                          layer=e.Layer.MONSTER_LAYER,
-                         size=e.Size.MEDIUM)
+                         size=e.Size.MEDIUM,
+                         fg=color.COLOR.YELLOW)
         self.eyes = config.NEWT_SIGHTRANGE
         self.Health = component.Health(health=config.NEWT_HEALTH)
         self.Brain = brain.SimpleBrain(sightrange=self.eyes,
@@ -261,7 +261,7 @@ class Newt(e.Entity):
 
     def death(self, levelmanager, animator, messager):
         super().death(levelmanager)
-        utility.corpse_drop(levelmanager, item.Corpse(), self.color, self.name, self.pos())
+        utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
 
 class Jelly(e.Entity):
     '''
@@ -272,9 +272,9 @@ class Jelly(e.Entity):
         super().__init__(typeid=typeid.TID.JELLY,
                          name='Jelly',
                          glyph='j',
-                         color=color.Color().blue,
                          layer=e.Layer.MONSTER_LAYER,
-                         size=e.Size.MEDIUM)
+                         size=e.Size.MEDIUM,
+                         fg=color.COLOR.BLUE)
         self.Health = component.Health(health=config.JELLY_HEALTH)
         self.splashdamage = config.JELLY_SPLASHDMG
         self.xp = 2
@@ -303,8 +303,8 @@ class Jelly(e.Entity):
         anim = animation.Animation(
             pos=origin,
             frames=frames, 
-            color=color.Color().blue,
-            delays=delays)
+            delays=delays,
+            fg=color.COLOR.BLUE)
         animator.queueUp(levelmanager, anim)
         # spread damage
         points = utility.get_one_layer_pts((self.row,self.col),

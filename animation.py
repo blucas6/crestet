@@ -1,4 +1,3 @@
-import color
 import config
 
 class AnimationFrame:
@@ -15,13 +14,16 @@ class Animation:
     '''
     Holds all data for a single animation
     '''
-    def __init__(self, pos, frames: list, color, delays=[]):
+    def __init__(self, pos, frames: list, delays: list, fg, bg=-1):
         self.pos = pos
         '''Position of the animation relative to the map'''
         self.animation_frames = []
         '''List of animation frames'''
-        self.color = color
         '''Color of the animation'''
+        self.fg = fg
+        '''Foreground color of animation'''
+        self.bg = bg
+        '''Background color of animation'''
 
         # load animation frames
         if not delays:

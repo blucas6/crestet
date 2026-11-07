@@ -7,8 +7,8 @@ Logger = logging.getLogger(__name__)
 ONE_LAYER_CIRCLE = [(1,-1),(1,0),(1,1),(0,-1),(0,0),(0,1),(-1,-1),(-1,0),(-1,1)]
 ONE_LAYER_CROSS = [(0,0), (-1,0), (1,0), (0,-1), (0,1)]
 
-def corpse_drop(levelmanager, corpse, color, name, pos):
-    corpse.color = color
+def corpse_drop(levelmanager, corpse, fg, name, pos):
+    corpse.fg = fg 
     corpse.name = name + ' ' + corpse.name
     levelmanager.place_entity(pos[2], corpse, (pos[0],pos[1]))
 

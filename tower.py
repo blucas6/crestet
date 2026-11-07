@@ -1,7 +1,7 @@
 import entity
+import color
 import item
 import utility
-import color
 import component
 import logging
 import typeid
@@ -13,17 +13,17 @@ class UnknownEntity(entity.Entity):
         super().__init__(typeid=typeid.TID.UNKNOWN,
                          name='Unknown',
                          glyph='!',
-                         color=color.Color().magenta,
                          layer=entity.Layer.MONSTER_LAYER,
-                         size=entity.Size.SMALL)
+                         size=entity.Size.SMALL,
+                         fg=color.COLOR.MAGENTA)
 class UnknownStructure(entity.Entity):
     def __init__(self):
         super().__init__(typeid=typeid.TID.UNKNOWNSTRUCT,
                          name='Unknown',
                          glyph='▒',
-                         color=color.Color().white,
                          layer=entity.Layer.MONSTER_LAYER,
-                         size=entity.Size.SMALL)
+                         size=entity.Size.SMALL,
+                         fg=color.COLOR.WHITE)
 
 class Barrel(entity.Entity):
     '''Barrel entity'''
@@ -31,9 +31,9 @@ class Barrel(entity.Entity):
         super().__init__(typeid=typeid.TID.BARREL,
                          name='Barrel',
                          glyph='0',
-                         color=color.Color().yellow,
                          layer=entity.Layer.BARREL_LAYER,
-                         size=entity.Size.LARGE)
+                         size=entity.Size.LARGE,
+                         fg=color.COLOR.YELLOW)
         self.Breakable = component.Breakable(max_dmg=1)
     
     def death(self, levelmanager, animator, messager):
@@ -47,9 +47,9 @@ class Floor(entity.Entity):
         super().__init__(typeid=typeid.TID.FLOOR,
                          name='Floor',
                          glyph='.',
-                         color=color.Color().white,
                          layer=entity.Layer.FLOOR_LAYER,
-                         size=entity.Size.LARGE)
+                         size=entity.Size.LARGE,
+                         fg=color.COLOR.WHITE)
 
 class StairUp(entity.Entity):
     '''Up stair entity'''
@@ -57,9 +57,9 @@ class StairUp(entity.Entity):
         super().__init__(typeid=typeid.TID.STAIRUP,
                          name='Upstair',
                          glyph='<',
-                         color=color.Color().white,
                          layer=entity.Layer.STAIR_LAYER,
-                         size=entity.Size.VERY_LARGE)
+                         size=entity.Size.VERY_LARGE,
+                         fg=color.COLOR.WHITE)
 
 class StairDown(entity.Entity):
     '''Down stair entity'''
@@ -67,9 +67,9 @@ class StairDown(entity.Entity):
         super().__init__(typeid=typeid.TID.STAIRDOWN,
                          name='Downstair',
                          glyph='>',
-                         color=color.Color().white,
                          layer=entity.Layer.STAIR_LAYER,
-                         size=entity.Size.VERY_LARGE)
+                         size=entity.Size.VERY_LARGE,
+                         fg=color.COLOR.WHITE)
 
 class Light(entity.Entity):
     '''Light entity'''
@@ -77,9 +77,9 @@ class Light(entity.Entity):
         super().__init__(typeid=typeid.TID.LIGHT,
                          name='Light',
                          glyph='+',
-                         color=color.Color().bright_yellow,
                          layer=entity.Layer.OBJECT_LAYER,
-                         size=entity.Size.SMALL)
+                         size=entity.Size.SMALL,
+                         fg=color.COLOR.BRIGHT_YELLOW)
         self.light = True
         '''Controls whether the light is on'''
 

@@ -1,4 +1,5 @@
 import curses
+import color
 import argparse
 import timing
 import simulator
@@ -21,6 +22,8 @@ if __name__ == '__main__':
                         help='runs random games to get a timing analysis')
     parser.add_argument('-c', '--combat', action='store_true',
                         help='runs a combat analysis test')
+    parser.add_argument('-z', '--color', action='store_true',
+                        help='Show all colors available in your terminal')
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -42,6 +45,8 @@ if __name__ == '__main__':
         combat = simulator.CombatTest(seed=args.seed, display=args.display, timing=False)
         combat.start()
         combat.run()
+    elif args.color:
+        curses.wrapper(color.show_colors)
     else:
         g = game.Game(seed=args.seed, timing=args.timing)
         g.start()
