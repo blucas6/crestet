@@ -1,6 +1,5 @@
 import utility
 import color
-import tower
 import entity
 import engine
 import config
@@ -70,7 +69,9 @@ class Display:
         '''Creates empty buffers'''
         self.screenbuffer = [[' ' for _ in range(self.termcols-1)] 
                                     for _ in range(self.termrows-1)]
-        self.colorbuffer = [[self.Engine.gc(color.COLOR.BLACK) for _ in range(self.termcols-1)] 
+        if self.displayon:
+            self.colorbuffer = [[
+                self.Engine.gc(color.COLOR.BLACK) for _ in range(self.termcols-1)] 
                                     for _ in range(self.termrows-1)]
 
     def render_menus(self, menumanager):
@@ -82,7 +83,8 @@ class Display:
                     cl = c+menu.origin[1]
                     if rw < len(self.screenbuffer) and cl < len(self.screenbuffer[rw]):
                         self.screenbuffer[rw][cl] = ch
-                        self.colorbuffer[rw][cl] = self.Engine.gc(color.COLOR.WHITE)
+                        if self.displayon:
+                            self.colorbuffer[rw][cl] = self.Engine.gc(color.COLOR.WHITE)
 
     def render_lightlayer(self, entitylayer, lightlayer):
         '''Add light highlighting to the screen'''
@@ -93,7 +95,8 @@ class Display:
                     rw, cl = self.level_to_screen_pos(r,c)
                     # only make non monsters glow
                     if ent.layer != entity.Layer.MONSTER_LAYER:
-                        self.colorbuffer[rw][cl] = self.Engine.gc(color.COLOR.BRIGHT_YELLOW)
+                        if self.displayon:
+                            self.colorbuffer[rw][cl] = self.Engine.gc(color.COLOR.BRIGHT_YELLOW)
 
     def render_entitylayer(self, entitylayer):
         '''Go through the entity layer and add it to the screen'''
@@ -122,10 +125,11 @@ class Display:
                     continue
                 # add glyph
                 self.screenbuffer[rw][cl] = glyph
-                if not self.bounds_check(self.colorbuffer, rw, cl):
-                    continue
                 # add color
-                self.colorbuffer[rw][cl] = self.Engine.gc(fg, bg, rw, cl)
+                if self.displayon:
+                    if not self.bounds_check(self.colorbuffer, rw, cl):
+                        continue
+                    self.colorbuffer[rw][cl] = self.Engine.gc(fg, bg, rw, cl)
 
     def bounds_check(self, buffer, r, c):
         '''
@@ -189,7 +193,8 @@ class Display:
                 elif (pos[0]+r,pos[1]+c) in fovpoints:
                     rw, cl = self.level_to_screen_pos(pos[0]+r, pos[1]+c)
                     screenbuffer[rw][cl] = col
-                    colorbuffer[rw][cl] = self.Engine.gc(fg, bg) 
+                    if self.displayon:
+                        colorbuffer[rw][cl] = self.Engine.gc(fg, bg) 
 
     def get_animation_frames(self, animator, levelz, fovpoints):
         '''
