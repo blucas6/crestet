@@ -9,6 +9,12 @@ import logging
 
 Logger = logging.getLogger(__name__)
 
+class ItemGenerator:
+    def __init__(self, itemname, amount, chance):
+        self.itemname = itemname
+        self.amount = amount
+        self.chance = chance
+
 class Combat:
     '''Combat component, every entity that can engage in damage must have one'''
     def __init__(self):
@@ -213,7 +219,7 @@ class Leveling:
         messager.add_level_up_message(levelmanager.currentz, parent_entity)
         # increase max health
         if hasattr(parent_entity, 'Health'):
-            parent_entity.Health.maxhealth += self.curr_level
+            parent_entity.Health.maxhealth += 1
         # health restore
         if hasattr(parent_entity, 'Health'):
             parent_entity.Health.restore_max_health()

@@ -42,6 +42,7 @@ class HealthMenu(Menu):
         maxhealth = healthcomponent.maxhealth
         amount = round(config.HEALTHMENU_BAR * currenthealth / maxhealth)
         self.text[0] = '[' + amount*'\u2588' + (config.HEALTHMENU_BAR-amount)*' ' + ']'
+        self.text[0] += f' {currenthealth}/{maxhealth}'
 
 class StatusMenu(Menu):
     '''

@@ -1,11 +1,19 @@
 import algo
 import entity
 import logging
+import random
 
 Logger = logging.getLogger(__name__)
 
 ONE_LAYER_CIRCLE = [(1,-1),(1,0),(1,1),(0,-1),(0,0),(0,1),(-1,-1),(-1,0),(-1,1)]
 ONE_LAYER_CROSS = [(0,0), (-1,0), (1,0), (0,-1), (0,1)]
+TWO_LAYER_CIRCLE = [(-2,-2),(-2,-1),(-2,0),(-2,1),(-2,2),(-1,-2),(-1,2),(0,-2),(0,2),(1,-2),(1,2),(2,-2),(2,-1),(2,0),(2,1),(2,2)]
+
+def get_surrounding_pt():
+    pts = ONE_LAYER_CIRCLE + TWO_LAYER_CIRCLE
+    random.shuffle(pts)
+    for pt in pts:
+        yield pt
 
 def corpse_drop(levelmanager, corpse, fg, name, pos):
     corpse.fg = fg 

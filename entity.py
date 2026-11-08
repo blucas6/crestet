@@ -366,26 +366,29 @@ class Entity:
                     messager.add_level_fail_message(levelmanager.currentz,
                                                     self, -1)
                     return
-                # check if there is a monster/barrel above you
-                entitylayer = levelmanager.Levels[newz].EntityLayer
-                _,an_entity = utility.get_max_entity(entitylayer[self.row][self.col])
-                # fight on stairwell
-                if ((an_entity.layer == Layer.MONSTER_LAYER or
-                    an_entity.layer == Layer.BARREL_LAYER) and
-                    hasattr(self, 'Combat')):
-                    # auto fight the entity
-                    self.energy -= self.speed
-                    self.Combat.attack_melee(self, levelmanager, animator, messager, an_entity, rng)
-                    return
-                # success
-                else:
-                    if levelmanager.move_entity_z(self, newz,
-                                                  [self.row,self.col],
-                                                  generator):
-                        messager.add_stair_message(levelmanager.currentz,
-                                                   self, incrementz)
+                # check if stair corresponds to the move
+                if ((incrementz > 0 and ent.name == 'Upstair') or
+                    (incrementz < 0 and ent.name == 'Downstair')):
+                    # check if there is a monster/barrel above you
+                    entitylayer = levelmanager.Levels[newz].EntityLayer
+                    _,an_entity = utility.get_max_entity(entitylayer[self.row][self.col])
+                    # fight on stairwell
+                    if ((an_entity.layer == Layer.MONSTER_LAYER or
+                        an_entity.layer == Layer.BARREL_LAYER) and
+                        hasattr(self, 'Combat')):
+                        # auto fight the entity
                         self.energy -= self.speed
+                        self.Combat.attack_melee(self, levelmanager, animator, messager, an_entity, rng)
                         return
+                    # success
+                    else:
+                        if levelmanager.move_entity_z(self, newz,
+                                                      [self.row,self.col],
+                                                      generator):
+                            messager.add_stair_message(levelmanager.currentz,
+                                                       self, incrementz)
+                            self.energy -= self.speed
+                            return
         # stairwell not on this space
         messager.add_stair_fail_message(levelmanager.currentz, self, incrementz)
 

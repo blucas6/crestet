@@ -12,6 +12,51 @@ import brain
 
 Logger = logging.getLogger(__name__)
 
+class GoblinLeader(e.Entity):
+    difficulty = 4
+    pack = 2
+    packtype = ['Goblin']
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.GOBLINLEADER,
+                         name='Goblin Leader',
+                         glyph='G',
+                         layer=e.Layer.MONSTER_LAYER,
+                         size=e.Size.MEDIUM,
+                         fg=color.COLOR.GREEN)
+        self.Health = component.Health(health=config.GOBLINLEADER_HEALTH)
+        self.eyes = config.GOBLINLEADER_SIGHTRANGE
+        self.xp = config.GOBLINLEADER_XP
+        self.Brain = brain.SimpleBrain(sightrange=self.eyes,
+                                     blockinglayer=e.Layer.MONSTER_LAYER,
+                                     attacks=[e.AttackType.THROW,e.AttackType.MELEE])
+        self.speed = e.Speed.SLOW
+        self.Combat = component.Combat()
+        self.Inventory = component.Inventory()
+        self.Inventory.equip(ability.Bite())
+        for _ in range(5):
+            self.Inventory.collect(item.Dart())
+
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
+        '''Uses brain to select an action'''
+        self.do_action(
+            levelmanager,
+            animator,
+            messager,
+            menumanager,
+            statemachine,
+            self.Brain.get_action(
+                levelmanager.Levels[self.z],
+                [self.row,self.col],
+                self.energy,
+                rng,
+                self.speed,
+                self.status,
+                self.Inventory
+            ),
+            rng,
+            generator
+        )
+
 class Snail(e.Entity):
     difficulty = 4
     def __init__(self):
@@ -161,6 +206,7 @@ class Goblin(e.Entity):
     Goblin creature
     '''
     difficulty = 2
+    item_generators = [component.ItemGenerator('Gambeson', 1, 50)]
     def __init__(self):
         super().__init__(typeid=typeid.TID.GOBLIN,
                          name='Goblin',

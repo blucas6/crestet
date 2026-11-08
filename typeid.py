@@ -44,6 +44,7 @@ class TID(IntEnum):
     HUMAN           = 105
     LYNX            = 106
     SNAIL           = 107
+    GOBLINLEADER    = 108
 
     EMBER           = 1001
     SNOW            = 1002

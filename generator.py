@@ -294,16 +294,44 @@ class Generator:
             levelmanager.place_entity(currlevel.z, monster.Human(), (r,c))
         '''
 
-        mons = [m for m in self.monster_classes if m.difficulty <= level_difficulty]
+        all_mons = [m for m in self.monster_classes if m.difficulty <= level_difficulty]
         attempt = 0
         while starting_difficulty < level_difficulty and attempt < config.MAX_RETRIES:
             attempt += 1
+            Logger.info(f'Attemp mons gen: {attempt} difficulty: {starting_difficulty} ({level_difficulty})')
             r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
-            n = self.RNG.randint(0, len(mons)-1)
-            new_mon = mons[n]()
+            n = self.RNG.randint(0, len(all_mons)-1)
+            new_mon = all_mons[n]()
             if levelmanager.place_entity(currlevel.z, new_mon, (r,c)):
                 starting_difficulty += new_mon.difficulty
                 Logger.info(f'Adding new mon to level: {new_mon}')
+                self.generate_pack_mons(levelmanager, currlevel, all_mons[n], (r,c))
+        if attempt >= config.MAX_RETRIES:
+            Logger.warning('Generate mons max retries!')
+
+    def generate_pack_mons(self, levelmanager, currlevel, mon, pos):
+        if not hasattr(mon, 'pack') or not hasattr(mon, 'packtype'):
+            return
+        packmons = [m for m in self.monster_classes if m.__name__ in mon.packtype]
+        if not packmons:
+            Logger.warning(f'Monster pack list empty!')
+            return
+        for ix in range(mon.pack):
+            attempt = 0
+            genpts = utility.get_surrounding_pt()
+            while attempt < config.MAX_RETRIES:
+                attempt += 1
+                if len(packmons) == 1:
+                    n = 0
+                else:
+                    n = self.RNG.randint(0, len(packmons)-1)
+                new_mon = packmons[n]()
+                dx,dy = next(genpts)
+                if levelmanager.place_entity(currlevel.z, new_mon, (pos[0]+dx,pos[1]+dy)):
+                    Logger.info(f'Adding pack mon to level: {new_mon}')
+                    break
+            if attempt >= config.MAX_RETRIES:
+                Logger.warning('Generate pack mons max retries!')
 
     def generate_items(self, levelmanager: level.LevelManager, currlevel: level.Level, item_amount):
         '''Add items to the level'''

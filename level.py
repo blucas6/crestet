@@ -173,20 +173,19 @@ class LevelManager:
             done_turn = True
             for row in level.EntityLayer:
                 for entitylist in row:
-                    # create a manually loop since entities might be removed
+                    # create a manual loop since entities might be removed
                     # during an update loop
                     index = 0
                     currlistsize = len(entitylist)
                     while index < currlistsize:
+                        # get the list size at the start of the turn
+                        currlistsize = len(entitylist)
                         try:
                             entity = entitylist[index]
                         except:
                             Logger.error(f'ERROR: {entitylist}')
                             Logger.error(f'ERROR: idx:{index}')
-                            break
-                        currlistsize = len(entitylist)
-                        if entity.name == 'Newt':
-                            Logger.info(f'Current turn: {currentturn} {entity} {entity.turn}')
+                            raise
                         done = self.update_entity(display,
                                                   animator,
                                                   messager,
@@ -197,9 +196,8 @@ class LevelManager:
                                                   generator)
                         # some entities need more turns
                         if not done: done_turn = False
-                        # entities were removed from the list
-                        # restart the index
-                        if currlistsize < len(entitylist):
+                        # entity list changed, restart the index
+                        if currlistsize != len(entitylist):
                             index = 0
                         else:
                             index += 1
