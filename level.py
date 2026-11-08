@@ -69,9 +69,10 @@ class LevelManager:
         self.place_entity(playerz, self.Player, playerpos)
         self.currentz = playerz
 
-    def add_to_level(self, entity, pos, z):
+    def add_to_level(self, entity, pos, z, overwrite=False):
+        '''Adds an entity to the level and calls the init hook'''
         entity.on_init(self.RNG)
-        return self.place_entity(z, entity, pos)
+        return self.place_entity(z, entity, pos, overwrite)
 
     def place_entity(self, z, entity, pos, overwrite=False):
         '''Place an entity into the level'''

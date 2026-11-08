@@ -101,7 +101,7 @@ class Snail(e.Entity):
     def death(self, levelmanager, animator, messager):
         super().death(levelmanager)
         if levelmanager.RNG.randint(0,1) == 0:
-            shell = item.TurtleShell()
+            shell = item.SnailShell()
             levelmanager.place_entity(self.z, shell, (self.row,self.col))
         else:
             utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
@@ -206,7 +206,6 @@ class Goblin(e.Entity):
     Goblin creature
     '''
     difficulty = 2
-    item_generators = [component.ItemGenerator('Gambeson', 1, 50)]
     def __init__(self):
         super().__init__(typeid=typeid.TID.GOBLIN,
                          name='Goblin',
@@ -222,12 +221,9 @@ class Goblin(e.Entity):
                                               e.AttackType.MELEE])
         self.Combat = component.Combat()
         self.Inventory = component.Inventory(autopickuplist=['Dart'])
+        self.Inventory.equip(ability.Bite())
         self.speed = e.Speed.SLOW
         self.xp = config.GOBLIN_XP
-
-        self.Inventory.equip(ability.Bite())
-        for _ in range(5):
-            self.Inventory.collect(item.Dart())
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
@@ -253,6 +249,14 @@ class Goblin(e.Entity):
     def death(self, levelmanager, animator, messager):
         super().death(levelmanager)
         utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
+
+    def on_init(self, rng):
+        darts = rng.randint(3, 7)
+        for _ in range(darts):
+            self.Inventory.collect(item.Dart())
+        
+        if rng.randint(0,1):
+            self.Inventory.equip(item.Gambeson())
 
 class Human(e.Entity):
     '''

@@ -36,7 +36,7 @@
       "min_walls": 80,
       "min_barrels": 20,
       "lights": true,
-      "items": 5,
+      "items": 1,
       "runes": 1,
       "mons": true,
       "plants": 7
@@ -49,7 +49,7 @@
       "min_walls": 80,
       "min_barrels": 20,
       "lights": true,
-      "items": 5,
+      "items": 1,
       "runes": 1,
       "mons": true,
       "plants": 10

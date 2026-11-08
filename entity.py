@@ -348,6 +348,10 @@ class Entity:
     def death(self, levelmanager, *_):
         '''Entities can add to this method to trigger on death actions'''
         levelmanager.remove_entity(self)
+        if hasattr(self, 'Inventory'):
+            for item in self.Inventory.get_all_items():
+                levelmanager.place_entity(self.z, item, self.pos())
+
 
     def moveZ(self, levelmanager, animator, messager, incrementz, rng, generator):
         '''Move an to another z level'''

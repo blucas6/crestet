@@ -24,10 +24,10 @@ class PreciousStone(e.Entity):
         self.ItemType = component.ItemType.QUIVER
 
 
-class TurtleShell(e.Entity):
+class SnailShell(e.Entity):
     def __init__(self):
-        super().__init__(typeid=typeid.TID.TURTLE_SHELL,
-                         name='Turtle Shell',
+        super().__init__(typeid=typeid.TID.SNAIL_SHELL,
+                         name='Snail Shell',
                          glyph='æ',
                          layer=e.Layer.OBJECT_LAYER,
                          size=e.Size.SMALL,
@@ -82,7 +82,7 @@ class Wood(e.Entity):
             )
 
 class Sword(e.Entity):
-    spawn = True
+    #spawn = True
     def __init__(self):
         super().__init__(typeid=typeid.TID.SWORD,
                          name='Sword',
@@ -112,7 +112,7 @@ class Dart(e.Entity):
             )
 
 class Gambeson(e.Entity):
-    spawn = True
+    #spawn = True
     def __init__(self):
         super().__init__(typeid=typeid.TID.GAMBESON,
                          name='Gambeson',

@@ -309,9 +309,12 @@ class Inventory:
         self.autopickuplist = autopickuplist
         '''Items that should be picked up automatically'''
 
-    def get_all_items(self):
-        return [self.quiver, self.mainHand, self.offHand, self.head, self.body,
-                self.feet, self.ability] + self.contents
+    def get_all_items(self, ability=False):
+        items = [self.quiver, self.mainHand, self.offHand, self.head, self.body,
+                self.feet] + self.contents
+        if ability:
+            items.append(self.ability)
+        return items
 
     def autopickup(self, levelmanager, entitylist):
         '''
