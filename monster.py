@@ -32,7 +32,7 @@ class Snail(e.Entity):
         self.Inventory = component.Inventory()
         self.Inventory.equip(ability.Lick())
 
-    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
         self.do_action(
             levelmanager,
@@ -49,7 +49,8 @@ class Snail(e.Entity):
                 self.status,
                 self.Inventory
             ),
-            rng
+            rng,
+            generator
         )
     
     def death(self, levelmanager, animator, messager):
@@ -80,7 +81,7 @@ class Lynx(e.Entity):
         self.Inventory = component.Inventory()
         self.Inventory.equip(ability.Claw())
 
-    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
         self.do_action(
             levelmanager,
@@ -97,7 +98,8 @@ class Lynx(e.Entity):
                 self.status,
                 self.Inventory
             ),
-            rng
+            rng,
+            generator
         )
 
     def death(self, levelmanager, animator, messager):
@@ -129,7 +131,7 @@ class Raven(e.Entity):
 
         self.Inventory.equip(ability.Peck())
 
-    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
         self.do_action(
             levelmanager,
@@ -146,7 +148,8 @@ class Raven(e.Entity):
                 self.status,
                 self.Inventory
             ),
-            rng
+            rng,
+            generator
         )
 
     def death(self, levelmanager, animator, messager):
@@ -180,7 +183,7 @@ class Goblin(e.Entity):
         for _ in range(5):
             self.Inventory.collect(item.Dart())
 
-    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
         self.do_action(
             levelmanager,
@@ -197,7 +200,8 @@ class Goblin(e.Entity):
                 self.status,
                 self.Inventory
             ),
-            rng
+            rng,
+            generator
         )
 
     def death(self, levelmanager, animator, messager):
@@ -240,7 +244,7 @@ class Newt(e.Entity):
         self.Combat = component.Combat()
         self.Inventory.equip(ability.Bite())
 
-    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
         self.do_action(
             levelmanager,
@@ -256,7 +260,8 @@ class Newt(e.Entity):
                 self.speed,
                 self.status
             ),
-            rng
+            rng,
+            generator
         )
 
     def death(self, levelmanager, animator, messager):

@@ -349,7 +349,7 @@ class Entity:
         '''Entities can add to this method to trigger on death actions'''
         levelmanager.remove_entity(self)
 
-    def moveZ(self, levelmanager, animator, messager, incrementz, rng):
+    def moveZ(self, levelmanager, animator, messager, incrementz, rng, generator):
         '''Move an to another z level'''
         if self.energy < self.speed:
             return
@@ -379,7 +379,9 @@ class Entity:
                     return
                 # success
                 else:
-                    if levelmanager.move_entity_z(self, newz, [self.row,self.col]):
+                    if levelmanager.move_entity_z(self, newz,
+                                                  [self.row,self.col],
+                                                  generator):
                         messager.add_stair_message(levelmanager.currentz,
                                                    self, incrementz)
                         self.energy -= self.speed
@@ -423,7 +425,7 @@ class Entity:
             return MoveAction.ATTACKED
         return MoveAction.INVALID
     
-    def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event, rng):
+    def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event, rng, generator):
         '''Pass an event for the entity to preform a certain action'''
 
         if hasattr(self, 'Health') and not self.Health.alive:
@@ -469,9 +471,9 @@ class Entity:
                           rng)
         # Z
         elif event == '<': 
-            self.moveZ(levelmanager, animator, messager, 1, rng)
+            self.moveZ(levelmanager, animator, messager, 1, rng, generator)
         elif event == '>':
-            self.moveZ(levelmanager, animator, messager, -1, rng)
+            self.moveZ(levelmanager, animator, messager, -1, rng, generator)
         # Inventory
         elif (hasattr(self, 'Inventory') and
             ((len(event) > 1 and

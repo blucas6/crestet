@@ -158,8 +158,8 @@ class Generator:
                     self.generate_clear_path(levelmanager, currlevel, config.PLAYERPOS, upstair_pos)
             if upstair_pos and downstair_pos:
                 self.generate_clear_path(levelmanager, currlevel, upstair_pos, downstair_pos)
-            if level_layout.mons > 0:
-                self.generate_mons(levelmanager, currlevel, level_layout.mons)
+            if level_layout.mons:
+                self.generate_mons(levelmanager, currlevel, 0, currlevel.difficulty)
             if level_layout.items > 0:
                 self.generate_items(levelmanager, currlevel, level_layout.items)
             if level_layout.runes > 0:
@@ -284,27 +284,26 @@ class Generator:
                 levelmanager.place_entity(currlevel.z, light, (r,c))
                 light.update_state(levelmanager)
 
-    def generate_mons(self, levelmanager: level.LevelManager, currlevel: level.Level, mon_amount):
+    def generate_mons(self, levelmanager: level.LevelManager, currlevel: level.Level, starting_difficulty, level_difficulty):
         '''Add monsters to the level'''
 
-        dlevel = 1 + currlevel.z + currlevel.z/2
-        mons = [m for m in self.monster_classes if m.difficulty <= dlevel]
-
-        difficulty = 0
-        attempt = 0
-        while difficulty < dlevel and attempt < config.MAX_RETRIES:
-            attempt += 1
-            r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
-            n = self.RNG.randint(0, len(mons)-1)
-            new_mon = mons[n]()
-            if levelmanager.place_entity(currlevel.z, new_mon, (r,c)):
-                difficulty += new_mon.difficulty
         '''
         for _ in range(1):
             r = self.RNG.randint(1,self.levelrows-1)
             c = self.RNG.randint(1,self.levelcols-1)
             levelmanager.place_entity(currlevel.z, monster.Human(), (r,c))
         '''
+
+        mons = [m for m in self.monster_classes if m.difficulty <= level_difficulty]
+        attempt = 0
+        while starting_difficulty < level_difficulty and attempt < config.MAX_RETRIES:
+            attempt += 1
+            r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
+            n = self.RNG.randint(0, len(mons)-1)
+            new_mon = mons[n]()
+            if levelmanager.place_entity(currlevel.z, new_mon, (r,c)):
+                starting_difficulty += new_mon.difficulty
+                Logger.info(f'Adding new mon to level: {new_mon}')
 
     def generate_items(self, levelmanager: level.LevelManager, currlevel: level.Level, item_amount):
         '''Add items to the level'''

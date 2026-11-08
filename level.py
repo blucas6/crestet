@@ -26,6 +26,8 @@ class Level:
         '''Tracks all lit spaces on level'''
         self.RNG = rng
         '''Random generator with optional seed'''
+        self.difficulty = int(1 + z + z/2)
+        self.player_difficulty = -1
 
 class LevelManager:
     '''
@@ -149,7 +151,7 @@ class LevelManager:
             return self.Levels[self.currentz]
         return None
 
-    def update_level(self, level, energy, display, animator, messager, menumanager, statemachine, currentturn):
+    def update_level(self, level, energy, display, animator, messager, menumanager, statemachine, currentturn, generator):
         '''Updates all entities on a single level with a given amount of energy'''
         if not level:
             return
@@ -191,7 +193,8 @@ class LevelManager:
                                                   menumanager,
                                                   statemachine,
                                                   entity,
-                                                  currentturn)
+                                                  currentturn,
+                                                  generator)
                         # some entities need more turns
                         if not done: done_turn = False
                         # entities were removed from the list
@@ -201,14 +204,14 @@ class LevelManager:
                         else:
                             index += 1
 
-    def update_player(self, display, animator, messager, menumanager, statemachine, event, rng):
+    def update_player(self, display, animator, messager, menumanager, statemachine, event, rng, generator):
         '''Updates the player and returns the energy used'''
         Logger.info(f'-------- TURN UPDATE ({self.Player.turn + 1}) ---------')
         self.Player.energy = 100
         self.Player.update_status(self, messager, animator)
         self.Player.update_state(self)
         Logger.info(f'Player status: {self.Player.status}')
-        self.Player.do_action(self, animator, messager, menumanager, statemachine, event, rng)
+        self.Player.do_action(self, animator, messager, menumanager, statemachine, event, rng, generator)
         self.Player.turn += 1
 
         # update the level the player is on
@@ -224,7 +227,7 @@ class LevelManager:
             energy = self.Player.speed
         return energy
 
-    def update_all(self, display, animator, messager, menumanager, statemachine, energy, currentturn):
+    def update_all(self, display, animator, messager, menumanager, statemachine, energy, currentturn, generator):
         '''Go through all entities and update them'''
 
         timing.Timing.start('Game Loop')
@@ -232,18 +235,18 @@ class LevelManager:
         Logger.info(f'-- UPDATE ALL {currentturn} --')
 
         for level in self.Levels:
-            self.update_level(level, energy, display, animator, messager, menumanager, statemachine, currentturn)
+            self.update_level(level, energy, display, animator, messager, menumanager, statemachine, currentturn, generator)
 
         timing.Timing.end()
 
-    def update_entity(self, display, animator, messager, menumanager, statemachine, entity, currentturn):
+    def update_entity(self, display, animator, messager, menumanager, statemachine, entity, currentturn, generator):
         '''Update a single entity'''
         if entity.turn > currentturn:
             return True
         energystart = entity.energy
         entity.update_state(self)
         entity.update_status(self, messager, animator)
-        entity.take_turn(self, animator, messager, menumanager, statemachine, self.RNG) 
+        entity.take_turn(self, animator, messager, menumanager, statemachine, self.RNG, generator) 
         # play animations from the turn
         display.play_animations(animator, self.currentz, self.Player.Brain.fovpoints)
 
@@ -280,7 +283,7 @@ class LevelManager:
 
         return True
     
-    def move_entity_z(self, entity, newz, newpos):
+    def move_entity_z(self, entity, newz, newpos, generator):
         '''Moves an entity to a new z level'''
 
         if newz >= len(self.Levels) or newz < 0:
@@ -295,16 +298,25 @@ class LevelManager:
 
         entity = self.remove_entity(entity)
 
-        # need to update the global Z index immediately
-        # message queue filters based on Z index
-        if entity.name == 'Player':
-            self.currentz = newz
+        self.enter_level(entity, level, generator)
 
         self.place_entity(level.z, entity, newpos)
 
         entity.on_zchange(level)
 
         return True
+
+    def enter_level(self, entity, new_level, generator):
+        # need to update the global Z index immediately
+        # message queue filters based on Z index
+        if entity.name == 'Player':
+            self.currentz = new_level.z 
+            if new_level.player_difficulty == -1 and hasattr(entity, 'Leveling'):
+                plevel = entity.Leveling.curr_level 
+                new_level.player_difficulty = int(1 + plevel + plevel/2)
+                generator.generate_mons(self, new_level,
+                                   new_level.difficulty,
+                                   new_level.player_difficulty)
 
     def remove_entity(self, entity):
         '''

@@ -116,7 +116,9 @@ class Game:
             # load generator with object classes
             self.Generator.load_classes()
             # load generator and run the generation
-            self.Generator.load_config(config.LEVELROWS, config.LEVELCOLS, self.RNG)
+            self.Generator.load_config(config.LEVELROWS,
+                                       config.LEVELCOLS,
+                                       self.RNG)
             self.Generator.generate_levels(self.LevelManager)
 
             # menus
@@ -124,7 +126,9 @@ class Game:
             lvl = leveling.curr_level
             xp = leveling.xp
             nextlv = leveling.nextlv
-            self.MenuManager.init(self.Messager, self.messageblocking, self.turn, lvl, xp, nextlv)
+            self.MenuManager.init(self.Messager,
+                                  self.messageblocking,
+                                  self.turn, lvl, xp, nextlv)
 
             # run loop a bunch
             for _ in range(config.PRE_LOOPS):
@@ -138,7 +142,9 @@ class Game:
             # add player to the map
             self.LevelManager.place_player(config.PLAYERPOS, config.PLAYERZ)
             # update player FOV
-            self.LevelManager.Player.update_mental_map(self.LevelManager.get_curr_level())
+            self.LevelManager.Player.update_mental_map(
+                    self.LevelManager.get_curr_level()
+                )
 
             tt.Timing.end()
 
@@ -176,7 +182,8 @@ class Game:
             # update the player before the rest of the game
             energy = self.LevelManager.update_player(
                     self.Display, self.Animator, self.Messager,
-                    self.MenuManager, self.StateMachine, event, self.RNG)
+                    self.MenuManager, self.StateMachine, event, self.RNG,
+                    self.Generator)
 
             # render player move
             self.display_out()
@@ -237,7 +244,7 @@ class Game:
             self.StateMachine.callback(self.StateMachine, self.MenuManager, event)
         else:
             # update all entities
-            self.LevelManager.update_all(self.Display, self.Animator, self.Messager, self.MenuManager, self.StateMachine, energy, self.turn)
+            self.LevelManager.update_all(self.Display, self.Animator, self.Messager, self.MenuManager, self.StateMachine, energy, self.turn, self.Generator)
 
             # end the player charge, get back into playing mode
             if (self.StateMachine.GameState == state.GameState.RUNNING and
