@@ -13,8 +13,8 @@ class Lick(entity.Entity):
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.VERY_SMALL,
                          fg=color.COLOR.PINK)
-        self.Attack = component.Attack(name='Lick', damage=1)
-        self.ItemType = component.ItemType.ABILITY
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.ABILITY,
+                                               melee_damage=1)
 
     def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
         entitylayer = levelmanager.Levels[z].EntityLayer
@@ -29,8 +29,8 @@ class Claw(entity.Entity):
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.VERY_SMALL,
                          fg=color.COLOR.PINK)
-        self.Attack = component.Attack(name='Claw', damage=4)
-        self.ItemType = component.ItemType.ABILITY
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.ABILITY,
+                                               melee_damage=4)
 
 class Bite(entity.Entity):
     def __init__(self):
@@ -40,8 +40,8 @@ class Bite(entity.Entity):
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.VERY_SMALL,
                          fg=color.COLOR.PINK)
-        self.Attack = component.Attack(name='Bite', damage=2)
-        self.ItemType = component.ItemType.ABILITY
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.ABILITY,
+                                               melee_damage=2)
 
 class Fist(entity.Entity):
     def __init__(self):
@@ -51,8 +51,8 @@ class Fist(entity.Entity):
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.VERY_SMALL,
                          fg=color.COLOR.PINK)
-        self.Attack = component.Attack(name='Fist', damage=1)
-        self.ItemType = component.ItemType.ABILITY
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.ABILITY,
+                                               melee_damage=1)
 
 class Peck(entity.Entity):
     def __init__(self):
@@ -62,8 +62,8 @@ class Peck(entity.Entity):
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.VERY_SMALL,
                          fg=color.COLOR.PINK)
-        self.Attack = component.Attack(name='Peck', damage=2)
-        self.ItemType = component.ItemType.ABILITY
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.ABILITY,
+                                               melee_damage=2)
 
     def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
         '''Abilities get applied on damage'''

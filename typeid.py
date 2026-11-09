@@ -36,6 +36,7 @@ class TID(IntEnum):
     SNAIL_SHELL     = 57
     PRECIOUS_STONE  = 58
     CORPSE          = 59
+    BLOWPIPE        = 60
 
     RAVEN           = 101
     GOBLIN          = 102

@@ -28,13 +28,10 @@ class GoblinLeader(e.Entity):
         self.xp = config.GOBLINLEADER_XP
         self.Brain = brain.SimpleBrain(sightrange=self.eyes,
                                      blockinglayer=e.Layer.MONSTER_LAYER,
-                                     attacks=[e.AttackType.THROW,e.AttackType.MELEE])
+                                     attacks=[e.AttackType.MELEE])
         self.speed = e.Speed.SLOW
         self.Combat = component.Combat()
         self.Inventory = component.Inventory()
-        self.Inventory.equip(ability.Bite())
-        for _ in range(5):
-            self.Inventory.collect(item.Dart())
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
@@ -56,6 +53,10 @@ class GoblinLeader(e.Entity):
             rng,
             generator
         )
+
+    def on_init(self, rng):
+        if rng.randint(0,1):
+            self.Inventory.equip(item.Sword())
 
 class Snail(e.Entity):
     difficulty = 4
@@ -225,6 +226,17 @@ class Goblin(e.Entity):
         self.speed = e.Speed.SLOW
         self.xp = config.GOBLIN_XP
 
+    def on_init(self, rng):
+        darts = rng.randint(3, 7)
+        for _ in range(darts):
+            self.Inventory.collect(item.Dart())
+        
+        if rng.randint(0,10) < 3:
+            self.Inventory.equip(item.Gambeson())
+
+        if rng.randint(0,10) < 7:
+            self.Inventory.equip(item.BlowPipe())
+
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
         self.do_action(
@@ -249,14 +261,6 @@ class Goblin(e.Entity):
     def death(self, levelmanager, animator, messager):
         super().death(levelmanager)
         utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
-
-    def on_init(self, rng):
-        darts = rng.randint(3, 7)
-        for _ in range(darts):
-            self.Inventory.collect(item.Dart())
-        
-        if rng.randint(0,1):
-            self.Inventory.equip(item.Gambeson())
 
 class Human(e.Entity):
     '''

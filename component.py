@@ -20,7 +20,7 @@ class Combat:
     def __init__(self):
         self.critical = 1
         '''Critical hit'''
-        self.accuracy = 60
+        self.melee_accuracy = 60
         '''Roll under this number to hit on a melee attack'''
         self.throw_accuracy = 40
         '''Roll under this number to hit on a ranged attack'''
@@ -36,14 +36,14 @@ class Combat:
         roll = rng.randint(1,100)
         if hasattr(parent, 'Charge') and parent.Charge.charging:
             potential_dmg = parent.Charge.end()
-            if roll <= self.accuracy:
+            if roll <= self.melee_accuracy:
                 dmg = potential_dmg
                 success = True
         elif hasattr(parent, 'Inventory'):
-            if roll <= self.accuracy:
-                dmg = parent.Inventory.calculate_damage()
+            if roll <= self.melee_accuracy:
+                dmg = parent.Inventory.calculate_melee_damage()
                 success = True
-        Logger.info(f"COMBAT: ({roll}) dmg:{dmg} {'HIT' if roll <= self.accuracy else 'MISS'}")
+        Logger.info(f"COMBAT: ({roll}) dmg:{dmg} {'HIT' if roll <= self.melee_accuracy else 'MISS'}")
         return success, dmg
 
     def take_damage(self, inventory, damage):
@@ -60,7 +60,7 @@ class Combat:
             return 1
         return damage
 
-    def throw(self, levelmanager, animator, projectile, direction_key, rng, start_row, start_col, z):
+    def throw(self, levelmanager, parent, animator, projectile, direction_key, rng, start_row, start_col, z):
         '''
         Send an object flying through the air, if the accuracy check succeeds, stop the
         object at a target otherwise keep going until something blocks the trajectory
@@ -81,7 +81,11 @@ class Combat:
                     maxlayer == entity.Layer.BARREL_LAYER):
                     objr, objc = r, c
                     # stop only if it passes the accuracy check
-                    if rng.randint(1,100) <= self.throw_accuracy:
+                    rng_throw = rng.randint(1,100)
+                    throw_accuracy = self.throw_accuracy
+                    if hasattr(parent, 'Inventory'):
+                        throw_accuracy = parent.Inventory.calculate_throw_accuracy(self.throw_accuracy)
+                    if rng_throw <= throw_accuracy:
                         success = True
                         break
                 elif maxlayer == entity.Layer.WALL_LAYER:
@@ -112,11 +116,11 @@ class Combat:
     def attack_range(self, parent, levelmanager, animator, messager, projectile, direction_key, rng, start_row, start_col, z):
         '''Start a ranged attack by throwing a projectile'''
         # throw
-        success, objr, objc = self.throw(levelmanager, animator, projectile, direction_key, rng, start_row, start_col, z)
+        success, objr, objc = self.throw(levelmanager, parent, animator, projectile, direction_key, rng, start_row, start_col, z)
         # get damage
         damage = 0
-        if hasattr(projectile, 'Attack'):
-            damage = projectile.Attack.damage
+        if hasattr(projectile, 'ItemTraits'):
+            damage = projectile.ItemTraits.throw_damage
         else:
             damage = projectile.size * 2
         # deal damage
@@ -391,35 +395,36 @@ class Inventory:
         Pass in an entity to place it in the correct slot
         '''
 
-        if not hasattr(entity, 'ItemType'):
+        if not hasattr(entity, 'ItemTraits'):
             return
         
-        if entity.ItemType == ItemType.NOEQUIP:
+        itemtype = entity.ItemTraits.itemtype
+        if itemtype == ItemType.NOEQUIP:
             return
         
         # delete an entity if it came from the bag, it will be placed
         self.remove_from_bag(entity)
 
         # QUIVER
-        if entity.ItemType == ItemType.QUIVER and (not self.quiver or self.quiver.id != entity.id):
+        if itemtype == ItemType.QUIVER and (not self.quiver or self.quiver.id != entity.id):
             if self.quiver:
                 self.add_to_bag(self.quiver)
             self.quiver = entity
         # WEARABLE
-        elif entity.ItemType == ItemType.HEAD and (not self.head or self.head.id != entity.id):
+        elif itemtype == ItemType.HEAD and (not self.head or self.head.id != entity.id):
             if self.head:
                 self.add_to_bag(self.head)
             self.head = entity
-        elif entity.ItemType == ItemType.BODY and (not self.body or self.body.id != entity.id):
+        elif itemtype == ItemType.BODY and (not self.body or self.body.id != entity.id):
             if self.body:
                 self.add_to_bag(self.body)
             self.body = entity
-        elif entity.ItemType == ItemType.FEET and (not self.feet or self.feet.id != entity.id):
+        elif itemtype == ItemType.FEET and (not self.feet or self.feet.id != entity.id):
             if self.feet:
                 self.add_to_bag(self.feet)
             self.feet = entity
         # MAIN / OFF HAND
-        elif entity.ItemType == ItemType.HAND:
+        elif itemtype == ItemType.HAND:
             # equipping the main hand does nothing
             # equipping the off hand, send it to the main hand
             # send the main hand to the bag
@@ -437,7 +442,7 @@ class Inventory:
                     self.offHand = self.mainHand
                 self.mainHand = entity
         # ABILITY
-        elif entity.ItemType == ItemType.ABILITY and (not self.ability or self.ability != entity.id):
+        elif itemtype == ItemType.ABILITY and (not self.ability or self.ability != entity.id):
             self.ability = entity
     
     def unequip(self, entity):
@@ -462,26 +467,31 @@ class Inventory:
     def collect(self, entity):
         '''Entrance for items being added into the inventory'''
 
+        if not hasattr(entity, 'ItemTraits'):
+            return
+
+        itemtype = entity.ItemTraits.itemtype
+
         # try to add it to the correct slot
-        if hasattr(entity, 'ItemType') and entity.ItemType == ItemType.QUIVER:
+        if itemtype == ItemType.QUIVER:
             if self.add_to_quiver(entity):
                 return
-        if hasattr(entity, 'ItemType') and entity.ItemType == ItemType.HAND:
+        if itemtype == ItemType.HAND:
             if self.mainHand is None:
                 self.mainHand = entity
                 return
             if self.offHand is None:
                 self.offHand = entity
                 return
-        if hasattr(entity, 'ItemType') and entity.ItemType == ItemType.BODY:
+        if itemtype == ItemType.BODY:
             if self.body is None:
                 self.body = entity
                 return
-        if hasattr(entity, 'ItemType') and entity.ItemType == ItemType.HEAD:
+        if itemtype == ItemType.HEAD:
             if self.head is None:
                 self.head = entity
                 return
-        if hasattr(entity, 'ItemType') and entity.ItemType == ItemType.FEET:
+        if itemtype == ItemType.FEET:
             if self.feet is None:
                 self.feet = entity
                 return
@@ -594,20 +604,44 @@ class Inventory:
                 entity = self.contents[key]
             else:
                 raise
-        if hasattr(entity, 'ApplyInfo'):
+        if entity and hasattr(entity, 'ApplyInfo'):
             return entity.ApplyInfo
         return None
 
-    def calculate_damage(self):
+    def calculate_melee_damage(self):
         '''Get the damage based off of the inventory objects'''
         dmg = 0
-        if self.mainHand and hasattr(self.mainHand, 'Attack'):
-            dmg += self.mainHand.Attack.damage
-            if self.offHand and hasattr(self.offHand, 'Attack'):
-                dmg += self.offHand.Attack.damage
-        elif self.ability and hasattr(self.ability, 'Attack'):
-            dmg += self.ability.Attack.damage
+        if self.mainHand and hasattr(self.mainHand, 'ItemTraits'):
+            dmg += self.mainHand.ItemTraits.melee_damage
+            if self.offHand and hasattr(self.offHand, 'ItemTraits'):
+                dmg += self.offHand.ItemTraits.melee_damage
+        elif self.ability and hasattr(self.ability, 'ItemTraits'):
+            dmg += self.ability.ItemTraits.melee_damage
         return dmg
+
+    def calculate_melee_accuracy(self, base_accuracy):
+        melee_accuracy = base_accuracy
+        if self.mainHand and hasattr(self.mainHand, 'ItemTraits'):
+            melee_accuracy += self.mainHand.ItemTraits.melee_accuracy_bonus
+            if self.offHand and hasattr(self.offHand, 'ItemTraits'):
+                melee_accuracy += self.offHand.ItemTraits.melee_accuracy_bonus
+        elif self.ability and hasattr(self.ability, 'ItemTraits'):
+            melee_accuracy += self.ability.ItemTraits.melee_accuracy_bonus
+        return melee_accuracy
+
+    def calculate_throw_accuracy(self, base_accuracy):
+        throw_accuracy = base_accuracy
+        if self.mainHand and hasattr(self.mainHand, 'ItemTraits'):
+            throw_accuracy += self.mainHand.ItemTraits.throw_accuracy_bonus
+            if self.offHand and hasattr(self.offHand, 'ItemTraits'):
+                throw_accuracy += self.offHand.ItemTraits.throw_accuracy_bonus
+        elif self.ability and hasattr(self.ability, 'ItemTraits'):
+            throw_accuracy += self.ability.ItemTraits.throw_accuracy_bonus
+        if throw_accuracy < 0:
+            throw_accuracy = 0
+        if throw_accuracy >= 100:
+            throw_accuracy = 99
+        return throw_accuracy
 
     def add_to_quiver(self, entity):
         '''Tries to add an item to the quiver, returns False if it cannot'''
@@ -749,15 +783,19 @@ class Health:
         return False
 
 
-class Attack:
+class ItemTraits:
     '''
-    Attack component, if an entity can be used as an attack
     '''
-    def __init__(self, name, damage):
-        self.name = name
-        '''name of the attack'''
-        self.damage = damage
+    def __init__(self, itemtype, melee_damage=0, throw_damage=0,
+                 melee_accuracy=0, throw_accuracy=0, armor=0, apply_damage=0):
+        self.itemtype = itemtype
+        self.melee_damage = melee_damage
+        self.throw_damage = throw_damage
         '''amount of damage the attack does'''
+        self.melee_accuracy_bonus = melee_accuracy
+        self.throw_accuracy_bonus = throw_accuracy
+        self.armor = armor
+        self.apply_damage = apply_damage
 
 class Charge:
     '''

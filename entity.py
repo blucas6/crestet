@@ -350,7 +350,8 @@ class Entity:
         levelmanager.remove_entity(self)
         if hasattr(self, 'Inventory'):
             for item in self.Inventory.get_all_items():
-                levelmanager.place_entity(self.z, item, self.pos())
+                if item:
+                    levelmanager.place_entity(self.z, item, self.pos())
 
 
     def moveZ(self, levelmanager, animator, messager, incrementz, rng, generator):
