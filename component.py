@@ -84,7 +84,9 @@ class Combat:
                     rng_throw = rng.randint(1,100)
                     throw_accuracy = self.throw_accuracy
                     if hasattr(parent, 'Inventory'):
-                        throw_accuracy = parent.Inventory.calculate_throw_accuracy(self.throw_accuracy)
+                        throw_accuracy = parent.Inventory.calculate_throw_accuracy(
+                                self.throw_accuracy, projectile)
+                    Logger.info(f'THROW: {rng_throw} <= {throw_accuracy}')
                     if rng_throw <= throw_accuracy:
                         success = True
                         break
@@ -629,14 +631,17 @@ class Inventory:
             melee_accuracy += self.ability.ItemTraits.melee_accuracy_bonus
         return melee_accuracy
 
-    def calculate_throw_accuracy(self, base_accuracy):
+    def calculate_throw_accuracy(self, base_accuracy, projectile):
         throw_accuracy = base_accuracy
         if self.mainHand and hasattr(self.mainHand, 'ItemTraits'):
-            throw_accuracy += self.mainHand.ItemTraits.throw_accuracy_bonus
+            if projectile.name in self.mainHand.ItemTraits.throw_bonus_items:
+                throw_accuracy += self.mainHand.ItemTraits.throw_accuracy_bonus
             if self.offHand and hasattr(self.offHand, 'ItemTraits'):
-                throw_accuracy += self.offHand.ItemTraits.throw_accuracy_bonus
+                if projectile.name in self.offHand.ItemTraits.throw_bonus_items:
+                    throw_accuracy += self.offHand.ItemTraits.throw_accuracy_bonus
         elif self.ability and hasattr(self.ability, 'ItemTraits'):
-            throw_accuracy += self.ability.ItemTraits.throw_accuracy_bonus
+            if projectile.name in self.ability.ItemTraits.throw_bonus_items:
+                throw_accuracy += self.ability.ItemTraits.throw_accuracy_bonus
         if throw_accuracy < 0:
             throw_accuracy = 0
         if throw_accuracy >= 100:
@@ -787,13 +792,15 @@ class ItemTraits:
     '''
     '''
     def __init__(self, itemtype, melee_damage=0, throw_damage=0,
-                 melee_accuracy=0, throw_accuracy=0, armor=0, apply_damage=0):
+                 melee_accuracy=0, throw_accuracy=0, throw_bonus_items=[], armor=0,
+                 apply_damage=0):
         self.itemtype = itemtype
         self.melee_damage = melee_damage
         self.throw_damage = throw_damage
         '''amount of damage the attack does'''
         self.melee_accuracy_bonus = melee_accuracy
         self.throw_accuracy_bonus = throw_accuracy
+        self.throw_bonus_items = throw_bonus_items
         self.armor = armor
         self.apply_damage = apply_damage
 

@@ -1,11 +1,8 @@
 import brain
-import tower
 import ability
 import item
 import utility
 import config
-import copy
-import enum
 import component
 import entity as e
 import logging
@@ -52,3 +49,6 @@ class Player(e.Entity):
         '''Update the mental map of the player'''
         self.Brain.update_mental_map(curr_level, self.row, self.col, self.status)
 
+    def death(self, levelmanager, animator, messager):
+        super().death(levelmanager)
+        utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
