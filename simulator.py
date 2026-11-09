@@ -62,7 +62,7 @@ class CombatTest:
 
     def get_equipment(self):
         '''Collect a list of all the equipment combinations'''
-        self.weapons = [None, item.Sword]
+        self.weapons = [None, item.ShortSword]
         self.armor = [None, item.Gambeson]
         for w in self.weapons:
             if self.armor:

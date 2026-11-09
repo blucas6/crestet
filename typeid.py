@@ -30,7 +30,7 @@ class TID(IntEnum):
     ARROW           = 51
     FRUIT           = 52
     WOOD            = 53
-    SWORD           = 54
+    SHORT_SWORD     = 54
     DART            = 55
     GAMBESON        = 56
     SNAIL_SHELL     = 57

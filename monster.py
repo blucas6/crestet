@@ -56,7 +56,7 @@ class GoblinLeader(e.Entity):
 
     def on_init(self, rng):
         if rng.randint(0,1):
-            self.Inventory.equip(item.Sword())
+            self.Inventory.equip(item.ShortSword())
 
 class Snail(e.Entity):
     difficulty = 4

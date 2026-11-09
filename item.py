@@ -89,11 +89,11 @@ class Wood(e.Entity):
                                      stack_name = 'Wood Stack',
                                      stack_glyph = '#')
 
-class Sword(e.Entity):
+class ShortSword(e.Entity):
     #spawn = True
     def __init__(self):
-        super().__init__(typeid=typeid.TID.SWORD,
-                         name='Sword',
+        super().__init__(typeid=typeid.TID.SHORT_SWORD,
+                         name='Short Sword',
                          glyph='/',
                          layer=e.Layer.OBJECT_LAYER,
                          size=e.Size.SMALL,
