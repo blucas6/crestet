@@ -2,6 +2,7 @@ import algo
 import entity
 import logging
 import random
+import copy
 
 Logger = logging.getLogger(__name__)
 
@@ -10,10 +11,21 @@ ONE_LAYER_CROSS = [(0,0), (-1,0), (1,0), (0,-1), (0,1)]
 TWO_LAYER_CIRCLE = [(-2,-2),(-2,-1),(-2,0),(-2,1),(-2,2),(-1,-2),(-1,2),(0,-2),(0,2),(1,-2),(1,2),(2,-2),(2,-1),(2,0),(2,1),(2,2)]
 
 def get_surrounding_pt():
-    pts = ONE_LAYER_CIRCLE + TWO_LAYER_CIRCLE
+    pts = copy.copy(ONE_LAYER_CIRCLE)
     random.shuffle(pts)
     for pt in pts:
         yield pt
+    pts = copy.copy(TWO_LAYER_CIRCLE)
+    random.shuffle(pts)
+    for pt in pts:
+        yield pt
+
+def is_pt_near(src, dest):
+    for pt in ONE_LAYER_CIRCLE:
+        nearpt = (pt[0] + src[0], pt[1] + src[1])
+        if nearpt == dest:
+            return True
+    return False
 
 def corpse_drop(levelmanager, corpse, fg, name, pos):
     corpse.fg = fg 

@@ -71,28 +71,25 @@ class SimpleBrain(Brain):
     def get_action(self, currlevel, mypos, energy, rng, speed, status, inventory=None):
         '''Returns an action'''
 
-        # not enough energy
-        if energy < speed:
-            return '5'
+        action = self.check_for_energy(energy, speed)
+        if action:
+            return action
 
-        fovpoints = self.getFOV(currlevel, mypos, status)
-        playerpos = self.find_player(currlevel, fovpoints)
+        fovpts = self.getFOV(currlevel, mypos, status)
 
-        # if the player is near, try to attack
-        if playerpos:
-            # go through possible attacks
-            for attack in self.attacks:
-                if (attack == entity.AttackType.THROW and
-                    self.throw_attack_possible(mypos, playerpos, inventory)):
-                    return self.throw_attack(mypos, playerpos)
-                elif attack == entity.AttackType.MELEE:
-                    return self.find_path(currlevel.EntityLayer, mypos, playerpos)
+        action = self.check_for_player(currlevel, mypos, inventory, status, fovpts)
+        if action:
+            return action
 
-        # move around
+        action = self.random_move(currlevel, mypos, rng)
+        if action:
+            return action
+
+        return '.'
+
+    def random_move(self, currlevel, mypos, rng):
         if self.state == BrainState.MOVE:
             actions = ['1', '2', '3', '4', '6', '7', '8', '9']
-            rows = len(currlevel.EntityLayer)
-            cols = len(currlevel.EntityLayer[0])
             # get which moves are legal
             possible_actions = []
             for key in actions:
@@ -115,7 +112,26 @@ class SimpleBrain(Brain):
         # rest if not able to do anything
         if rng.randint(*config.MONS_IDLE) == 0:
             self.state = BrainState.MOVE
-        return '.'
+        return None
+
+    def check_for_player(self, currlevel, mypos, inventory, status, fovpoints):
+        playerpos = self.find_entity(currlevel, fovpoints, 'Player')
+
+        # if the player is near, try to attack
+        if playerpos:
+            # go through possible attacks
+            for attack in self.attacks:
+                if (attack == entity.AttackType.THROW and
+                    self.throw_attack_possible(mypos, playerpos, inventory)):
+                    return self.throw_attack(mypos, playerpos)
+                elif attack == entity.AttackType.MELEE:
+                    return self.find_path(currlevel.EntityLayer, mypos, playerpos)
+        return None
+
+    def check_for_energy(self, energy, speed):
+        if energy < speed:
+            return '5'
+        return None
 
     def throw_attack_possible(self, mypos, playerpos, inventory):
         '''Check if the player is reachable by a throw'''
@@ -132,15 +148,15 @@ class SimpleBrain(Brain):
         d = self.move_towards_pt(mypos, playerpos)
         return 't' + str(d)
 
-    def find_player(self, currlevel, pts):
+    def find_entity(self, currlevel, pts, name):
         '''In a set of FOV points, check if the player exists'''
         for pt in pts:
             for ent in currlevel.EntityLayer[pt[0]][pt[1]]:
-                if ent.name == 'Player':
+                if ent.name == name:
                     return pt
         return None
 
-    def find_path(self, entitylayer, mypos, playerpos):
+    def find_path(self, entitylayer, mypos, dest):
         '''Finds a path using A* to the player position'''
         # create the 1,0 grid
         grid = [[1 if max([int(x.layer) for x in elist]) > entity.Layer.OBJECT_LAYER else 0
@@ -148,9 +164,9 @@ class SimpleBrain(Brain):
                     for row in entitylayer]
         # set the source/dest positions to open
         grid[mypos[0]][mypos[1]] = 0
-        grid[playerpos[0]][playerpos[1]] = 0
+        grid[dest[0]][dest[1]] = 0
         # call A* to get a set of pts
-        returncode, pts = algo.astar(grid, mypos, playerpos)
+        returncode, pts = algo.astar(grid, mypos, dest)
         if returncode != 1:
             Logger.error(f'Error: brain failed to find path -> {returncode}')
             return '.'
@@ -178,6 +194,42 @@ class SimpleBrain(Brain):
             elif otherpos[1] < mypos[1]:
                 return '4'
         return '.'
+
+class PackBrain(SimpleBrain):
+    def __init__(self, sightrange, blockinglayer, attacks=[], pack_leader=None):
+        super().__init__(sightrange, blockinglayer, attacks)
+
+        self.pack_leader = pack_leader
+
+    def get_action(self, currlevel, mypos, energy, rng, speed, status, inventory=None):
+        '''Returns an action'''
+
+        action = self.check_for_energy(energy, speed)
+        if action:
+            return action
+
+        fovpts = self.getFOV(currlevel, mypos, status)
+
+        action = self.check_for_player(currlevel, mypos, inventory, status, fovpts)
+        if action:
+            return action
+
+        action = self.check_for_leader(currlevel, mypos, fovpts)
+        if action:
+            return action
+
+        action = self.random_move(currlevel, mypos, rng)
+        if action:
+            return action
+
+        return '.'
+
+    def check_for_leader(self, currlevel, mypos, fovpts):
+        leaderpos = self.find_entity(currlevel, fovpts, self.pack_leader)
+
+        if leaderpos and not utility.is_pt_near(mypos, leaderpos):
+            return self.find_path(currlevel.EntityLayer, mypos, leaderpos)
+        return None
 
 class FOVBrain(Brain):
     '''

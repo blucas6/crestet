@@ -216,10 +216,12 @@ class Goblin(e.Entity):
                          fg=color.COLOR.GREEN)
         self.eyes = config.GOBLIN_SIGHTRANGE
         self.Health = component.Health(health=config.GOBLIN_HEALTH)
-        self.Brain = brain.SimpleBrain(sightrange=self.eyes,
+        self.Brain = brain.PackBrain(sightrange=self.eyes,
                                      blockinglayer=e.Layer.MONSTER_LAYER,
                                      attacks=[e.AttackType.THROW,
-                                              e.AttackType.MELEE])
+                                              e.AttackType.MELEE],
+                                     pack_leader='Goblin Leader')
+
         self.Combat = component.Combat()
         self.Inventory = component.Inventory(autopickuplist=['Dart'])
         self.Inventory.equip(ability.Bite())

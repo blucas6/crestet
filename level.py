@@ -271,7 +271,7 @@ class LevelManager:
         level = self.Levels[entity.z]
 
         if not self.is_entity_pos_valid(level, entity, pos):
-            Logger.error(f'Moving entity failed: invalid {entity}')
+            Logger.error(f'Moving entity failed: invalid {entity} -> {pos}')
             return False
 
         # move is valid - delete old entity
