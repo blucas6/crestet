@@ -149,6 +149,20 @@ class InteractMenu(Menu):
         self.text[1] = '|' + message + '|'
         self.text[2] = '-'*(len(message)+2)
 
+class CombatMenu(Menu):
+    def __init__(self, origin, size):
+        super().__init__(origin, size[0], size[1])
+
+    def update(self, combat, inventory):
+        super().update()
+        dmg = inventory.calculate_melee_damage()
+        accuracy = inventory.calculate_melee_accuracy(combat.melee_accuracy)
+        self.text[0] = f'Melee: {dmg} ({accuracy}%)'
+        accuracy = inventory.calculate_throw_accuracy(combat.throw_accuracy, inventory.quiver)
+        dmg = inventory.calculate_range_damage(inventory.quiver)
+        self.text[1] = f'Range: {dmg} ({accuracy}%)'
+        self.text[2] = f'Armor: {-1*inventory.calculate_armor()}'
+
 class MenuManager:
     '''
     Holds all menus
@@ -164,9 +178,10 @@ class MenuManager:
         self.DepthMenu = DepthMenu(config.DEPTHMENU_ORIGIN, config.DEPTHMENU_SZ)
         self.InventoryMenu = InventoryMenu(config.INVENTORYMENU_ORIGIN, config.INVENTORYMENU_SZ)
         self.InteractMenu = InteractMenu(config.INTERACTMENU_ORIGIN, config.INTERACTMENU_SZ)
+        self.CombatMenu = CombatMenu(config.COMBATMENU_ORIGIN, config.COMBATMENU_SZ)
 
     def get_menus(self):
-        menulist = [self.StatusMenu, self.MessageMenu, self.HealthMenu, self.DepthMenu, self.InventoryMenu]
+        menulist = [self.StatusMenu, self.MessageMenu, self.HealthMenu, self.DepthMenu, self.InventoryMenu, self.CombatMenu]
         if self.showinteract:
             menulist.append(self.InteractMenu)
         return menulist
@@ -174,3 +189,4 @@ class MenuManager:
     def load_interact(self, message):
         self.InteractMenu.update(message)
         self.showinteract = True
+

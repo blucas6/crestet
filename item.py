@@ -144,6 +144,6 @@ class BlowPipe(e.Entity):
                                                throw_damage=0,
                                                melee_accuracy=0,
                                                throw_accuracy=30,
-                                               throw_bonus_items=['Dart'])
+                                               throw_bonus_items=[typeid.TID.DART])
 
 

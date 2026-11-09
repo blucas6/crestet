@@ -48,14 +48,7 @@ class Combat:
 
     def take_damage(self, inventory, damage):
         '''Return the damage actually taken after subtracting for armor and resistances'''
-        reduction = 0
-        if inventory.head and hasattr(inventory.head, 'armor'):
-            reduction += inventory.head.armor
-        if inventory.body and hasattr(inventory.body, 'armor'):
-            reduction += inventory.body.armor
-        if inventory.feet and hasattr(inventory.feet, 'armor'):
-            reduction += inventory.feet.armor
-        damage -= reduction
+        damage -= inventory.calculate_armor()
         if damage <= 0:
             return 1
         return damage
@@ -121,10 +114,8 @@ class Combat:
         success, objr, objc = self.throw(levelmanager, parent, animator, projectile, direction_key, rng, start_row, start_col, z)
         # get damage
         damage = 0
-        if hasattr(projectile, 'ItemTraits'):
-            damage = projectile.ItemTraits.throw_damage
-        else:
-            damage = projectile.size * 2
+        if hasattr(parent, 'Inventory'):
+            damage = parent.Inventory.calculate_range_damage(projectile)
         # deal damage
         for ent in levelmanager.Levels[z].EntityLayer[objr][objc]:
             self.deal_damage(parent, levelmanager, animator, messager, ent, success, damage, 'range')
@@ -617,8 +608,16 @@ class Inventory:
             dmg += self.mainHand.ItemTraits.melee_damage
             if self.offHand and hasattr(self.offHand, 'ItemTraits'):
                 dmg += self.offHand.ItemTraits.melee_damage
-        elif self.ability and hasattr(self.ability, 'ItemTraits'):
+        if dmg == 0 and self.ability and hasattr(self.ability, 'ItemTraits'):
             dmg += self.ability.ItemTraits.melee_damage
+        return dmg
+
+    def calculate_range_damage(self, projectile):
+        dmg = 0
+        if projectile and hasattr(projectile, 'ItemTraits'):
+            dmg += projectile.ItemTraits.throw_damage
+        if projectile and dmg == 0:
+            dmg += projectile.size * 2
         return dmg
 
     def calculate_melee_accuracy(self, base_accuracy):
@@ -634,19 +633,29 @@ class Inventory:
     def calculate_throw_accuracy(self, base_accuracy, projectile):
         throw_accuracy = base_accuracy
         if self.mainHand and hasattr(self.mainHand, 'ItemTraits'):
-            if projectile.name in self.mainHand.ItemTraits.throw_bonus_items:
+            if projectile and projectile.typeid in self.mainHand.ItemTraits.throw_bonus_items:
                 throw_accuracy += self.mainHand.ItemTraits.throw_accuracy_bonus
             if self.offHand and hasattr(self.offHand, 'ItemTraits'):
-                if projectile.name in self.offHand.ItemTraits.throw_bonus_items:
+                if projectile and projectile.typeid in self.offHand.ItemTraits.throw_bonus_items:
                     throw_accuracy += self.offHand.ItemTraits.throw_accuracy_bonus
         elif self.ability and hasattr(self.ability, 'ItemTraits'):
-            if projectile.name in self.ability.ItemTraits.throw_bonus_items:
+            if projectile and projectile.typeid in self.ability.ItemTraits.throw_bonus_items:
                 throw_accuracy += self.ability.ItemTraits.throw_accuracy_bonus
         if throw_accuracy < 0:
             throw_accuracy = 0
         if throw_accuracy >= 100:
             throw_accuracy = 99
         return throw_accuracy
+
+    def calculate_armor(self):
+        reduction = 0
+        if self.head and hasattr(self.head, 'ItemTraits'):
+            reduction += self.head.ItemTraits.armor
+        if self.body and hasattr(self.body, 'ItemTraits'):
+            reduction += self.body.ItemTraits.armor
+        if self.feet and hasattr(self.feet, 'ItemTraits'):
+            reduction += self.feet.ItemTraits.armor
+        return reduction
 
     def add_to_quiver(self, entity):
         '''Tries to add an item to the quiver, returns False if it cannot'''

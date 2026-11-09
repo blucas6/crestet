@@ -271,13 +271,16 @@ class Game:
         self.MenuManager.StatusMenu.update(self.turn, lvl, currxp, nextlv)
 
         # update health menu
-        self.MenuManager.HealthMenu.update(self.LevelManager.Player.Health)
+        self.MenuManager.HealthMenu.update(player.Health)
 
         # update menu z level
         self.MenuManager.DepthMenu.update(self.LevelManager.currentz)
 
         # update inventory menu
-        self.MenuManager.InventoryMenu.update(self.LevelManager.Player.Inventory)
+        self.MenuManager.InventoryMenu.update(player.Inventory)
+
+        # update combat menu
+        self.MenuManager.CombatMenu.update(player.Combat, player.Inventory)
 
     def display_out(self):
         player = self.LevelManager.Player
