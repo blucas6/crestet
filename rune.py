@@ -48,11 +48,11 @@ class SnowRune(entity.Entity):
         animator.queueUp(levelmanager, anim)
 
         # deal damage
-        for ent in entitylayer[objr][objc]:
+        for victim in entitylayer[objr][objc]:
             if hasattr(parent, 'Combat'):
-                parent.Combat.deal_damage(parent, levelmanager, animator,
-                                        messager, ent, True, self.ItemTraits.apply_damage, 'ice')
-            ent.apply_status(messager, entity.StatusEffect.FROZEN, levelmanager)
+                parent.Combat.deal_damage(parent, levelmanager, animator, messager,
+                              victim, self.ItemTraits.apply_damage, component.DamageType.SNOW)
+            victim.apply_status(messager, entity.StatusEffect.FROZEN, levelmanager)
         return True
 
 class EmberRune(entity.Entity):
@@ -93,10 +93,10 @@ class EmberRune(entity.Entity):
         animator.queueUp(levelmanager, anim)
 
         # deal damage
-        for ent in entitylayer[objr][objc]:
+        for victim in entitylayer[objr][objc]:
             if hasattr(parent, 'Combat'):
-                parent.Combat.deal_damage(parent, levelmanager, animator,
-                                    messager, ent, True, self.ItemTraits.apply_damage, 'fire')
+                parent.Combat.deal_damage(parent, levelmanager, animator, messager,
+                            victim, self.ItemTraits.apply_damage, component.DamageType.FIRE)
         return True
 
 

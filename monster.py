@@ -377,8 +377,8 @@ class Jelly(e.Entity):
             # don't damage yourself
             if (ptrow,ptcol) == (self.row,self.col):
                 continue
-            for entity in levelmanager.Levels[self.z].EntityLayer[ptrow][ptcol]:
+            for victim in levelmanager.Levels[self.z].EntityLayer[ptrow][ptcol]:
                 self.Combat.deal_damage(
-                    self, levelmanager, animator, messager, entity,
-                    True, self.splashdamage, 'jelly')
+                    self, levelmanager, animator, messager, victim,
+                    self.splashdamage, component.DamageType.BLAST)
 

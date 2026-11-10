@@ -59,11 +59,12 @@ class Messager:
         return None
     
     def add_text(self, msg):
+        '''Add text to the queue, will be shown no matter what'''
         self.MsgQueue.append(Notif(msg, ()))
 
     def add_notif(self, levelz, msg, pos, unseen=''):
         '''
-        Adds a message to the queue, filtering out out of position messages
+        Adds a message to the queue, filtering out messages based on position
         '''
         notif = Notif(msg, pos, unseen)
         # no position means it is alert text, always shown
@@ -75,17 +76,17 @@ class Messager:
     
     def add_damage_message(self, levelz, attackentity, defendentity):
         if attackentity.name == 'Player':
+            pos = attackentity.pos()
             msg = f'You hit the {defendentity.name}.'
             unseen = 'You hit it.'
-            pos = attackentity.pos()
         elif defendentity.name == 'Player':
+            pos = defendentity.pos()
             msg = f'The {attackentity.name} hits you.'
             unseen = 'It hits you.'
-            pos = defendentity.pos()
         else:
+            pos = attackentity.pos()
             msg = f'The {attackentity.name} hits the {defendentity.name}.'
             unseen = 'You hear fighting.'
-            pos = attackentity.pos()
         self.add_notif(levelz, msg, pos, unseen)
     
     def add_kill_message(self, levelz, attackentity, defendentity):
@@ -230,7 +231,6 @@ class Messager:
             unseen = 'You hear a burst!'
             pos = ent.pos()
         self.add_notif(levelz, msg, pos, unseen)
-
 
 
 

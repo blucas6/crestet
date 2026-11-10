@@ -9,11 +9,16 @@ import logging
 
 Logger = logging.getLogger(__name__)
 
-class ItemGenerator:
-    def __init__(self, itemname, amount, chance):
-        self.itemname = itemname
-        self.amount = amount
-        self.chance = chance
+@enum.unique
+class DamageType(enum.IntEnum):
+    NONE     = 0
+    BLUDGEON = 1
+    PIERCING = 2
+    SLASH    = 3
+    FIRE     = 4
+    SNOW     = 5
+    POISON   = 6
+    BLAST    = 7
 
 class Combat:
     '''Combat component, every entity that can engage in damage must have one'''
@@ -28,23 +33,6 @@ class Combat:
         '''Resistance library'''
         self.evade = 10
         '''Roll under this to evade the attack'''
-
-    def get_damage_melee(self, rng, parent):
-        '''Return the damage a melee attack does'''
-        dmg = 0
-        success = False
-        roll = rng.randint(1,100)
-        if hasattr(parent, 'Charge') and parent.Charge.charging:
-            potential_dmg = parent.Charge.end()
-            if roll <= self.melee_accuracy:
-                dmg = potential_dmg
-                success = True
-        elif hasattr(parent, 'Inventory'):
-            if roll <= self.melee_accuracy:
-                dmg = parent.Inventory.calculate_melee_damage()
-                success = True
-        Logger.info(f"COMBAT: ({roll}) dmg:{dmg} {'HIT' if roll <= self.melee_accuracy else 'MISS'}")
-        return success, dmg
 
     def take_damage(self, inventory, damage):
         '''Return the damage actually taken after subtracting for armor and resistances'''
@@ -111,44 +99,70 @@ class Combat:
     def attack_range(self, parent, levelmanager, animator, messager, projectile, direction_key, rng, start_row, start_col, z):
         '''Start a ranged attack by throwing a projectile'''
         # throw
-        success, objr, objc = self.throw(levelmanager, parent, animator, projectile, direction_key, rng, start_row, start_col, z)
+        success, objr, objc = self.throw(levelmanager, parent, animator, projectile,
+                                         direction_key, rng, start_row, start_col, z)
         # get damage
         damage = 0
-        if hasattr(parent, 'Inventory'):
-            damage = parent.Inventory.calculate_range_damage(projectile)
-        # deal damage
-        for ent in levelmanager.Levels[z].EntityLayer[objr][objc]:
-            self.deal_damage(parent, levelmanager, animator, messager, ent, success, damage, 'range')
+        dmgtype = None
+        if success:
+            if hasattr(parent, 'Inventory'):
+                damage,dmgtype = parent.Inventory.calculate_range_damage(projectile)
+            else:
+                damage = projectile.size * 2
+                dmgtype = DamageType.BLUDGEON
+            for victim in levelmanager.Levels[z].EntityLayer[objr][objc]:
+                if hasattr(victim, 'Health') or hasattr(victim, 'Breakable'):
+                    messager.add_damage_message(parent.z, parent, victim)
+                self.deal_damage(parent, levelmanager, animator, messager, victim,
+                                 damage, dmgtype)
 
     def attack_melee(self, parent, levelmanager, animator, messager, victim, rng):
         '''Attack the entity passed in'''
-        # get damage
-        if hasattr(parent, 'Inventory') or hasattr(parent, 'Charge'):
-            success, damage = self.get_damage_melee(rng, parent)
-            self.deal_damage(parent, levelmanager, animator, messager, victim, success, damage, 'melee')
-            # check for any special effects
-            if success and hasattr(parent, 'Inventory'):
-                parent.Inventory.apply_ability(parent, levelmanager, messager, animator, victim.row, victim.col, victim.z)
+        damage = 0
+        dmgtype = None
+        if hasattr(parent, 'Inventory'):
+            if parent.Inventory.mainHand:
+                roll = rng.randint(1,100)
+                if roll <= parent.Inventory.calculate_melee_accuracy(self.melee_accuracy):
+                    damage,dmgtype = parent.Inventory.get_mainHand_dmg()
+                    messager.add_damage_message(parent.z, parent, victim)
+                    self.deal_damage(parent, levelmanager, animator, messager, victim,
+                                 damage, dmgtype)
+                else:
+                    messager.add_miss_message(parent.z, parent, victim)
+                if parent.Inventory.offHand:
+                    roll = rng.randint(1,100)
+                    if roll <= parent.Inventory.calculate_melee_accuracy(self.melee_accuracy):
+                        damage,dmgtype = parent.Inventory.get_offHand_dmg()
+                        messager.add_damage_message(parent.z, parent, victim)
+                        self.deal_damage(parent, levelmanager, animator, messager, victim,
+                                     damage, dmgtype)
+                    else:
+                        messager.add_miss_message(parent.z, parent, victim)
+            elif parent.Inventory.ability:
+                roll = rng.randint(1,100)
+                if roll <= parent.Inventory.calculate_melee_accuracy(self.melee_accuracy):
+                    damage,dmgtype = parent.Inventory.get_ability_dmg()
+                    messager.add_damage_message(parent.z, parent, victim)
+                    self.deal_damage(parent, levelmanager, animator, messager, victim,
+                                 damage, dmgtype)
+                    parent.Inventory.apply_ability(parent, levelmanager, messager,
+                                                   animator, victim.row, victim.col, victim.z)
+                else:
+                    messager.add_miss_message(parent.z, parent, victim)
 
-    def deal_damage(self, parent, levelmanager, animator, messager, victim, success, damage, dmg_type):
+    def deal_damage(self, parent, levelmanager, animator, messager, victim, damage, damage_type): 
         '''Send damage to an entity and specify the damage type'''
 
         # victim must have a health bar to take damage and for a 'miss'
         if hasattr(victim, 'Health'):
-            # missed
-            if not success:
-                messager.add_miss_message(levelmanager.currentz, parent, victim)
-                return
 
-            # only create a notification for actual attacks
-            if dmg_type == 'melee' or dmg_type == 'range':
-                messager.add_damage_message(levelmanager.currentz, parent, victim)
-
-            # send damage to the victim Combat component for defense
+            # calculate damage after opponent defense
             if hasattr(victim, 'Combat') and hasattr(victim, 'Inventory'):
                 damage = victim.Combat.take_damage(victim.Inventory, damage)
 
-            Logger.info(f'{parent} dealing damage to {victim}: {damage} ')
+            Logger.info(f'{parent} dealing damage to {victim}: {damage} {damage_type.name}')
+
             # check for kill
             if victim.Health.change_health(-damage):
                 victim.death(levelmanager, animator, messager)
@@ -159,16 +173,7 @@ class Combat:
 
         # or victim must be breakable
         elif hasattr(victim, 'Breakable'):
-            # missed
-            if not success:
-                messager.add_miss_message(levelmanager.currentz, parent, victim)
-                return
-
-            Logger.info(f'{parent} hitting {victim} : {damage}')
-
-            # only create a notification for actual attacks
-            if dmg_type == 'melee' or dmg_type == 'range':
-                messager.add_damage_message(levelmanager.currentz, parent, victim)
+            Logger.info(f'{parent} hitting {victim} : {damage} {damage_type}')
 
             # check for break
             if victim.Breakable.change_dmg(damage):
@@ -601,24 +606,48 @@ class Inventory:
             return entity.ApplyInfo
         return None
 
+    def get_mainHand_dmg(self):
+        if self.mainHand and hasattr(self.mainHand, 'ItemTraits'):
+            traits = self.mainHand.ItemTraits
+            return traits.melee_damage, traits.melee_damage_type
+        return 0, None
+
+    def get_offHand_dmg(self):
+        if self.offHand and hasattr(self.offHand, 'ItemTraits'):
+            traits = self.offHand.ItemTraits
+            return traits.melee_damage, traits.melee_damage_type 
+        return 0, None
+
+    def get_ability_dmg(self):
+        if self.ability and hasattr(self.ability, 'ItemTraits'):
+            traits = self.ability.ItemTraits
+            return traits.melee_damage, traits.melee_damage_type
+        return 0, None
+
     def calculate_melee_damage(self):
         '''Get the damage based off of the inventory objects'''
         dmg = 0
-        if self.mainHand and hasattr(self.mainHand, 'ItemTraits'):
-            dmg += self.mainHand.ItemTraits.melee_damage
-            if self.offHand and hasattr(self.offHand, 'ItemTraits'):
-                dmg += self.offHand.ItemTraits.melee_damage
-        if dmg == 0 and self.ability and hasattr(self.ability, 'ItemTraits'):
-            dmg += self.ability.ItemTraits.melee_damage
+        if self.mainHand:
+            mhdmg,_ = self.get_mainHand_dmg()
+            dmg += mhdmg
+            if self.offHand:
+                ohdmg,_ = self.get_offHand_dmg()
+                dmg += ohdmg
+        elif self.ability:
+            admg,_ = self.get_ability_dmg()
+            dmg += admg
         return dmg
 
     def calculate_range_damage(self, projectile):
         dmg = 0
+        dmgtype = None
         if projectile and hasattr(projectile, 'ItemTraits'):
             dmg += projectile.ItemTraits.throw_damage
+            dmgtype = projectile.ItemTraits.throw_damage_type
         if projectile and dmg == 0:
             dmg += projectile.size * 2
-        return dmg
+            dmgtype = DamageType.BLUDGEON
+        return dmg,dmgtype
 
     def calculate_melee_accuracy(self, base_accuracy):
         melee_accuracy = base_accuracy
@@ -800,16 +829,23 @@ class Health:
 class ItemTraits:
     '''
     '''
-    def __init__(self, itemtype, melee_damage=0, throw_damage=0,
-                 melee_accuracy=0, throw_accuracy=0, throw_bonus_items=[], armor=0,
-                 apply_damage=0):
+    def __init__(self, itemtype,
+                 melee_damage=0, throw_damage=0,
+                 melee_accuracy=0, throw_accuracy=0,
+                 melee_bonues_items=[], throw_bonus_items=[],
+                 armor=0, apply_damage=0,
+                 melee_damage_type=DamageType.NONE,
+                 throw_damage_type=DamageType.NONE):
         self.itemtype = itemtype
         self.melee_damage = melee_damage
         self.throw_damage = throw_damage
         '''amount of damage the attack does'''
         self.melee_accuracy_bonus = melee_accuracy
         self.throw_accuracy_bonus = throw_accuracy
+        self.melee_bonues_items = melee_bonues_items
         self.throw_bonus_items = throw_bonus_items
+        self.melee_damage_type = melee_damage_type
+        self.throw_damage_type = throw_damage_type
         self.armor = armor
         self.apply_damage = apply_damage
 
