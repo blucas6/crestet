@@ -1,4 +1,6 @@
+from threading import main_thread
 import algo
+import typeid
 import animation
 import config
 import entity
@@ -6,6 +8,7 @@ import level
 import enum
 import utility
 import logging
+import dataclasses
 
 Logger = logging.getLogger(__name__)
 
@@ -67,7 +70,7 @@ class Combat:
                     if hasattr(parent, 'Inventory'):
                         throw_accuracy = parent.Inventory.calculate_throw_accuracy(
                                 self.throw_accuracy, projectile)
-                    Logger.info(f'THROW: {rng_throw} <= {throw_accuracy}')
+                    Logger.info(f'THROW: {parent}  RNG:{rng_throw} <= ACC:{throw_accuracy}')
                     if rng_throw <= throw_accuracy:
                         success = True
                         break
@@ -104,15 +107,21 @@ class Combat:
         # get damage
         damage = 0
         dmgtype = None
+        you_action = 'throw'
+        it_action = 'throws'
+        if hasattr(parent, 'Inventory'):
+            you_action, it_action = parent.Inventory.get_firing_actions(projectile)
+        messager.add_fire_message(parent.z, parent, projectile, you_action, it_action)
         if success:
             if hasattr(parent, 'Inventory'):
                 damage,dmgtype = parent.Inventory.calculate_range_damage(projectile)
             else:
                 damage = projectile.size * 2
                 dmgtype = DamageType.BLUDGEON
+            Logger.info(f'THROW: {parent}  DMG: {damage} TYPE:{dmgtype}')
             for victim in levelmanager.Levels[z].EntityLayer[objr][objc]:
                 if hasattr(victim, 'Health') or hasattr(victim, 'Breakable'):
-                    messager.add_damage_message(parent.z, parent, victim)
+                    messager.add_projectile_message(victim.z, projectile, victim)
                 self.deal_damage(parent, levelmanager, animator, messager, victim,
                                  damage, dmgtype)
 
@@ -125,7 +134,15 @@ class Combat:
                 roll = rng.randint(1,100)
                 if roll <= parent.Inventory.calculate_melee_accuracy(self.melee_accuracy):
                     damage,dmgtype = parent.Inventory.get_mainHand_dmg()
-                    messager.add_damage_message(parent.z, parent, victim)
+                    you_action = ''
+                    it_action = ''
+                    if hasattr(parent.Inventory.mainHand, 'ItemTraits'):
+                        you_action = parent.Inventory.mainHand.ItemTraits.melee_you_action
+                        it_action = parent.Inventory.mainHand.ItemTraits.melee_it_action
+                    if you_action != '' and it_action != '':
+                        messager.add_attack_message(parent.z, parent, victim, you_action, it_action)
+                    else:
+                        messager.add_damage_message(parent.z, parent, victim)
                     self.deal_damage(parent, levelmanager, animator, messager, victim,
                                  damage, dmgtype)
                 else:
@@ -143,7 +160,15 @@ class Combat:
                 roll = rng.randint(1,100)
                 if roll <= parent.Inventory.calculate_melee_accuracy(self.melee_accuracy):
                     damage,dmgtype = parent.Inventory.get_ability_dmg()
-                    messager.add_damage_message(parent.z, parent, victim)
+                    you_action = ''
+                    it_action = ''
+                    if hasattr(parent.Inventory.ability, 'ItemTraits'):
+                        you_action = parent.Inventory.ability.ItemTraits.melee_you_action
+                        it_action = parent.Inventory.ability.ItemTraits.melee_it_action
+                    if you_action != '' and it_action != '':
+                        messager.add_attack_message(parent.z, parent, victim, you_action, it_action)
+                    else:
+                        messager.add_damage_message(parent.z, parent, victim)
                     self.deal_damage(parent, levelmanager, animator, messager, victim,
                                  damage, dmgtype)
                     parent.Inventory.apply_ability(parent, levelmanager, messager,
@@ -606,6 +631,17 @@ class Inventory:
             return entity.ApplyInfo
         return None
 
+    def get_firing_actions(self, projectile):
+        if self.mainHand and hasattr(self.mainHand, 'ItemTraits'):
+            mtraits = self.mainHand.ItemTraits
+            if projectile.typeid in mtraits.fire_bonus_items:
+                return mtraits.fire_you_action, mtraits.fire_it_action
+            elif self.offHand and hasattr(self.offHand, 'ItemTraits'):
+                otraits = self.offHand.ItemTraits
+                if projectile.typeid in otraits.fire_bonus_items:
+                    return otraits.fire_you_action, otraits.fire_it_action
+        return 'throw', 'throws'
+
     def get_mainHand_dmg(self):
         if self.mainHand and hasattr(self.mainHand, 'ItemTraits'):
             traits = self.mainHand.ItemTraits
@@ -660,16 +696,24 @@ class Inventory:
         return melee_accuracy
 
     def calculate_throw_accuracy(self, base_accuracy, projectile):
+        fire_accuracy_bonus = 0
         throw_accuracy = base_accuracy
-        if self.mainHand and hasattr(self.mainHand, 'ItemTraits'):
-            if projectile and projectile.typeid in self.mainHand.ItemTraits.throw_bonus_items:
-                throw_accuracy += self.mainHand.ItemTraits.throw_accuracy_bonus
-            if self.offHand and hasattr(self.offHand, 'ItemTraits'):
-                if projectile and projectile.typeid in self.offHand.ItemTraits.throw_bonus_items:
-                    throw_accuracy += self.offHand.ItemTraits.throw_accuracy_bonus
-        elif self.ability and hasattr(self.ability, 'ItemTraits'):
-            if projectile and projectile.typeid in self.ability.ItemTraits.throw_bonus_items:
-                throw_accuracy += self.ability.ItemTraits.throw_accuracy_bonus
+        if projectile:
+            if self.mainHand and hasattr(self.mainHand, 'ItemTraits'):
+                if projectile.typeid in self.mainHand.ItemTraits.throw_bonus_items:
+                    throw_accuracy += self.mainHand.ItemTraits.throw_accuracy_bonus
+                if projectile.typeid in self.mainHand.ItemTraits.fire_bonus_items:
+                    fire_accuracy_bonus += self.mainHand.ItemTraits.fire_accuracy_bonus
+                if self.offHand and hasattr(self.offHand, 'ItemTraits'):
+                    if projectile.typeid in self.offHand.ItemTraits.throw_bonus_items:
+                        throw_accuracy += self.offHand.ItemTraits.throw_accuracy_bonus
+                    if (projectile.typeid in self.offHand.ItemTraits.fire_bonus_items and
+                        fire_accuracy_bonus == 0):
+                        fire_accuracy_bonus += self.offHand.ItemTraits.fire_accuracy_bonus
+            elif self.ability and hasattr(self.ability, 'ItemTraits'):
+                if projectile and projectile.typeid in self.ability.ItemTraits.throw_bonus_items:
+                    throw_accuracy += self.ability.ItemTraits.throw_accuracy_bonus
+        throw_accuracy += fire_accuracy_bonus
         if throw_accuracy < 0:
             throw_accuracy = 0
         if throw_accuracy >= 100:
@@ -826,28 +870,27 @@ class Health:
         return False
 
 
+@dataclasses.dataclass
 class ItemTraits:
-    '''
-    '''
-    def __init__(self, itemtype,
-                 melee_damage=0, throw_damage=0,
-                 melee_accuracy=0, throw_accuracy=0,
-                 melee_bonues_items=[], throw_bonus_items=[],
-                 armor=0, apply_damage=0,
-                 melee_damage_type=DamageType.NONE,
-                 throw_damage_type=DamageType.NONE):
-        self.itemtype = itemtype
-        self.melee_damage = melee_damage
-        self.throw_damage = throw_damage
-        '''amount of damage the attack does'''
-        self.melee_accuracy_bonus = melee_accuracy
-        self.throw_accuracy_bonus = throw_accuracy
-        self.melee_bonues_items = melee_bonues_items
-        self.throw_bonus_items = throw_bonus_items
-        self.melee_damage_type = melee_damage_type
-        self.throw_damage_type = throw_damage_type
-        self.armor = armor
-        self.apply_damage = apply_damage
+    itemtype: ItemType
+    melee_damage: int = 0
+    throw_damage: int = 0 
+    melee_accuracy_bonus: int = 0 
+    throw_accuracy_bonus: int = 0 
+    melee_bonues_items: list[typeid.TID] = dataclasses.field(default_factory=list)
+    throw_bonus_items: list[typeid.TID] = dataclasses.field(default_factory=list)
+    melee_damage_type: DamageType = DamageType.NONE 
+    throw_damage_type: DamageType = DamageType.NONE
+    armor: int = 0 
+    apply_damage: int = 0 
+    melee_you_action: str = 'hit'
+    melee_it_action: str = 'hits'
+    range_you_action: str = ''
+    range_it_action: str = ''
+    fire_accuracy_bonus: int = 0
+    fire_bonus_items: list[typeid.TID] = dataclasses.field(default_factory=list)
+    fire_you_action: str = ''
+    fire_it_action: str = ''
 
 class Charge:
     '''

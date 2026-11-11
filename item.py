@@ -100,7 +100,9 @@ class ShortSword(e.Entity):
                          fg=color.COLOR.GREY)
         self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.HAND,
                                                melee_damage=2,
-                                               throw_damage=1)
+                                               throw_damage=1,
+                                               melee_you_action='slash',
+                                               melee_it_action='slashes')
 
 class Dart(e.Entity):
     spawn = True
@@ -140,10 +142,9 @@ class BlowPipe(e.Entity):
                          size=e.Size.SMALL,
                          fg=color.COLOR.RED)
         self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.HAND,
-                                               melee_damage=0,
-                                               throw_damage=0,
-                                               melee_accuracy=0,
-                                               throw_accuracy=30,
-                                               throw_bonus_items=[typeid.TID.DART])
+                                               fire_accuracy_bonus=40,
+                                               fire_bonus_items=[typeid.TID.DART],
+                                               fire_you_action='blow',
+                                               fire_it_action='blows')
 
 

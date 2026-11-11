@@ -88,6 +88,21 @@ class Messager:
             msg = f'The {attackentity.name} hits the {defendentity.name}.'
             unseen = 'You hear fighting.'
         self.add_notif(levelz, msg, pos, unseen)
+
+    def add_attack_message(self, levelz, attacker, victim, you_action, it_action):
+        if attacker.name == 'Player':
+            pos = attacker.pos()
+            msg = f'You {you_action} the {victim.name}.'
+            unseen = f'You {you_action} it.'
+        elif victim.name == 'Player':
+            pos = victim.pos()
+            msg = f'The {attacker.name} {it_action} you.'
+            unseen = f'It {it_action} you.'
+        else:
+            pos = attacker.pos()
+            msg = f'The {attacker.name} {it_action} the {victim.name}.'
+            unseen = 'You hear fighting.'
+        self.add_notif(levelz, msg, pos, unseen)
     
     def add_kill_message(self, levelz, attackentity, defendentity):
         if attackentity.name == 'Player':
@@ -230,6 +245,26 @@ class Messager:
             msg = f'The {ent.name} explodes!'
             unseen = 'You hear a burst!'
             pos = ent.pos()
+        self.add_notif(levelz, msg, pos, unseen)
+
+    def add_fire_message(self, levelz, parent, projectile, you_action, it_action):
+        pos = parent.pos()
+        if parent.name == 'Player':
+            msg = f'You {you_action} the {projectile.name}.'
+            unseen = f'You {you_action} the {projectile.name}.'
+        else:
+            msg = f'The {parent.name} {it_action} the {projectile.name}.'
+            unseen = '_'
+        self.add_notif(levelz, msg, pos, unseen)
+    
+    def add_projectile_message(self, levelz, projectile, victim):
+        pos = victim.pos()
+        if victim.name == 'Player':
+            msg = f'The {projectile.name} hits you.'
+            unseen = 'Something hits you.'
+        else:
+            msg = f'The {projectile.name} hits the {victim.name}.'
+            unseen = '_'
         self.add_notif(levelz, msg, pos, unseen)
 
 
