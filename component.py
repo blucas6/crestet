@@ -39,9 +39,10 @@ class Combat:
 
     def take_damage(self, inventory, damage):
         '''Return the damage actually taken after subtracting for armor and resistances'''
-        damage -= inventory.calculate_armor()
-        if damage <= 0:
-            return 1
+        if damage > 0:
+            damage -= inventory.calculate_armor()
+            if damage <= 0:
+                return 1
         return damage
 
     def throw(self, levelmanager, parent, animator, projectile, direction_key, rng, start_row, start_col, z):
@@ -127,8 +128,6 @@ class Combat:
 
     def attack_melee(self, parent, levelmanager, animator, messager, victim, rng):
         '''Attack the entity passed in'''
-        damage = 0
-        dmgtype = None
         if hasattr(parent, 'Inventory'):
             if parent.Inventory.mainHand:
                 roll = rng.randint(1,100)
@@ -143,6 +142,7 @@ class Combat:
                         messager.add_attack_message(parent.z, parent, victim, you_action, it_action)
                     else:
                         messager.add_damage_message(parent.z, parent, victim)
+                    Logger.info(f'Attack Melee: {parent} {victim} MainHand dmg:{damage}')
                     self.deal_damage(parent, levelmanager, animator, messager, victim,
                                  damage, dmgtype)
                 else:
@@ -151,6 +151,7 @@ class Combat:
                     roll = rng.randint(1,100)
                     if roll <= parent.Inventory.calculate_melee_accuracy(self.melee_accuracy):
                         damage,dmgtype = parent.Inventory.get_offHand_dmg()
+                        Logger.info(f'Attack Melee: {parent} {victim} OffHand dmg:{damage}')
                         messager.add_damage_message(parent.z, parent, victim)
                         self.deal_damage(parent, levelmanager, animator, messager, victim,
                                      damage, dmgtype)
@@ -169,6 +170,7 @@ class Combat:
                         messager.add_attack_message(parent.z, parent, victim, you_action, it_action)
                     else:
                         messager.add_damage_message(parent.z, parent, victim)
+                    Logger.info(f'Attack Melee: {parent} {victim} Ability dmg:{damage}')
                     self.deal_damage(parent, levelmanager, animator, messager, victim,
                                  damage, dmgtype)
                     parent.Inventory.apply_ability(parent, levelmanager, messager,
@@ -883,8 +885,8 @@ class ItemTraits:
     throw_damage_type: DamageType = DamageType.NONE
     armor: int = 0 
     apply_damage: int = 0 
-    melee_you_action: str = 'hit'
-    melee_it_action: str = 'hits'
+    melee_you_action: str = 'smack'
+    melee_it_action: str = 'smacks'
     range_you_action: str = ''
     range_it_action: str = ''
     fire_accuracy_bonus: int = 0
