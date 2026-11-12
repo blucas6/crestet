@@ -267,6 +267,12 @@ class Messager:
             unseen = '_'
         self.add_notif(levelz, msg, pos, unseen)
 
+    def add_level_clear_message(self, levelz, playerpos):
+        msg = '** Level Cleared **'
+        pos = playerpos
+        unseen = msg
+        self.add_notif(levelz, msg, pos, unseen)
+
 
 
 

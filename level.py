@@ -28,6 +28,23 @@ class Level:
         '''Random generator with optional seed'''
         self.difficulty = int(1 + z + z/2)
         self.player_difficulty = -1
+        self.total_mons = 0
+        self.total_mons_last = 0
+
+    def add_entity_record(self, entity):
+        if entity.layer == e.Layer.MONSTER_LAYER and entity.name != 'Player':
+            self.total_mons += 1
+
+    def remove_entity_record(self, entity):
+        if entity.layer == e.Layer.MONSTER_LAYER and entity.name != 'Player':
+            self.total_mons -= 1
+
+    def upkeep(self, messager, playerpos):
+        Logger.info(f'Level Upkeep z:{self.z}: mons last:{self.total_mons_last} mons:{self.total_mons}')
+        if self.total_mons_last > 0 and self.total_mons <= 0:
+            messager.add_level_clear_message(self.z, playerpos)
+
+        self.total_mons_last = self.total_mons
 
 class LevelManager:
     '''
@@ -72,7 +89,10 @@ class LevelManager:
     def add_to_level(self, entity, pos, z, overwrite=False):
         '''Adds an entity to the level and calls the init hook'''
         entity.on_init(self.RNG)
-        return self.place_entity(z, entity, pos, overwrite)
+        success = self.place_entity(z, entity, pos, overwrite)
+        if success:
+            self.Levels[z].add_entity_record(entity)
+        return success
 
     def place_entity(self, z, entity, pos, overwrite=False):
         '''Place an entity into the level'''
@@ -169,6 +189,13 @@ class LevelManager:
                     entity.energy += energy
 
         # update loop
+        self.level_update_loop(level, display, animator, messager, menumanager,
+                               statemachine, currentturn, generator)
+
+        # level upkeep
+        level.upkeep(messager, self.Player.pos())
+
+    def level_update_loop(self, level, display, animator, messager, menumanager, statemachine, currentturn, generator):
         done_turn = False
         while not done_turn:
             done_turn = True
@@ -289,19 +316,24 @@ class LevelManager:
             Logger.error(f'Error: {entity} cannot go past last level!')
             return
 
-        level = self.Levels[newz]
+        oldlevel = self.Levels[entity.z]
+        newlevel = self.Levels[newz]
 
-        if not self.is_entity_pos_valid(level, entity, newpos):
+        if not self.is_entity_pos_valid(newlevel, entity, newpos):
             Logger.error(f'Error: {entity} moving to z:{newz} is invalid!')
             return False
 
         entity = self.remove_entity(entity)
 
-        self.enter_level(entity, level, generator)
+        oldlevel.remove_entity_record(entity)
 
-        self.place_entity(level.z, entity, newpos)
+        self.enter_level(entity, newlevel, generator)
 
-        entity.on_zchange(level)
+        self.place_entity(newlevel.z, entity, newpos)
+
+        newlevel.add_entity_record(entity)
+
+        entity.on_zchange(newlevel)
 
         return True
 

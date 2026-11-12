@@ -185,6 +185,8 @@ class Combat:
             if victim.Health.change_health(-damage):
                 victim.death(levelmanager, animator, messager)
                 messager.add_kill_message(levelmanager.currentz, parent, victim)
+                # update level mons count
+                levelmanager.Levels[victim.z].total_mons -= 1
                 # gain xp
                 if hasattr(parent, 'Leveling') and hasattr(victim, 'xp'):
                     parent.Leveling.gain_xp(victim.xp, parent, messager, levelmanager)
