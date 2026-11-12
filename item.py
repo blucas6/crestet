@@ -142,7 +142,7 @@ class BlowPipe(e.Entity):
                          size=e.Size.SMALL,
                          fg=color.COLOR.RED)
         self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.HAND,
-                                               fire_accuracy_bonus=40,
+                                               fire_accuracy=40,
                                                fire_bonus_items=[typeid.TID.DART],
                                                fire_you_action='blow',
                                                fire_it_action='blows')
