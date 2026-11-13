@@ -347,7 +347,7 @@ class Entity:
     
     def death(self, levelmanager, *_):
         '''Entities can add to this method to trigger on death actions'''
-        levelmanager.remove_entity(self)
+        levelmanager.permanently_remove_entity(self)
         if hasattr(self, 'Inventory'):
             for item in self.Inventory.get_all_items():
                 if item:
@@ -407,6 +407,7 @@ class Entity:
 
     def handle_charging(self, levelmanager, animator, messager, menumanager, statemachine, event, rng):
         '''Talks to the charge component'''
+        Logger.info('HANDLE CHARGING')
         # start the charge
         if event[0] == '5':
             self.Charge.start(int(event[1]))

@@ -109,7 +109,10 @@ def get_pts(rows, cols):
             pts.append((r,c)) 
     return pts
 
-def get_random_pt(rng, rows, cols):
+def get_random_pt(rng, allpts, invalidpts=[]):
     '''Get a random pt from an array'''
-    return rng.randint(0,rows-1), rng.randint(0,cols-1)
+    invalidpts = set(invalidpts)
+    validpts = [pt for pt in allpts if pt not in invalidpts] 
+    return validpts[rng.randint(0, len(validpts)-1)]
+
 

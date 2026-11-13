@@ -27,24 +27,39 @@ class Level:
         self.RNG = rng
         '''Random generator with optional seed'''
         self.difficulty = int(1 + z + z/2)
+        self.current_difficulty = 0
         self.player_difficulty = -1
         self.total_mons = 0
         self.total_mons_last = 0
+        self.regen_timer = [config.LEVEL_REGEN_TURNS, config.LEVEL_REGEN_TURNS]
+        self.level_cleared = False
 
     def add_entity_record(self, entity):
         if entity.layer == e.Layer.MONSTER_LAYER and entity.name != 'Player':
             self.total_mons += 1
+            self.current_difficulty += entity.difficulty
+            Logger.info(f'adding: {entity} mon:{self.total_mons} cd:{self.current_difficulty}')
 
     def remove_entity_record(self, entity):
         if entity.layer == e.Layer.MONSTER_LAYER and entity.name != 'Player':
             self.total_mons -= 1
+            self.current_difficulty -= entity.difficulty
+            Logger.info(f'removing: {entity} mon:{self.total_mons} cd:{self.current_difficulty}')
 
-    def upkeep(self, messager, playerpos):
-        Logger.info(f'Level Upkeep z:{self.z}: mons last:{self.total_mons_last} mons:{self.total_mons}')
-        if self.total_mons_last > 0 and self.total_mons <= 0:
+    def upkeep(self, levelmanager, messager, playerpos, generator, fovpoints):
+        if not self.level_cleared and self.total_mons_last > 0 and self.total_mons <= 0:
+            self.level_cleared = True
             messager.add_level_clear_message(self.z, playerpos)
 
         self.total_mons_last = self.total_mons
+
+        if self.level_cleared and self.current_difficulty < self.difficulty:
+            self.regen_timer[0] -= 1
+            if self.regen_timer[0] <= 0:
+                self.regen_timer[0] = self.regen_timer[1]
+                generator.generate_mon_amount(levelmanager, self,
+                                  self.current_difficulty, self.difficulty, 1, fovpoints)
+
 
 class LevelManager:
     '''
@@ -193,7 +208,7 @@ class LevelManager:
                                statemachine, currentturn, generator)
 
         # level upkeep
-        level.upkeep(messager, self.Player.pos())
+        level.upkeep(self, messager, self.Player.pos(), generator, self.Player.Brain.fovpoints)
 
     def level_update_loop(self, level, display, animator, messager, menumanager, statemachine, currentturn, generator):
         done_turn = False
@@ -363,6 +378,11 @@ class LevelManager:
         for ix in range(idx, len(level.EntityLayer[r][c])):
             level.EntityLayer[r][c][ix].idx -= 1
         return level.EntityLayer[r][c].pop(idx)
+
+    def permanently_remove_entity(self, entity):
+        self.remove_entity(entity)
+        level = self.Levels[entity.z]
+        level.remove_entity_record(entity)
 
     def reset_turns(self, turn):
         '''Pass in a turn number to reset all entities to that turn'''

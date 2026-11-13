@@ -32,6 +32,7 @@ LEVELMAX_ENTITIES = 10
 '''Maximum entities on a square'''
 PRE_LOOPS = 2
 '''Amount of game loops to run before starting the game'''
+LEVEL_REGEN_TURNS = 10
 
 ## PLAYER
 PLAYERPOS = [1,1]

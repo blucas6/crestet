@@ -70,6 +70,7 @@ class Generator:
         '''Collection of item classes'''
         self.rune_classes = []
         '''Collection of rune classes'''
+        self.all_pts = []
 
     def load_classes(self):
         '''Gather all object classes from files'''
@@ -95,6 +96,7 @@ class Generator:
         self.level_layouts = []
         self.levelrows = levelrows
         self.levelcols = levelcols
+        self.all_pts = utility.get_pts(self.levelrows, self.levelcols)
         self.RNG = rng
         try:
             data = None
@@ -187,7 +189,7 @@ class Generator:
 
     def generate_upstair(self, levelmanager: level.LevelManager, currlevel: level.Level):
         '''Places an upstairs in a random spot, returns the placement'''
-        r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
+        r,c = utility.get_random_pt(self.RNG, self.all_pts)
         levelmanager.add_to_level(tower.StairUp(), [r,c], currlevel.z, overwrite=True)
         Logger.info(f'Placed UPSTAIR z:{currlevel.z}: {(r,c)}')
         return (r,c)
@@ -227,7 +229,7 @@ class Generator:
         wallsplaced = 0
         attempt = 0
         # go through until minimum wall amount was reached or max tries
-        pts = utility.get_pts(self.levelrows, self.levelcols)
+        pts = copy.copy(self.all_pts)
         while wallsplaced < minwalls and attempt < config.MAX_RETRIES and pts:
             attempt += 1
             idx = self.RNG.randint(0,len(pts)-1)
@@ -253,7 +255,7 @@ class Generator:
         '''Add barrels to the level'''
         barrels_placed = 0
         attempt = 0
-        pts = utility.get_pts(self.levelrows, self.levelcols)
+        pts = copy.copy(self.all_pts)
         while barrels_placed < min_barrels and attempt < config.MAX_RETRIES and pts:
             attempt += 1
             idx = self.RNG.randint(0,len(pts)-1)
@@ -276,7 +278,7 @@ class Generator:
     def generate_lights(self, levelmanager:level.LevelManager, currlevel:level.Level):
         '''Add lights to the level'''
         for _ in range(self.light_amount):
-            r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
+            r,c = utility.get_random_pt(self.RNG, self.all_pts)
             _,myentity  = utility.get_max_entity(currlevel.EntityLayer[r][c])
             valid = all([False if type(ent) == tower.Light else True for ent in currlevel.EntityLayer[r][c]])
             if myentity.layer < entity.Layer.WALL_LAYER and valid:
@@ -293,13 +295,12 @@ class Generator:
             c = self.RNG.randint(1,self.levelcols-1)
             levelmanager.place_entity(currlevel.z, monster.Human(), (r,c))
         '''
-
         all_mons = [m for m in self.monster_classes if m.difficulty <= level_difficulty]
         attempt = 0
         while starting_difficulty < level_difficulty and attempt < config.MAX_RETRIES:
             attempt += 1
-            Logger.info(f'Attemp mons gen: {attempt} difficulty: {starting_difficulty} ({level_difficulty})')
-            r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
+            Logger.info(f'Attempt mons gen: {attempt} difficulty: {starting_difficulty} ({level_difficulty})')
+            r,c = utility.get_random_pt(self.RNG, self.all_pts)
             n = self.RNG.randint(0, len(all_mons)-1)
             new_mon = all_mons[n]()
             if levelmanager.add_to_level(new_mon, (r,c), currlevel.z):
@@ -333,12 +334,33 @@ class Generator:
             if attempt >= config.MAX_RETRIES:
                 Logger.warning('Generate pack mons max retries!')
 
+    def generate_mon_amount(self, levelmanager, currlevel, starting_difficulty, level_difficulty, fixed_amount, fovpoints):
+        generated_amount = 0
+        all_mons = [m for m in self.monster_classes if m.difficulty <= level_difficulty]
+        attempt = 0
+        while (starting_difficulty < level_difficulty and
+               attempt < config.MAX_RETRIES and
+               generated_amount < fixed_amount):
+            attempt += 1
+            Logger.info(f'Attempt mons gen: {attempt} difficulty: {starting_difficulty} ({level_difficulty})')
+            pt = utility.get_random_pt(self.RNG, self.all_pts, invalidpts=fovpoints)
+            r = pt[0]
+            c = pt[1]
+            n = self.RNG.randint(0, len(all_mons)-1)
+            new_mon = all_mons[n]()
+            if levelmanager.add_to_level(new_mon, (r,c), currlevel.z):
+                starting_difficulty += new_mon.difficulty
+                generated_amount += 1
+                Logger.info(f'Adding new mon to level: {new_mon}')
+                self.generate_pack_mons(levelmanager, currlevel, all_mons[n], (r,c))
+        if attempt >= config.MAX_RETRIES:
+            Logger.warning('Generate mons max retries!')
 
     def generate_items(self, levelmanager: level.LevelManager, currlevel: level.Level, item_amount):
         '''Add items to the level'''
         attempt = 0
         while item_amount > 0 and attempt < config.MAX_RETRIES:
-            r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
+            r,c = utility.get_random_pt(self.RNG, self.all_pts)
             new_item = None
             n = self.RNG.randint(0, len(self.item_classes)-1)
             new_item = self.item_classes[n]()
@@ -348,7 +370,7 @@ class Generator:
     def generate_runes(self, levelmanager: level.LevelManager, currlevel: level.Level, rune_amount):
         attempt = 0
         while rune_amount > 0 and attempt < config.MAX_RETRIES:
-            r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
+            r,c = utility.get_random_pt(self.RNG, self.all_pts)
             n = self.RNG.randint(0, len(self.rune_classes)-1)
             new_rune = self.rune_classes[n]()
             if levelmanager.add_to_level(new_rune, (r,c), currlevel.z):
@@ -357,7 +379,7 @@ class Generator:
     def generate_plants(self, levelmanager: level.LevelManager, currlevel: level.Level, plant_amount):
         plants = 0
         attempt = 0
-        pts = utility.get_pts(self.levelrows, self.levelcols)
+        pts = copy.copy(self.all_pts)
         while plants < plant_amount and attempt < config.MAX_RETRIES and pts:
             attempt += 1
             idx = self.RNG.randint(0,len(pts)-1)

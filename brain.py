@@ -47,10 +47,10 @@ class Brain:
         grid = [[max([int(x.layer) for x in level.EntityLayer[r][c]]) if level.EntityLayer[r][c] else 0
                  for c in range(len(level.EntityLayer[r]))]
                     for r in range(len(level.EntityLayer))]
-        return algo.RecursiveShadow(grid,
+        return list(algo.RecursiveShadow(grid,
                                mypos,
                                self.sightrange,
-                               int(self.blockinglayer))
+                               int(self.blockinglayer)))
 
     def level_change(self, *_):
         '''Base case, brain child classes can override this trigger'''

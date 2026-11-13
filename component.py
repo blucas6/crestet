@@ -142,7 +142,15 @@ class Combat:
 
     def attack_melee(self, parent, levelmanager, animator, messager, victim, rng):
         '''Attack the entity passed in'''
-        if hasattr(parent, 'Inventory'):
+
+        # CHARGE
+        if hasattr(parent, 'Charge') and parent.Charge.charging:
+            damage, dmgtype = parent.Charge.end()
+            messager.add_attack_message(parent.z, parent, victim, 'charge', 'charges')
+            self.deal_damage(parent, levelmanager, animator, messager, victim, damage, dmgtype)
+
+        # INVENTORY
+        elif hasattr(parent, 'Inventory'):
 
             # MAINHAND
             attacktraits = parent.Inventory.roll_mainHand_attack(rng, self.melee_accuracy)
@@ -185,8 +193,6 @@ class Combat:
             if victim.Health.change_health(-damage):
                 victim.death(levelmanager, animator, messager)
                 messager.add_kill_message(levelmanager.currentz, parent, victim)
-                # update level mons count
-                levelmanager.Levels[victim.z].total_mons -= 1
                 # gain xp
                 if hasattr(parent, 'Leveling') and hasattr(victim, 'xp'):
                     parent.Leveling.gain_xp(victim.xp, parent, messager, levelmanager)
@@ -936,4 +942,5 @@ class Charge:
         self.charging = False
         dmg = self.distance
         self.distance = 0
-        return dmg
+        return dmg, DamageType.BLUDGEON
+
