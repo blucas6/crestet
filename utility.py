@@ -110,4 +110,11 @@ def get_random_pt(rng, allpts, invalidpts=[]):
     validpts = [pt for pt in allpts if pt not in invalidpts] 
     return validpts[rng.randint(0, len(validpts)-1)]
 
+def find_entity(currlevel, pts, typeid):
+    '''In a set of FOV points, check if the entity exists'''
+    for pt in pts:
+        for ent in currlevel.EntityLayer[pt[0]][pt[1]]:
+            if ent.typeid == typeid:
+                return pt
+    return None
 

@@ -69,6 +69,7 @@ class Display:
         '''Creates empty buffers'''
         self.screenbuffer = [[' ' for _ in range(self.termcols-1)] 
                                     for _ in range(self.termrows-1)]
+        # only load colorbuffer if engine initialized colors
         if self.displayon:
             self.colorbuffer = [[
                 self.Engine.gc(color.COLOR.BLACK) for _ in range(self.termcols-1)] 

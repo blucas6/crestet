@@ -203,7 +203,7 @@ class Goblin(e.Entity):
                                      blockinglayer=e.Layer.MONSTER_LAYER,
                                      attacks=[e.AttackType.THROW,
                                               e.AttackType.MELEE],
-                                     pack_leader='Goblin Leader')
+                                     pack_leader=typeid.TID.GOBLINLEADER)
 
         self.Combat = component.Combat()
         self.Inventory = component.Inventory(autopickuplist=['Dart'])

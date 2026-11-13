@@ -1,4 +1,5 @@
 import enum
+import typeid
 import tower
 import algo
 import utility
@@ -115,7 +116,7 @@ class SimpleBrain(Brain):
         return None
 
     def check_for_player(self, currlevel, mypos, inventory, status, fovpoints):
-        playerpos = self.find_entity(currlevel, fovpoints, 'Player')
+        playerpos = utility.find_entity(currlevel, fovpoints, typeid.TID.PLAYER)
 
         # if the player is near, try to attack
         if playerpos:
@@ -147,14 +148,6 @@ class SimpleBrain(Brain):
         '''Get the throw command'''
         d = self.move_towards_pt(mypos, playerpos)
         return 't' + str(d)
-
-    def find_entity(self, currlevel, pts, name):
-        '''In a set of FOV points, check if the player exists'''
-        for pt in pts:
-            for ent in currlevel.EntityLayer[pt[0]][pt[1]]:
-                if ent.name == name:
-                    return pt
-        return None
 
     def find_path(self, entitylayer, mypos, dest):
         '''Finds a path using A* to the player position'''
@@ -196,10 +189,14 @@ class SimpleBrain(Brain):
         return '.'
 
 class PackBrain(SimpleBrain):
+    '''
+    Same as SimpleBrain, but will stay close to the pack leader
+    '''
     def __init__(self, sightrange, blockinglayer, attacks=[], pack_leader=None):
         super().__init__(sightrange, blockinglayer, attacks)
 
         self.pack_leader = pack_leader
+        '''Pack leader type id entity to follow'''
 
     def get_action(self, currlevel, mypos, energy, rng, speed, status, inventory=None):
         '''Returns an action'''
@@ -225,7 +222,8 @@ class PackBrain(SimpleBrain):
         return '.'
 
     def check_for_leader(self, currlevel, mypos, fovpts):
-        leaderpos = self.find_entity(currlevel, fovpts, self.pack_leader)
+        '''Try to find the pack leader on the level'''
+        leaderpos = utility.find_entity(currlevel, fovpts, self.pack_leader)
 
         if leaderpos and not utility.is_pt_near(mypos, leaderpos):
             return self.find_path(currlevel.EntityLayer, mypos, leaderpos)
