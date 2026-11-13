@@ -71,6 +71,7 @@ class Generator:
         self.rune_classes = []
         '''Collection of rune classes'''
         self.all_pts = []
+        '''All points in the level'''
 
     def load_classes(self):
         '''Gather all object classes from files'''
@@ -161,7 +162,7 @@ class Generator:
             if upstair_pos and downstair_pos:
                 self.generate_clear_path(levelmanager, currlevel, upstair_pos, downstair_pos)
             if level_layout.mons:
-                self.generate_mons(levelmanager, currlevel, 0, currlevel.difficulty)
+                self.generate_mons(levelmanager, currlevel, 0, currlevel.LevelDifficulty.max)
             if level_layout.items > 0:
                 self.generate_items(levelmanager, currlevel, level_layout.items)
             if level_layout.runes > 0:
@@ -312,6 +313,7 @@ class Generator:
             Logger.warning('Generate mons max retries!')
 
     def generate_pack_mons(self, levelmanager, currlevel, mon, pos):
+        '''Generate pack monsters based on pack leader'''
         if not hasattr(mon, 'pack') or not hasattr(mon, 'packtype'):
             return
         packmons = [m for m in self.monster_classes if m.__name__ in mon.packtype]
@@ -336,6 +338,7 @@ class Generator:
                 Logger.warning('Generate pack mons max retries!')
 
     def generate_mon_amount(self, levelmanager, currlevel, starting_difficulty, level_difficulty, fixed_amount, fovpoints):
+        '''Add monsters to level by a certain amount'''
         generated_amount = 0
         all_mons = [m for m in self.monster_classes if m.difficulty <= level_difficulty]
         attempt = 0

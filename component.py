@@ -1,4 +1,5 @@
 import algo
+import typing
 import typeid
 import animation
 import config
@@ -173,6 +174,10 @@ class Combat:
             Logger.info(f'Attack Melee: {parent} {victim} MainHand dmg:{atraits.damage}')
             self.deal_damage(parent, levelmanager, animator, messager, victim,
                          atraits.damage, atraits.dmgtype)
+            Logger.info(f'APPLY: {atraits.item}')
+            if atraits.item:
+                atraits.item.on_apply('', parent, levelmanager, messager, animator, victim.row,
+                                      victim.col, victim.z)
         else:
             messager.add_miss_message(parent.z, parent, victim)
 
@@ -717,6 +722,7 @@ class Inventory:
     def roll_melee_attack(self, item, rng, base_accuracy):
         attacktraits = AttackTraits()
         if item:
+            attacktraits.item = item
             attacktraits.result = AttackResult.FAIL
             roll = rng.randint(1,100)
             if roll <= self.calculate_melee_accuracy(base_accuracy):
@@ -885,6 +891,7 @@ class AttackResult(enum.IntEnum):
 
 @dataclasses.dataclass
 class AttackTraits:
+    item: typing.Any = None
     result: AttackResult = AttackResult.INVALID
     damage: int = 0
     dmgtype: DamageType = DamageType.NONE

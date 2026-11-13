@@ -11,11 +11,48 @@ import logging
 
 Logger = logging.getLogger(__name__)
 
+class LevelDifficulty:
+    '''Keep track of level difficulty'''
+    def __init__(self, z) -> None:
+        self.max = int(1 + z + z/2)
+        '''Level max difficulty'''
+        self.current = 0
+        '''Level current difficulty'''
+
+class MonsTracker:
+    '''Track monsters on the level'''
+    def __init__(self, z):
+        self.z = z
+        '''Z level'''
+        self.level_cleared = False
+        '''If level was cleared for the first time'''
+        self.total_mons = 0
+        '''Total monsters on the level'''
+        self.total_mons_last = 0
+        '''Total monsters on the level from last turn'''
+
+    def add_mon(self):
+        '''Add a monster to the amount'''
+        self.total_mons += 1
+
+    def remove_mon(self):
+        '''Remove a monster from the amount'''
+        self.total_mons -= 1
+        if self.total_mons < 0:
+            self.total_mons = 0
+    
+    def upkeep(self, messager, playerpos):
+        '''Update the total monster number and check for clearing'''
+        if not self.level_cleared and self.total_mons_last > 0 and self.total_mons <= 0:
+            self.level_cleared = True
+            messager.add_level_clear_message(self.z, playerpos)
+        self.total_mons_last = self.total_mons
+
 class Level:
     def __init__(self, rows, cols, z, rng):
-        self.rows = rows 
+        self.rows = rows
         '''Total height of the level'''
-        self.cols = cols 
+        self.cols = cols
         '''Total width of the level'''
         self.z = z
         '''Level index'''
@@ -27,49 +64,55 @@ class Level:
         '''Tracks all lit spaces on level'''
         self.RNG = rng
         '''Random generator with optional seed'''
-        self.difficulty = int(1 + z + z/2)
-        self.current_difficulty = 0
-        self.player_difficulty = -1
-        self.total_mons = 0
-        self.total_mons_last = 0
+        self.LevelDifficulty = LevelDifficulty(self.z)
+        '''Level difficulty'''
+        self.MonsTracker = MonsTracker(self.z)
+        '''Track monsters and level clear'''
         self.regen_timer = [config.LEVEL_REGEN_TURNS, config.LEVEL_REGEN_TURNS]
-        self.level_cleared = False
+        '''How quickly monsters regenerate'''
         self.player_has_visited = False
+        '''Track if player has entered the level'''
 
     def add_entity_record(self, entity, levelmanager, generator):
+        '''Record an entity entering the level'''
         if entity.layer == e.Layer.MONSTER_LAYER:
+            # track when player first visits the level
+            # adjust level difficulty based on player level
             if not self.player_has_visited and entity.typeid == typeid.TID.PLAYER:
                 self.player_has_visited = True
                 if hasattr(entity, 'Leveling'):
                     plevel = entity.Leveling.curr_level
                     new_difficulty = int(1 + plevel + plevel/2)
-                    Logger.info(f'Adding difficulty: {self.difficulty} -> {new_difficulty}')
-                    generator.generate_mons(levelmanager, self, self.difficulty, new_difficulty)
-                    self.difficulty = new_difficulty
+                    Logger.info(f'Adding difficulty: {self.LevelDifficulty.max} -> {new_difficulty}')
+                    generator.generate_mons(levelmanager, self, self.LevelDifficulty.max, new_difficulty)
+                    self.LevelDifficulty.max = new_difficulty
+            # update level difficulty based on monsters
             else:
-                self.total_mons += 1
-                self.current_difficulty += entity.difficulty
-                Logger.info(f'adding: {entity} mon:{self.total_mons} cd:{self.current_difficulty}')
+                self.MonsTracker.add_mon()
+                self.LevelDifficulty.current += entity.difficulty
+                Logger.info(f'adding: {entity} mon:{self.MonsTracker.total_mons} cd:{self.LevelDifficulty.current}')
 
     def remove_entity_record(self, entity):
+        '''Record an entity leaving the level'''
         if entity.layer == e.Layer.MONSTER_LAYER and entity.typeid != typeid.TID.PLAYER:
-            self.total_mons -= 1
-            self.current_difficulty -= entity.difficulty
-            Logger.info(f'removing: {entity} mon:{self.total_mons} cd:{self.current_difficulty}')
+            self.MonsTracker.remove_mon()
+            self.LevelDifficulty.current -= entity.difficulty
+            Logger.info(f'removing: {entity} mon:{self.MonsTracker.total_mons} cd:{self.LevelDifficulty.current}')
 
     def upkeep(self, levelmanager, messager, playerpos, generator, fovpoints):
-        if not self.level_cleared and self.total_mons_last > 0 and self.total_mons <= 0:
-            self.level_cleared = True
-            messager.add_level_clear_message(self.z, playerpos)
+        '''Do level upkeep'''
 
-        self.total_mons_last = self.total_mons
+        # check if level has been cleared
+        self.MonsTracker.upkeep(messager, playerpos)
 
-        if self.level_cleared and self.current_difficulty < self.difficulty:
+        # spawn new monsters if level is cleared
+        if (self.MonsTracker.level_cleared and
+            self.LevelDifficulty.current < self.LevelDifficulty.max):
             self.regen_timer[0] -= 1
             if self.regen_timer[0] <= 0:
                 self.regen_timer[0] = self.regen_timer[1]
                 generator.generate_mon_amount(levelmanager, self,
-                                  self.current_difficulty, self.difficulty, 1, fovpoints)
+                                  self.LevelDifficulty.current, self.LevelDifficulty.max, 1, fovpoints)
 
 
 class LevelManager:
