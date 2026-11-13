@@ -1,4 +1,5 @@
 import config
+import typeid
 import utility
 import item
 import message
@@ -33,15 +34,25 @@ class Level:
         self.total_mons_last = 0
         self.regen_timer = [config.LEVEL_REGEN_TURNS, config.LEVEL_REGEN_TURNS]
         self.level_cleared = False
+        self.player_has_visited = False
 
-    def add_entity_record(self, entity):
-        if entity.layer == e.Layer.MONSTER_LAYER and entity.name != 'Player':
-            self.total_mons += 1
-            self.current_difficulty += entity.difficulty
-            Logger.info(f'adding: {entity} mon:{self.total_mons} cd:{self.current_difficulty}')
+    def add_entity_record(self, entity, levelmanager, generator):
+        if entity.layer == e.Layer.MONSTER_LAYER:
+            if not self.player_has_visited and entity.typeid == typeid.TID.PLAYER:
+                self.player_has_visited = True
+                if hasattr(entity, 'Leveling'):
+                    plevel = entity.Leveling.curr_level
+                    new_difficulty = int(1 + plevel + plevel/2)
+                    Logger.info(f'Adding difficulty: {self.difficulty} -> {new_difficulty}')
+                    generator.generate_mons(levelmanager, self, self.difficulty, new_difficulty)
+                    self.difficulty = new_difficulty
+            else:
+                self.total_mons += 1
+                self.current_difficulty += entity.difficulty
+                Logger.info(f'adding: {entity} mon:{self.total_mons} cd:{self.current_difficulty}')
 
     def remove_entity_record(self, entity):
-        if entity.layer == e.Layer.MONSTER_LAYER and entity.name != 'Player':
+        if entity.layer == e.Layer.MONSTER_LAYER and entity.typeid != typeid.TID.PLAYER:
             self.total_mons -= 1
             self.current_difficulty -= entity.difficulty
             Logger.info(f'removing: {entity} mon:{self.total_mons} cd:{self.current_difficulty}')
@@ -101,12 +112,12 @@ class LevelManager:
         self.place_entity(playerz, self.Player, playerpos)
         self.currentz = playerz
 
-    def add_to_level(self, entity, pos, z, overwrite=False):
+    def add_to_level(self, entity, pos, z, generator, overwrite=False):
         '''Adds an entity to the level and calls the init hook'''
         entity.on_init(self.RNG)
         success = self.place_entity(z, entity, pos, overwrite)
         if success:
-            self.Levels[z].add_entity_record(entity)
+            self.Levels[z].add_entity_record(entity, self, generator)
         return success
 
     def place_entity(self, z, entity, pos, overwrite=False):
@@ -342,27 +353,16 @@ class LevelManager:
 
         oldlevel.remove_entity_record(entity)
 
-        self.enter_level(entity, newlevel, generator)
+        if entity.typeid == typeid.TID.PLAYER:
+            self.currentz = newlevel.z 
 
         self.place_entity(newlevel.z, entity, newpos)
 
-        newlevel.add_entity_record(entity)
+        newlevel.add_entity_record(entity, self, generator)
 
         entity.on_zchange(newlevel)
 
         return True
-
-    def enter_level(self, entity, new_level, generator):
-        # need to update the global Z index immediately
-        # message queue filters based on Z index
-        if entity.name == 'Player':
-            self.currentz = new_level.z 
-            if new_level.player_difficulty == -1 and hasattr(entity, 'Leveling'):
-                plevel = entity.Leveling.curr_level 
-                new_level.player_difficulty = int(1 + plevel + plevel/2)
-                generator.generate_mons(self, new_level,
-                                   new_level.difficulty,
-                                   new_level.player_difficulty)
 
     def remove_entity(self, entity):
         '''

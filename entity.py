@@ -1,4 +1,5 @@
 import itertools
+import typeid
 import animation
 import config
 import utility
@@ -286,7 +287,7 @@ class Entity:
         if entity.layer == Layer.MONSTER_LAYER:
 
             # check for interactions
-            if self.name == 'Player' and hasattr(entity, 'Interact'):
+            if self.typeid == typeid.TID.PLAYER and hasattr(entity, 'Interact'):
                 self.energy -= 1
                 entity.Interact.talk(statemachine, menumanager)
                 return MoveAction.INTERACT
@@ -347,11 +348,17 @@ class Entity:
     
     def death(self, levelmanager, *_):
         '''Entities can add to this method to trigger on death actions'''
+
+        # record that entity is removed from level
         levelmanager.permanently_remove_entity(self)
+
+        # drop inventory items
         if hasattr(self, 'Inventory'):
             for item in self.Inventory.get_all_items():
                 if item:
                     levelmanager.place_entity(self.z, item, self.pos())
+
+        # drop corpse
         if hasattr(self, 'Body'):
             self.Body.drop_corpse(levelmanager, self.pos())
 

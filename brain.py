@@ -162,7 +162,7 @@ class SimpleBrain(Brain):
         returncode, pts = algo.astar(grid, mypos, dest)
         if returncode != 1:
             Logger.error(f'Error: brain failed to find path -> {returncode}')
-            return '.'
+            return None
         return self.move_towards_pt(mypos, pts[1])
     
     def move_towards_pt(self, mypos, otherpos):
@@ -333,7 +333,7 @@ class FOVBrain(Brain):
                 # add player always
                 if myrow == r and mycol == c:
                     for ent in level.EntityLayer[r][c]:
-                        if ent.name == 'Player':
+                        if ent.typeid == typeid.TID.PLAYER:
                             self.mentalmap[r][c] = [ent]
                 # add other nearby objects as blurry
                 else:
