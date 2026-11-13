@@ -205,6 +205,8 @@ class Display:
         loaded_frames = []
         loaded_colors = []
         time_delays = []
+        tmp_screenbuffer = []
+        tmp_colorbuffer = []
 
         # go through each animation
         for anim in animator.AnimationQueue:
@@ -213,7 +215,8 @@ class Display:
             for animframe in anim.animation_frames:
                 # reset buffers
                 tmp_screenbuffer = self.get_new_buffer(self.screenbuffer)
-                tmp_colorbuffer = self.get_new_buffer(self.colorbuffer) 
+                if self.displayon:
+                    tmp_colorbuffer = self.get_new_buffer(self.colorbuffer) 
                 self.add_animation_frame(tmp_screenbuffer,
                                          tmp_colorbuffer,
                                          animframe.frame,
@@ -222,7 +225,8 @@ class Display:
                                          anim.bg,
                                          fovpoints)
                 loaded_frames.append(tmp_screenbuffer)
-                loaded_colors.append(tmp_colorbuffer)
+                if self.displayon:
+                    loaded_colors.append(tmp_colorbuffer)
                 time_delays.append(animframe.delay)
                 
         return loaded_frames, loaded_colors, time_delays
