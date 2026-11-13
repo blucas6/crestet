@@ -40,6 +40,7 @@ class Player(e.Entity):
         self.Inventory = component.Inventory(autopickuplist=['Dart', 'Arrow', 'Rune'])
         '''Inventory component'''
         self.Combat = component.Combat()
+        self.Body = component.Body(item.Corpse(), self.fg, self.name)
 
     def init(self):
         '''Initialize player data'''
@@ -48,7 +49,3 @@ class Player(e.Entity):
     def update_mental_map(self, curr_level):
         '''Update the mental map of the player'''
         self.Brain.update_mental_map(curr_level, self.row, self.col, self.status)
-
-    def death(self, levelmanager, animator, messager):
-        super().death(levelmanager)
-        utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())

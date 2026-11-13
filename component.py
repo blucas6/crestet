@@ -1,4 +1,3 @@
-from threading import main_thread
 import algo
 import typeid
 import animation
@@ -943,4 +942,19 @@ class Charge:
         dmg = self.distance
         self.distance = 0
         return dmg, DamageType.BLUDGEON
+
+class Body:
+    def __init__(self, corpse, fg, name, item=None, chance=100):
+        self.corpse = corpse
+        self.corpse.fg = fg
+        self.corpse.name = name + ' ' + self.corpse.name
+        self.item = item
+        self.chance = chance
+
+    def drop_corpse(self, levelmanager, pos):
+        if levelmanager.RNG.randint(0, 100) <= self.chance:
+            levelmanager.place_entity(pos[2], self.corpse, (pos[0],pos[1]))
+        elif self.item:
+            levelmanager.place_entity(pos[2], self.item, (pos[0],pos[1]))
+
 

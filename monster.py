@@ -77,6 +77,7 @@ class Snail(e.Entity):
         self.Combat = component.Combat()
         self.Inventory = component.Inventory()
         self.Inventory.equip(ability.Lick())
+        self.Body = component.Body(item.Corpse(), self.fg, self.name, item.SnailShell(), 50)
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
@@ -98,14 +99,6 @@ class Snail(e.Entity):
             rng,
             generator
         )
-    
-    def death(self, levelmanager, animator, messager):
-        super().death(levelmanager)
-        if levelmanager.RNG.randint(0,1) == 0:
-            shell = item.SnailShell()
-            levelmanager.place_entity(self.z, shell, (self.row,self.col))
-        else:
-            utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
 
 class Lynx(e.Entity):
     difficulty = 4
@@ -126,6 +119,7 @@ class Lynx(e.Entity):
         self.Combat = component.Combat()
         self.Inventory = component.Inventory()
         self.Inventory.equip(ability.Claw())
+        self.Body = component.Body(item.Corpse(), self.fg, self.name)
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
@@ -147,14 +141,6 @@ class Lynx(e.Entity):
             rng,
             generator
         )
-
-    def death(self, levelmanager, animator, messager):
-        super().death(levelmanager)
-        if levelmanager.RNG.randint(0,1) == 0:
-            stone = item.PreciousStone()
-            levelmanager.place_entity(self.z, stone, (self.row,self.col))
-        else:
-            utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
 
 class Raven(e.Entity):
     difficulty = 3
@@ -176,6 +162,7 @@ class Raven(e.Entity):
         self.xp = config.RAVEN_XP
 
         self.Inventory.equip(ability.Peck())
+        self.Body = component.Body(item.Corpse(), self.fg, self.name)
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
@@ -197,10 +184,6 @@ class Raven(e.Entity):
             rng,
             generator
         )
-
-    def death(self, levelmanager, animator, messager):
-        super().death(levelmanager)
-        utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
 
 class Goblin(e.Entity):
     '''
@@ -227,6 +210,7 @@ class Goblin(e.Entity):
         self.Inventory.equip(ability.Bite())
         self.speed = e.Speed.SLOW
         self.xp = config.GOBLIN_XP
+        self.Body = component.Body(item.Corpse(), self.fg, self.name)
 
     def on_init(self, rng):
         darts = rng.randint(3, 7)
@@ -259,10 +243,6 @@ class Goblin(e.Entity):
             rng,
             generator
         )
-
-    def death(self, levelmanager, animator, messager):
-        super().death(levelmanager)
-        utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
 
 class Human(e.Entity):
     '''
@@ -299,6 +279,7 @@ class Newt(e.Entity):
         self.xp = config.NEWT_XP
         self.Combat = component.Combat()
         self.Inventory.equip(ability.Bite())
+        self.Body = component.Body(item.Corpse(), self.fg, self.name)
 
     def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
@@ -319,10 +300,6 @@ class Newt(e.Entity):
             rng,
             generator
         )
-
-    def death(self, levelmanager, animator, messager):
-        super().death(levelmanager)
-        utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
 
 class Jelly(e.Entity):
     '''

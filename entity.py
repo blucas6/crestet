@@ -352,6 +352,8 @@ class Entity:
             for item in self.Inventory.get_all_items():
                 if item:
                     levelmanager.place_entity(self.z, item, self.pos())
+        if hasattr(self, 'Body'):
+            self.Body.drop_corpse(levelmanager, self.pos())
 
 
     def moveZ(self, levelmanager, animator, messager, incrementz, rng, generator):

@@ -27,11 +27,6 @@ def is_pt_near(src, dest):
             return True
     return False
 
-def corpse_drop(levelmanager, corpse, fg, name, pos):
-    corpse.fg = fg 
-    corpse.name = name + ' ' + corpse.name
-    levelmanager.place_entity(pos[2], corpse, (pos[0],pos[1]))
-
 def get_one_layer_pts(pos, rows, cols, shape='circle'):
     '''
     Pass in a position to return all points around that position
