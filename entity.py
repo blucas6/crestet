@@ -1,4 +1,5 @@
 import itertools
+import typeid
 import animation
 import config
 import utility
@@ -286,7 +287,7 @@ class Entity:
         if entity.layer == Layer.MONSTER_LAYER:
 
             # check for interactions
-            if self.name == 'Player' and hasattr(entity, 'Interact'):
+            if self.typeid == typeid.TID.PLAYER and hasattr(entity, 'Interact'):
                 self.energy -= 1
                 entity.Interact.talk(statemachine, menumanager)
                 return MoveAction.INTERACT
@@ -347,9 +348,22 @@ class Entity:
     
     def death(self, levelmanager, *_):
         '''Entities can add to this method to trigger on death actions'''
-        levelmanager.remove_entity(self)
 
-    def moveZ(self, levelmanager, animator, messager, incrementz, rng):
+        # record that entity is removed from level
+        levelmanager.permanently_remove_entity(self)
+
+        # drop inventory items
+        if hasattr(self, 'Inventory'):
+            for item in self.Inventory.get_all_items():
+                if item:
+                    levelmanager.place_entity(self.z, item, self.pos())
+
+        # drop corpse
+        if hasattr(self, 'Body'):
+            self.Body.drop_corpse(levelmanager, self.pos())
+
+
+    def moveZ(self, levelmanager, animator, messager, incrementz, rng, generator):
         '''Move an to another z level'''
         if self.energy < self.speed:
             return
@@ -366,24 +380,29 @@ class Entity:
                     messager.add_level_fail_message(levelmanager.currentz,
                                                     self, -1)
                     return
-                # check if there is a monster/barrel above you
-                entitylayer = levelmanager.Levels[newz].EntityLayer
-                _,an_entity = utility.get_max_entity(entitylayer[self.row][self.col])
-                # fight on stairwell
-                if ((an_entity.layer == Layer.MONSTER_LAYER or
-                    an_entity.layer == Layer.BARREL_LAYER) and
-                    hasattr(self, 'Combat')):
-                    # auto fight the entity
-                    self.energy -= self.speed
-                    self.Combat.attack_melee(self, levelmanager, animator, messager, an_entity, rng)
-                    return
-                # success
-                else:
-                    if levelmanager.move_entity_z(self, newz, [self.row,self.col]):
-                        messager.add_stair_message(levelmanager.currentz,
-                                                   self, incrementz)
+                # check if stair corresponds to the move
+                if ((incrementz > 0 and ent.name == 'Upstair') or
+                    (incrementz < 0 and ent.name == 'Downstair')):
+                    # check if there is a monster/barrel above you
+                    entitylayer = levelmanager.Levels[newz].EntityLayer
+                    _,an_entity = utility.get_max_entity(entitylayer[self.row][self.col])
+                    # fight on stairwell
+                    if ((an_entity.layer == Layer.MONSTER_LAYER or
+                        an_entity.layer == Layer.BARREL_LAYER) and
+                        hasattr(self, 'Combat')):
+                        # auto fight the entity
                         self.energy -= self.speed
+                        self.Combat.attack_melee(self, levelmanager, animator, messager, an_entity, rng)
                         return
+                    # success
+                    else:
+                        if levelmanager.move_entity_z(self, newz,
+                                                      [self.row,self.col],
+                                                      generator):
+                            messager.add_stair_message(levelmanager.currentz,
+                                                       self, incrementz)
+                            self.energy -= self.speed
+                            return
         # stairwell not on this space
         messager.add_stair_fail_message(levelmanager.currentz, self, incrementz)
 
@@ -397,6 +416,7 @@ class Entity:
 
     def handle_charging(self, levelmanager, animator, messager, menumanager, statemachine, event, rng):
         '''Talks to the charge component'''
+        Logger.info('HANDLE CHARGING')
         # start the charge
         if event[0] == '5':
             self.Charge.start(int(event[1]))
@@ -423,17 +443,23 @@ class Entity:
             return MoveAction.ATTACKED
         return MoveAction.INVALID
     
-    def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event, rng):
+    def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event, rng, generator):
         '''Pass an event for the entity to preform a certain action'''
 
+        # invalid event
+        if not isinstance(event, str):
+            return
+
+        # do nothing event
+        if event[0] == '`':
+            return
+
+        # don't even bother if dead
         if hasattr(self, 'Health') and not self.Health.alive:
             return
 
         if self.z == levelmanager.currentz:
             Logger.info(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
-
-        if not isinstance(event, str):
-            return
 
         # check for status effects
         if StatusEffect.FROZEN in self.status:
@@ -469,9 +495,9 @@ class Entity:
                           rng)
         # Z
         elif event == '<': 
-            self.moveZ(levelmanager, animator, messager, 1, rng)
+            self.moveZ(levelmanager, animator, messager, 1, rng, generator)
         elif event == '>':
-            self.moveZ(levelmanager, animator, messager, -1, rng)
+            self.moveZ(levelmanager, animator, messager, -1, rng, generator)
         # Inventory
         elif (hasattr(self, 'Inventory') and
             ((len(event) > 1 and

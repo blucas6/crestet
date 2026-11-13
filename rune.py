@@ -18,9 +18,9 @@ class SnowRune(entity.Entity):
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.VERY_SMALL,
                          fg=color.COLOR.BLUE)
-        self.ItemType = component.ItemType.NOEQUIP
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.NOEQUIP,
+                                               apply_damage=1)
         self.ApplyInfo = component.ApplyInfo.DIRECTION
-        self.damage = 1
 
     def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
         messager.add_notif(levelmanager.currentz, 'Ice freezes the air!', parent.pos())
@@ -48,11 +48,11 @@ class SnowRune(entity.Entity):
         animator.queueUp(levelmanager, anim)
 
         # deal damage
-        for ent in entitylayer[objr][objc]:
+        for victim in entitylayer[objr][objc]:
             if hasattr(parent, 'Combat'):
-                parent.Combat.deal_damage(parent, levelmanager, animator,
-                                        messager, ent, True, self.damage, 'ice')
-            ent.apply_status(messager, entity.StatusEffect.FROZEN, levelmanager)
+                parent.Combat.deal_damage(parent, levelmanager, animator, messager,
+                              victim, self.ItemTraits.apply_damage, component.DamageType.SNOW)
+            victim.apply_status(messager, entity.StatusEffect.FROZEN, levelmanager)
         return True
 
 class EmberRune(entity.Entity):
@@ -63,9 +63,9 @@ class EmberRune(entity.Entity):
                          layer=entity.Layer.OBJECT_LAYER,
                          size=entity.Size.VERY_SMALL,
                          fg=color.COLOR.RED)
-        self.ItemType = component.ItemType.NOEQUIP
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.NOEQUIP,
+                                               apply_damage=2)
         self.ApplyInfo = component.ApplyInfo.DIRECTION
-        self.damage = 2
 
     def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
         messager.add_notif(levelmanager.currentz, 'Flames shoot out!', parent.pos())
@@ -93,10 +93,10 @@ class EmberRune(entity.Entity):
         animator.queueUp(levelmanager, anim)
 
         # deal damage
-        for ent in entitylayer[objr][objc]:
+        for victim in entitylayer[objr][objc]:
             if hasattr(parent, 'Combat'):
-                parent.Combat.deal_damage(parent, levelmanager, animator,
-                                    messager, ent, True, self.damage, 'fire')
+                parent.Combat.deal_damage(parent, levelmanager, animator, messager,
+                            victim, self.ItemTraits.apply_damage, component.DamageType.FIRE)
         return True
 
 

@@ -30,12 +30,13 @@ class TID(IntEnum):
     ARROW           = 51
     FRUIT           = 52
     WOOD            = 53
-    SWORD           = 54
+    SHORT_SWORD     = 54
     DART            = 55
     GAMBESON        = 56
-    TURTLE_SHELL    = 57
+    SNAIL_SHELL     = 57
     PRECIOUS_STONE  = 58
     CORPSE          = 59
+    BLOWPIPE        = 60
 
     RAVEN           = 101
     GOBLIN          = 102
@@ -44,6 +45,7 @@ class TID(IntEnum):
     HUMAN           = 105
     LYNX            = 106
     SNAIL           = 107
+    GOBLINLEADER    = 108
 
     EMBER           = 1001
     SNOW            = 1002

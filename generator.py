@@ -70,6 +70,8 @@ class Generator:
         '''Collection of item classes'''
         self.rune_classes = []
         '''Collection of rune classes'''
+        self.all_pts = []
+        '''All points in the level'''
 
     def load_classes(self):
         '''Gather all object classes from files'''
@@ -95,6 +97,7 @@ class Generator:
         self.level_layouts = []
         self.levelrows = levelrows
         self.levelcols = levelcols
+        self.all_pts = utility.get_pts(self.levelrows, self.levelcols)
         self.RNG = rng
         try:
             data = None
@@ -158,8 +161,8 @@ class Generator:
                     self.generate_clear_path(levelmanager, currlevel, config.PLAYERPOS, upstair_pos)
             if upstair_pos and downstair_pos:
                 self.generate_clear_path(levelmanager, currlevel, upstair_pos, downstair_pos)
-            if level_layout.mons > 0:
-                self.generate_mons(levelmanager, currlevel, level_layout.mons)
+            if level_layout.mons:
+                self.generate_mons(levelmanager, currlevel, 0, currlevel.LevelDifficulty.max)
             if level_layout.items > 0:
                 self.generate_items(levelmanager, currlevel, level_layout.items)
             if level_layout.runes > 0:
@@ -168,14 +171,14 @@ class Generator:
                 self.generate_plants(levelmanager, currlevel, level_layout.plants)
             # make sure player can be placed, even after placing all items down
             if z == config.PLAYERZ:
-                levelmanager.place_entity(currlevel.z, tower.Floor(), config.PLAYERPOS, overwrite=True)
+                levelmanager.add_to_level(tower.Floor(), config.PLAYERPOS, currlevel.z, self, overwrite=True)
         Logger.info(f'----- FINISHED LEVEL GENERATION -----')
 
     def generate_floor(self, levelmanager: level.LevelManager, currlevel: level.Level):
         '''Adds floors to the entity array'''
         for r in range(self.levelrows):
             for c in range(self.levelcols):
-                levelmanager.place_entity(currlevel.z, tower.Floor(), [r,c], overwrite=True)
+                levelmanager.add_to_level(tower.Floor(), [r,c], currlevel.z, self, overwrite=True)
 
     def generate_outer_walls(self, levelmanager: level.LevelManager, currlevel: level.Level):
         '''Adds surrounding walls to the entity array'''
@@ -183,12 +186,12 @@ class Generator:
             for c in range(self.levelcols):
                 if r == 0 or c == 0 or r == self.levelrows-1 or c == self.levelcols-1:
                     wall_piece = self.get_wall_piece()
-                    levelmanager.place_entity(currlevel.z, wall_piece, [r,c], overwrite=True)
+                    levelmanager.add_to_level(wall_piece, [r,c], currlevel.z, self, overwrite=True)
 
     def generate_upstair(self, levelmanager: level.LevelManager, currlevel: level.Level):
         '''Places an upstairs in a random spot, returns the placement'''
-        r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
-        levelmanager.place_entity(currlevel.z, tower.StairUp(), [r,c], overwrite=True)
+        r,c = utility.get_random_pt(self.RNG, self.all_pts)
+        levelmanager.add_to_level(tower.StairUp(), [r,c], currlevel.z, self, overwrite=True)
         Logger.info(f'Placed UPSTAIR z:{currlevel.z}: {(r,c)}')
         return (r,c)
     
@@ -198,9 +201,10 @@ class Generator:
         if not levellayout.downstair_pos:
             Logger.error(f'ERROR: downstair position is empty! z:{currlevel.z}')
             return ()
-        levelmanager.place_entity(currlevel.z,
-                                  tower.StairDown(),
+        levelmanager.add_to_level(tower.StairDown(),
                                   levellayout.downstair_pos,
+                                  currlevel.z,
+                                  self,
                                   overwrite=True)
         return levellayout.downstair_pos
 
@@ -217,7 +221,7 @@ class Generator:
             for pt in pts:
                 maxlayer = max([x.layer for x in currlevel.EntityLayer[pt[0]][pt[1]]])
                 if maxlayer >= entity.Layer.WALL_LAYER:
-                    levelmanager.place_entity(currlevel.z, tower.Floor(), pt, overwrite=True)
+                    levelmanager.add_to_level(tower.Floor(), pt, currlevel.z, self, overwrite=True)
 
     def generate_walls(self, levelmanager:level.LevelManager, currlevel:level.Level, minwalls):
         '''
@@ -227,7 +231,7 @@ class Generator:
         wallsplaced = 0
         attempt = 0
         # go through until minimum wall amount was reached or max tries
-        pts = utility.get_pts(self.levelrows, self.levelcols)
+        pts = copy.copy(self.all_pts)
         while wallsplaced < minwalls and attempt < config.MAX_RETRIES and pts:
             attempt += 1
             idx = self.RNG.randint(0,len(pts)-1)
@@ -243,7 +247,7 @@ class Generator:
                         continue
                     place_at = [pt[0]+sr,pt[1]+sc]
                     wall_piece = self.get_wall_piece()
-                    if levelmanager.place_entity(currlevel.z, wall_piece, place_at):
+                    if levelmanager.add_to_level(wall_piece, place_at, currlevel.z, self):
                         wallsplaced += 1
                         if wallsplaced >= minwalls:
                             return
@@ -253,7 +257,7 @@ class Generator:
         '''Add barrels to the level'''
         barrels_placed = 0
         attempt = 0
-        pts = utility.get_pts(self.levelrows, self.levelcols)
+        pts = copy.copy(self.all_pts)
         while barrels_placed < min_barrels and attempt < config.MAX_RETRIES and pts:
             attempt += 1
             idx = self.RNG.randint(0,len(pts)-1)
@@ -267,7 +271,7 @@ class Generator:
                     if not scols:
                         continue
                     place_at = [pt[0]+sr, pt[1]+sc]
-                    if levelmanager.place_entity(currlevel.z, tower.Barrel(), place_at):
+                    if levelmanager.add_to_level(tower.Barrel(), place_at, currlevel.z, self):
                         barrels_placed += 1
             if barrels_placed >= min_barrels:
                 return
@@ -276,60 +280,110 @@ class Generator:
     def generate_lights(self, levelmanager:level.LevelManager, currlevel:level.Level):
         '''Add lights to the level'''
         for _ in range(self.light_amount):
-            r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
+            r,c = utility.get_random_pt(self.RNG, self.all_pts)
             _,myentity  = utility.get_max_entity(currlevel.EntityLayer[r][c])
             valid = all([False if type(ent) == tower.Light else True for ent in currlevel.EntityLayer[r][c]])
             if myentity.layer < entity.Layer.WALL_LAYER and valid:
                 light = tower.Light()
-                levelmanager.place_entity(currlevel.z, light, (r,c))
+                levelmanager.add_to_level(light, (r,c), currlevel.z, self)
                 light.update_state(levelmanager)
 
-    def generate_mons(self, levelmanager: level.LevelManager, currlevel: level.Level, mon_amount):
+    def generate_mons(self, levelmanager: level.LevelManager, currlevel: level.Level, starting_difficulty, level_difficulty):
         '''Add monsters to the level'''
 
-        dlevel = 1 + currlevel.z + currlevel.z/2
-        mons = [m for m in self.monster_classes if m.difficulty <= dlevel]
-
-        difficulty = 0
-        attempt = 0
-        while difficulty < dlevel and attempt < config.MAX_RETRIES:
-            attempt += 1
-            r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
-            n = self.RNG.randint(0, len(mons)-1)
-            new_mon = mons[n]()
-            if levelmanager.place_entity(currlevel.z, new_mon, (r,c)):
-                difficulty += new_mon.difficulty
         '''
         for _ in range(1):
             r = self.RNG.randint(1,self.levelrows-1)
             c = self.RNG.randint(1,self.levelcols-1)
             levelmanager.place_entity(currlevel.z, monster.Human(), (r,c))
         '''
+        all_mons = [m for m in self.monster_classes if m.difficulty <= level_difficulty]
+        attempt = 0
+        while starting_difficulty < level_difficulty and attempt < config.MAX_RETRIES:
+            attempt += 1
+            Logger.info(f'Attempt mons gen: {attempt} difficulty: {starting_difficulty} ({level_difficulty})')
+            r,c = utility.get_random_pt(self.RNG, self.all_pts)
+            n = self.RNG.randint(0, len(all_mons)-1)
+            new_mon = all_mons[n]()
+            if levelmanager.add_to_level(new_mon, (r,c), currlevel.z, self):
+                starting_difficulty += new_mon.difficulty
+                Logger.info(f'Adding new mon to level: {new_mon}')
+                self.generate_pack_mons(levelmanager, currlevel, all_mons[n], (r,c))
+        if attempt >= config.MAX_RETRIES:
+            Logger.warning('Generate mons max retries!')
+
+    def generate_pack_mons(self, levelmanager, currlevel, mon, pos):
+        '''Generate pack monsters based on pack leader'''
+        if not hasattr(mon, 'pack') or not hasattr(mon, 'packtype'):
+            return
+        packmons = [m for m in self.monster_classes if m.__name__ in mon.packtype]
+        if not packmons:
+            Logger.warning(f'Monster pack list empty!')
+            return
+        for ix in range(mon.pack):
+            attempt = 0
+            genpts = utility.get_surrounding_pt()
+            while attempt < config.MAX_RETRIES:
+                attempt += 1
+                if len(packmons) == 1:
+                    n = 0
+                else:
+                    n = self.RNG.randint(0, len(packmons)-1)
+                new_mon = packmons[n]()
+                dx,dy = next(genpts)
+                if levelmanager.add_to_level(new_mon, (pos[0]+dx,pos[1]+dy), currlevel.z, self):
+                    Logger.info(f'Adding pack mon to level: {new_mon}')
+                    break
+            if attempt >= config.MAX_RETRIES:
+                Logger.warning('Generate pack mons max retries!')
+
+    def generate_mon_amount(self, levelmanager, currlevel, starting_difficulty, level_difficulty, fixed_amount, fovpoints):
+        '''Add monsters to level by a certain amount'''
+        generated_amount = 0
+        all_mons = [m for m in self.monster_classes if m.difficulty <= level_difficulty]
+        attempt = 0
+        while (starting_difficulty < level_difficulty and
+               attempt < config.MAX_RETRIES and
+               generated_amount < fixed_amount):
+            attempt += 1
+            Logger.info(f'Attempt mons gen: {attempt} difficulty: {starting_difficulty} ({level_difficulty})')
+            pt = utility.get_random_pt(self.RNG, self.all_pts, invalidpts=fovpoints)
+            r = pt[0]
+            c = pt[1]
+            n = self.RNG.randint(0, len(all_mons)-1)
+            new_mon = all_mons[n]()
+            if levelmanager.add_to_level(new_mon, (r,c), currlevel.z, self):
+                starting_difficulty += new_mon.difficulty
+                generated_amount += 1
+                Logger.info(f'Adding new mon to level: {new_mon}')
+                self.generate_pack_mons(levelmanager, currlevel, all_mons[n], (r,c))
+        if attempt >= config.MAX_RETRIES:
+            Logger.warning('Generate mons max retries!')
 
     def generate_items(self, levelmanager: level.LevelManager, currlevel: level.Level, item_amount):
         '''Add items to the level'''
         attempt = 0
         while item_amount > 0 and attempt < config.MAX_RETRIES:
-            r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
+            r,c = utility.get_random_pt(self.RNG, self.all_pts)
             new_item = None
             n = self.RNG.randint(0, len(self.item_classes)-1)
             new_item = self.item_classes[n]()
-            if levelmanager.place_entity(currlevel.z, new_item, (r,c)):
+            if levelmanager.add_to_level(new_item, (r,c), currlevel.z, self):
                 item_amount -= 1
 
     def generate_runes(self, levelmanager: level.LevelManager, currlevel: level.Level, rune_amount):
         attempt = 0
         while rune_amount > 0 and attempt < config.MAX_RETRIES:
-            r,c = utility.get_random_pt(self.RNG, self.levelrows, self.levelcols)
+            r,c = utility.get_random_pt(self.RNG, self.all_pts)
             n = self.RNG.randint(0, len(self.rune_classes)-1)
             new_rune = self.rune_classes[n]()
-            if levelmanager.place_entity(currlevel.z, new_rune, (r,c)):
+            if levelmanager.add_to_level(new_rune, (r,c), currlevel.z, self):
                 rune_amount -= 1
 
     def generate_plants(self, levelmanager: level.LevelManager, currlevel: level.Level, plant_amount):
         plants = 0
         attempt = 0
-        pts = utility.get_pts(self.levelrows, self.levelcols)
+        pts = copy.copy(self.all_pts)
         while plants < plant_amount and attempt < config.MAX_RETRIES and pts:
             attempt += 1
             idx = self.RNG.randint(0,len(pts)-1)
@@ -346,7 +400,7 @@ class Generator:
                         continue
                     if self.RNG.randint(1,3) == 1:
                         plant = biosphere.Plant()
-                        if levelmanager.add_to_level(plant, pos2, currlevel.z):
+                        if levelmanager.add_to_level(plant, pos2, currlevel.z, self):
                             plants += 1
                         if plants >= plant_amount:
                             return
@@ -355,4 +409,3 @@ class Generator:
     def get_wall_piece(self):
         '''Return a random wall'''
         return self.wall_classes[self.RNG.randint(0, len(self.wall_classes)-1)]()
-    

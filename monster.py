@@ -12,6 +12,52 @@ import brain
 
 Logger = logging.getLogger(__name__)
 
+class GoblinLeader(e.Entity):
+    difficulty = 4
+    pack = 2
+    packtype = ['Goblin']
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.GOBLINLEADER,
+                         name='Goblin Leader',
+                         glyph='G',
+                         layer=e.Layer.MONSTER_LAYER,
+                         size=e.Size.MEDIUM,
+                         fg=color.COLOR.GREEN)
+        self.Health = component.Health(health=config.GOBLINLEADER_HEALTH)
+        self.eyes = config.GOBLINLEADER_SIGHTRANGE
+        self.xp = config.GOBLINLEADER_XP
+        self.Brain = brain.SimpleBrain(sightrange=self.eyes,
+                                     blockinglayer=e.Layer.MONSTER_LAYER,
+                                     attacks=[e.AttackType.MELEE])
+        self.speed = e.Speed.SLOW
+        self.Combat = component.Combat()
+        self.Inventory = component.Inventory()
+
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
+        '''Uses brain to select an action'''
+        self.do_action(
+            levelmanager,
+            animator,
+            messager,
+            menumanager,
+            statemachine,
+            self.Brain.get_action(
+                levelmanager.Levels[self.z],
+                [self.row,self.col],
+                self.energy,
+                rng,
+                self.speed,
+                self.status,
+                self.Inventory
+            ),
+            rng,
+            generator
+        )
+
+    def on_init(self, rng):
+        if rng.randint(0,1):
+            self.Inventory.equip(item.ShortSword())
+
 class Snail(e.Entity):
     difficulty = 4
     def __init__(self):
@@ -31,8 +77,9 @@ class Snail(e.Entity):
         self.Combat = component.Combat()
         self.Inventory = component.Inventory()
         self.Inventory.equip(ability.Lick())
+        self.Body = component.Body(item.Corpse(), self.fg, self.name, item.SnailShell(), 50)
 
-    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
         self.do_action(
             levelmanager,
@@ -49,16 +96,9 @@ class Snail(e.Entity):
                 self.status,
                 self.Inventory
             ),
-            rng
+            rng,
+            generator
         )
-    
-    def death(self, levelmanager, animator, messager):
-        super().death(levelmanager)
-        if levelmanager.RNG.randint(0,1) == 0:
-            shell = item.TurtleShell()
-            levelmanager.place_entity(self.z, shell, (self.row,self.col))
-        else:
-            utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
 
 class Lynx(e.Entity):
     difficulty = 4
@@ -79,8 +119,9 @@ class Lynx(e.Entity):
         self.Combat = component.Combat()
         self.Inventory = component.Inventory()
         self.Inventory.equip(ability.Claw())
+        self.Body = component.Body(item.Corpse(), self.fg, self.name)
 
-    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
         self.do_action(
             levelmanager,
@@ -97,16 +138,9 @@ class Lynx(e.Entity):
                 self.status,
                 self.Inventory
             ),
-            rng
+            rng,
+            generator
         )
-
-    def death(self, levelmanager, animator, messager):
-        super().death(levelmanager)
-        if levelmanager.RNG.randint(0,1) == 0:
-            stone = item.PreciousStone()
-            levelmanager.place_entity(self.z, stone, (self.row,self.col))
-        else:
-            utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
 
 class Raven(e.Entity):
     difficulty = 3
@@ -128,8 +162,9 @@ class Raven(e.Entity):
         self.xp = config.RAVEN_XP
 
         self.Inventory.equip(ability.Peck())
+        self.Body = component.Body(item.Corpse(), self.fg, self.name)
 
-    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
         self.do_action(
             levelmanager,
@@ -146,12 +181,9 @@ class Raven(e.Entity):
                 self.status,
                 self.Inventory
             ),
-            rng
+            rng,
+            generator
         )
-
-    def death(self, levelmanager, animator, messager):
-        super().death(levelmanager)
-        utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
 
 class Goblin(e.Entity):
     '''
@@ -167,20 +199,31 @@ class Goblin(e.Entity):
                          fg=color.COLOR.GREEN)
         self.eyes = config.GOBLIN_SIGHTRANGE
         self.Health = component.Health(health=config.GOBLIN_HEALTH)
-        self.Brain = brain.SimpleBrain(sightrange=self.eyes,
+        self.Brain = brain.PackBrain(sightrange=self.eyes,
                                      blockinglayer=e.Layer.MONSTER_LAYER,
                                      attacks=[e.AttackType.THROW,
-                                              e.AttackType.MELEE])
+                                              e.AttackType.MELEE],
+                                     pack_leader=typeid.TID.GOBLINLEADER)
+
         self.Combat = component.Combat()
         self.Inventory = component.Inventory(autopickuplist=['Dart'])
+        self.Inventory.equip(ability.Bite())
         self.speed = e.Speed.SLOW
         self.xp = config.GOBLIN_XP
+        self.Body = component.Body(item.Corpse(), self.fg, self.name)
 
-        self.Inventory.equip(ability.Bite())
-        for _ in range(5):
+    def on_init(self, rng):
+        darts = rng.randint(3, 7)
+        for _ in range(darts):
             self.Inventory.collect(item.Dart())
+        
+        if rng.randint(0,10) < 3:
+            self.Inventory.equip(item.Gambeson())
 
-    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
+        if rng.randint(0,10) < 7:
+            self.Inventory.equip(item.BlowPipe())
+
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
         self.do_action(
             levelmanager,
@@ -197,12 +240,9 @@ class Goblin(e.Entity):
                 self.status,
                 self.Inventory
             ),
-            rng
+            rng,
+            generator
         )
-
-    def death(self, levelmanager, animator, messager):
-        super().death(levelmanager)
-        utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
 
 class Human(e.Entity):
     '''
@@ -239,8 +279,9 @@ class Newt(e.Entity):
         self.xp = config.NEWT_XP
         self.Combat = component.Combat()
         self.Inventory.equip(ability.Bite())
+        self.Body = component.Body(item.Corpse(), self.fg, self.name)
 
-    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng):
+    def take_turn(self, levelmanager, animator, messager, menumanager, statemachine, rng, generator):
         '''Uses brain to select an action'''
         self.do_action(
             levelmanager,
@@ -256,12 +297,9 @@ class Newt(e.Entity):
                 self.speed,
                 self.status
             ),
-            rng
+            rng,
+            generator
         )
-
-    def death(self, levelmanager, animator, messager):
-        super().death(levelmanager)
-        utility.corpse_drop(levelmanager, item.Corpse(), self.fg, self.name, self.pos())
 
 class Jelly(e.Entity):
     '''
@@ -316,8 +354,8 @@ class Jelly(e.Entity):
             # don't damage yourself
             if (ptrow,ptcol) == (self.row,self.col):
                 continue
-            for entity in levelmanager.Levels[self.z].EntityLayer[ptrow][ptcol]:
+            for victim in levelmanager.Levels[self.z].EntityLayer[ptrow][ptcol]:
                 self.Combat.deal_damage(
-                    self, levelmanager, animator, messager, entity,
-                    True, self.splashdamage, 'jelly')
+                    self, levelmanager, animator, messager, victim,
+                    self.splashdamage, component.DamageType.BLAST)
 

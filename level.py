@@ -1,4 +1,5 @@
 import config
+import typeid
 import utility
 import item
 import message
@@ -10,11 +11,48 @@ import logging
 
 Logger = logging.getLogger(__name__)
 
+class LevelDifficulty:
+    '''Keep track of level difficulty'''
+    def __init__(self, z) -> None:
+        self.max = int(1 + z + z/2)
+        '''Level max difficulty'''
+        self.current = 0
+        '''Level current difficulty'''
+
+class MonsTracker:
+    '''Track monsters on the level'''
+    def __init__(self, z):
+        self.z = z
+        '''Z level'''
+        self.level_cleared = False
+        '''If level was cleared for the first time'''
+        self.total_mons = 0
+        '''Total monsters on the level'''
+        self.total_mons_last = 0
+        '''Total monsters on the level from last turn'''
+
+    def add_mon(self):
+        '''Add a monster to the amount'''
+        self.total_mons += 1
+
+    def remove_mon(self):
+        '''Remove a monster from the amount'''
+        self.total_mons -= 1
+        if self.total_mons < 0:
+            self.total_mons = 0
+    
+    def upkeep(self, messager, playerpos):
+        '''Update the total monster number and check for clearing'''
+        if not self.level_cleared and self.total_mons_last > 0 and self.total_mons <= 0:
+            self.level_cleared = True
+            messager.add_level_clear_message(self.z, playerpos)
+        self.total_mons_last = self.total_mons
+
 class Level:
     def __init__(self, rows, cols, z, rng):
-        self.rows = rows 
+        self.rows = rows
         '''Total height of the level'''
-        self.cols = cols 
+        self.cols = cols
         '''Total width of the level'''
         self.z = z
         '''Level index'''
@@ -26,6 +64,56 @@ class Level:
         '''Tracks all lit spaces on level'''
         self.RNG = rng
         '''Random generator with optional seed'''
+        self.LevelDifficulty = LevelDifficulty(self.z)
+        '''Level difficulty'''
+        self.MonsTracker = MonsTracker(self.z)
+        '''Track monsters and level clear'''
+        self.regen_timer = [config.LEVEL_REGEN_TURNS, config.LEVEL_REGEN_TURNS]
+        '''How quickly monsters regenerate'''
+        self.player_has_visited = False
+        '''Track if player has entered the level'''
+
+    def add_entity_record(self, entity, levelmanager, generator):
+        '''Record an entity entering the level'''
+        if entity.layer == e.Layer.MONSTER_LAYER:
+            # track when player first visits the level
+            # adjust level difficulty based on player level
+            if not self.player_has_visited and entity.typeid == typeid.TID.PLAYER:
+                self.player_has_visited = True
+                if hasattr(entity, 'Leveling'):
+                    plevel = entity.Leveling.curr_level
+                    new_difficulty = int(1 + plevel + plevel/2)
+                    Logger.info(f'Adding difficulty: {self.LevelDifficulty.max} -> {new_difficulty}')
+                    generator.generate_mons(levelmanager, self, self.LevelDifficulty.max, new_difficulty)
+                    self.LevelDifficulty.max = new_difficulty
+            # update level difficulty based on monsters
+            else:
+                self.MonsTracker.add_mon()
+                self.LevelDifficulty.current += entity.difficulty
+                Logger.info(f'adding: {entity} mon:{self.MonsTracker.total_mons} cd:{self.LevelDifficulty.current}')
+
+    def remove_entity_record(self, entity):
+        '''Record an entity leaving the level'''
+        if entity.layer == e.Layer.MONSTER_LAYER and entity.typeid != typeid.TID.PLAYER:
+            self.MonsTracker.remove_mon()
+            self.LevelDifficulty.current -= entity.difficulty
+            Logger.info(f'removing: {entity} mon:{self.MonsTracker.total_mons} cd:{self.LevelDifficulty.current}')
+
+    def upkeep(self, levelmanager, messager, playerpos, generator, fovpoints):
+        '''Do level upkeep'''
+
+        # check if level has been cleared
+        self.MonsTracker.upkeep(messager, playerpos)
+
+        # spawn new monsters if level is cleared
+        if (self.MonsTracker.level_cleared and
+            self.LevelDifficulty.current < self.LevelDifficulty.max):
+            self.regen_timer[0] -= 1
+            if self.regen_timer[0] <= 0:
+                self.regen_timer[0] = self.regen_timer[1]
+                generator.generate_mon_amount(levelmanager, self,
+                                  self.LevelDifficulty.current, self.LevelDifficulty.max, 1, fovpoints)
+
 
 class LevelManager:
     '''
@@ -67,9 +155,13 @@ class LevelManager:
         self.place_entity(playerz, self.Player, playerpos)
         self.currentz = playerz
 
-    def add_to_level(self, entity, pos, z):
+    def add_to_level(self, entity, pos, z, generator, overwrite=False):
+        '''Adds an entity to the level and calls the init hook'''
         entity.on_init(self.RNG)
-        return self.place_entity(z, entity, pos)
+        success = self.place_entity(z, entity, pos, overwrite)
+        if success:
+            self.Levels[z].add_entity_record(entity, self, generator)
+        return success
 
     def place_entity(self, z, entity, pos, overwrite=False):
         '''Place an entity into the level'''
@@ -149,7 +241,7 @@ class LevelManager:
             return self.Levels[self.currentz]
         return None
 
-    def update_level(self, level, energy, display, animator, messager, menumanager, statemachine, currentturn):
+    def update_level(self, level, energy, display, animator, messager, menumanager, statemachine, currentturn, generator):
         '''Updates all entities on a single level with a given amount of energy'''
         if not level:
             return
@@ -166,49 +258,56 @@ class LevelManager:
                     entity.energy += energy
 
         # update loop
+        self.level_update_loop(level, display, animator, messager, menumanager,
+                               statemachine, currentturn, generator)
+
+        # level upkeep
+        level.upkeep(self, messager, self.Player.pos(), generator, self.Player.Brain.fovpoints)
+
+    def level_update_loop(self, level, display, animator, messager, menumanager, statemachine, currentturn, generator):
+        '''Run the update loop'''
         done_turn = False
         while not done_turn:
             done_turn = True
             for row in level.EntityLayer:
                 for entitylist in row:
-                    # create a manually loop since entities might be removed
+                    # create a manual loop since entities might be removed
                     # during an update loop
                     index = 0
                     currlistsize = len(entitylist)
                     while index < currlistsize:
+                        # get the list size at the start of the turn
+                        currlistsize = len(entitylist)
                         try:
                             entity = entitylist[index]
                         except:
                             Logger.error(f'ERROR: {entitylist}')
                             Logger.error(f'ERROR: idx:{index}')
-                            break
-                        currlistsize = len(entitylist)
-                        if entity.name == 'Newt':
-                            Logger.info(f'Current turn: {currentturn} {entity} {entity.turn}')
+                            raise
                         done = self.update_entity(display,
                                                   animator,
                                                   messager,
                                                   menumanager,
                                                   statemachine,
                                                   entity,
-                                                  currentturn)
+                                                  currentturn,
+                                                  generator)
                         # some entities need more turns
                         if not done: done_turn = False
-                        # entities were removed from the list
-                        # restart the index
-                        if currlistsize < len(entitylist):
+                        # entity list changed, restart the index
+                        if currlistsize != len(entitylist):
                             index = 0
                         else:
                             index += 1
 
-    def update_player(self, display, animator, messager, menumanager, statemachine, event, rng):
+    def update_player(self, display, animator, messager, menumanager, statemachine, event, rng, generator):
         '''Updates the player and returns the energy used'''
         Logger.info(f'-------- TURN UPDATE ({self.Player.turn + 1}) ---------')
         self.Player.energy = 100
         self.Player.update_status(self, messager, animator)
         self.Player.update_state(self)
         Logger.info(f'Player status: {self.Player.status}')
-        self.Player.do_action(self, animator, messager, menumanager, statemachine, event, rng)
+        self.Player.do_action(self, animator, messager, menumanager, statemachine, event, rng, generator)
         self.Player.turn += 1
 
         # update the level the player is on
@@ -224,7 +323,7 @@ class LevelManager:
             energy = self.Player.speed
         return energy
 
-    def update_all(self, display, animator, messager, menumanager, statemachine, energy, currentturn):
+    def update_all(self, display, animator, messager, menumanager, statemachine, energy, currentturn, generator):
         '''Go through all entities and update them'''
 
         timing.Timing.start('Game Loop')
@@ -232,18 +331,18 @@ class LevelManager:
         Logger.info(f'-- UPDATE ALL {currentturn} --')
 
         for level in self.Levels:
-            self.update_level(level, energy, display, animator, messager, menumanager, statemachine, currentturn)
+            self.update_level(level, energy, display, animator, messager, menumanager, statemachine, currentturn, generator)
 
         timing.Timing.end()
 
-    def update_entity(self, display, animator, messager, menumanager, statemachine, entity, currentturn):
+    def update_entity(self, display, animator, messager, menumanager, statemachine, entity, currentturn, generator):
         '''Update a single entity'''
         if entity.turn > currentturn:
             return True
         energystart = entity.energy
         entity.update_state(self)
         entity.update_status(self, messager, animator)
-        entity.take_turn(self, animator, messager, menumanager, statemachine, self.RNG) 
+        entity.take_turn(self, animator, messager, menumanager, statemachine, self.RNG, generator) 
         # play animations from the turn
         display.play_animations(animator, self.currentz, self.Player.Brain.fovpoints)
 
@@ -269,7 +368,7 @@ class LevelManager:
         level = self.Levels[entity.z]
 
         if not self.is_entity_pos_valid(level, entity, pos):
-            Logger.error(f'Moving entity failed: invalid {entity}')
+            Logger.error(f'Moving entity failed: invalid {entity} -> {pos}')
             return False
 
         # move is valid - delete old entity
@@ -280,29 +379,32 @@ class LevelManager:
 
         return True
     
-    def move_entity_z(self, entity, newz, newpos):
+    def move_entity_z(self, entity, newz, newpos, generator):
         '''Moves an entity to a new z level'''
 
         if newz >= len(self.Levels) or newz < 0:
             Logger.error(f'Error: {entity} cannot go past last level!')
             return
 
-        level = self.Levels[newz]
+        oldlevel = self.Levels[entity.z]
+        newlevel = self.Levels[newz]
 
-        if not self.is_entity_pos_valid(level, entity, newpos):
+        if not self.is_entity_pos_valid(newlevel, entity, newpos):
             Logger.error(f'Error: {entity} moving to z:{newz} is invalid!')
             return False
 
         entity = self.remove_entity(entity)
 
-        # need to update the global Z index immediately
-        # message queue filters based on Z index
-        if entity.name == 'Player':
-            self.currentz = newz
+        oldlevel.remove_entity_record(entity)
 
-        self.place_entity(level.z, entity, newpos)
+        if entity.typeid == typeid.TID.PLAYER:
+            self.currentz = newlevel.z 
 
-        entity.on_zchange(level)
+        self.place_entity(newlevel.z, entity, newpos)
+
+        newlevel.add_entity_record(entity, self, generator)
+
+        entity.on_zchange(newlevel)
 
         return True
 
@@ -320,6 +422,12 @@ class LevelManager:
         for ix in range(idx, len(level.EntityLayer[r][c])):
             level.EntityLayer[r][c][ix].idx -= 1
         return level.EntityLayer[r][c].pop(idx)
+
+    def permanently_remove_entity(self, entity):
+        '''Remove an entity and record the removal in the level'''
+        self.remove_entity(entity)
+        level = self.Levels[entity.z]
+        level.remove_entity_record(entity)
 
     def reset_turns(self, turn):
         '''Pass in a turn number to reset all entities to that turn'''

@@ -1,16 +1,33 @@
 import algo
 import entity
 import logging
+import random
+import copy
 
 Logger = logging.getLogger(__name__)
 
 ONE_LAYER_CIRCLE = [(1,-1),(1,0),(1,1),(0,-1),(0,0),(0,1),(-1,-1),(-1,0),(-1,1)]
 ONE_LAYER_CROSS = [(0,0), (-1,0), (1,0), (0,-1), (0,1)]
+TWO_LAYER_CIRCLE = [(-2,-2),(-2,-1),(-2,0),(-2,1),(-2,2),(-1,-2),(-1,2),(0,-2),(0,2),(1,-2),(1,2),(2,-2),(2,-1),(2,0),(2,1),(2,2)]
 
-def corpse_drop(levelmanager, corpse, fg, name, pos):
-    corpse.fg = fg 
-    corpse.name = name + ' ' + corpse.name
-    levelmanager.place_entity(pos[2], corpse, (pos[0],pos[1]))
+def get_surrounding_pt():
+    '''Yield points starting from one layer and then two layers around'''
+    pts = copy.copy(ONE_LAYER_CIRCLE)
+    random.shuffle(pts)
+    for pt in pts:
+        yield pt
+    pts = copy.copy(TWO_LAYER_CIRCLE)
+    random.shuffle(pts)
+    for pt in pts:
+        yield pt
+
+def is_pt_near(src, dest):
+    '''Returns true for points that are touching'''
+    for pt in ONE_LAYER_CIRCLE:
+        nearpt = (pt[0] + src[0], pt[1] + src[1])
+        if nearpt == dest:
+            return True
+    return False
 
 def get_one_layer_pts(pos, rows, cols, shape='circle'):
     '''
@@ -89,7 +106,17 @@ def get_pts(rows, cols):
             pts.append((r,c)) 
     return pts
 
-def get_random_pt(rng, rows, cols):
+def get_random_pt(rng, allpts, invalidpts=[]):
     '''Get a random pt from an array'''
-    return rng.randint(0,rows-1), rng.randint(0,cols-1)
+    invalidpts = set(invalidpts)
+    validpts = [pt for pt in allpts if pt not in invalidpts] 
+    return validpts[rng.randint(0, len(validpts)-1)]
+
+def find_entity(currlevel, pts, typeid):
+    '''In a set of FOV points, check if the entity exists'''
+    for pt in pts:
+        for ent in currlevel.EntityLayer[pt[0]][pt[1]]:
+            if ent.typeid == typeid:
+                return pt
+    return None
 

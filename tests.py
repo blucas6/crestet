@@ -153,7 +153,7 @@ class TestSuite(unittest.TestCase):
         player = TestSuite.environment.Game.LevelManager.Player
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         for _ in range(4):
-            self.loop(6)
+            self.loop('6')
         self.assertEqual(player.pos(), [1, 5, 0, 1])
         self.assertIn(player, entitylayer[1][5])
 
@@ -161,7 +161,7 @@ class TestSuite(unittest.TestCase):
         '''Checks that the player cannot move into a wall'''
         player = TestSuite.environment.Game.LevelManager.Player
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
-        self.loop(4)
+        self.loop('4')
         self.assertEqual(player.pos(), [1, 1, 0, 1])
         self.assertIn(player, entitylayer[1][1])
 
@@ -173,7 +173,7 @@ class TestSuite(unittest.TestCase):
         barrel = tower.Barrel()
         levelmanager.place_entity(0, barrel, (1,2))
         for _ in range(4):
-            self.loop(6)
+            self.loop('6')
         self.assertEqual(player.pos(), [1, 5, 0, 1])
         self.assertIn(player, entitylayer[1][5])
         self.assertEqual(2, len(entitylayer[1][5]))
@@ -186,10 +186,10 @@ class TestSuite(unittest.TestCase):
         player = TestSuite.environment.Game.LevelManager.Player
         levelmanager = TestSuite.environment.Game.LevelManager
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
-        self.loop(6)
+        self.loop('6')
         barrel = tower.Barrel()
         levelmanager.place_entity(0, barrel, (1,1))
-        self.loop(4)
+        self.loop('4')
         self.assertTrue(TestSuite.environment.Game.running)
         self.assertEqual(player.pos(), [1, 2, 0, 1])
         self.assertIn(player, entitylayer[1][2])
@@ -204,7 +204,7 @@ class TestSuite(unittest.TestCase):
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         dart = item.Dart()
         player.Inventory.equip(dart)
-        self.loop(6)
+        self.loop('6')
         self.loop('t4')
         self.assertEqual(dart.pos(), [1, 1, 0, 1])
         self.assertIn(dart, entitylayer[1][1])
@@ -214,7 +214,7 @@ class TestSuite(unittest.TestCase):
         '''Checks that the player cannot throw an object if not equipped'''
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         dart = item.Dart()
-        self.loop(6)
+        self.loop('6')
         self.loop('t4')
         self.assertNotEqual(dart.pos(), [1, 1, 0, 1])
         self.assertNotIn(dart, entitylayer[1][1])
@@ -237,8 +237,8 @@ class TestSuite(unittest.TestCase):
         lightlayer = TestSuite.environment.Game.LevelManager.Levels[0].LightLayer
         light = tower.Light()
         levelmanager.place_entity(0, light, (3,3))
-        self.loop(3)
-        self.loop(3)
+        self.loop('3')
+        self.loop('3')
         pts = utility.get_one_layer_pts((3,3), len(lightlayer), len(lightlayer[0]))
         for pt in pts:
             self.assertFalse(lightlayer[pt[0]][pt[1]])
@@ -248,7 +248,7 @@ class TestSuite(unittest.TestCase):
         player = TestSuite.environment.Game.LevelManager.Player
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         levelmanager = TestSuite.environment.Game.LevelManager
-        player.Combat.accuracy = 100
+        player.Combat.base_melee_accuracy = 100
         barrel = tower.Barrel()
         levelmanager.place_entity(0, barrel, (1,2))
         self.loop('F6')
@@ -270,9 +270,9 @@ class TestSuite(unittest.TestCase):
         self.loop('.')
         self.assertEqual(display.unknownglyph, display.screenbuffer[r][c])
         for _ in range(2):
-            self.loop(6)
+            self.loop('6')
         for _ in range(2):
-            self.loop(4)
+            self.loop('4')
         self.assertEqual('0', display.screenbuffer[r][c])
 
     def test_fov_hidden_object(self):
@@ -289,9 +289,9 @@ class TestSuite(unittest.TestCase):
         levelmanager.place_entity(0, tower.Barrel(), (row,col))
         self.loop('.')
         for _ in range(2):
-            self.loop(6)
+            self.loop('6')
         for _ in range(2):
-            self.loop(4)
+            self.loop('4')
         r,c = display.level_to_screen_pos(row, col)
         self.assertEqual(display.unknownglyph, display.screenbuffer[r][c])
 

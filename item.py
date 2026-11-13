@@ -11,7 +11,9 @@ class Corpse(e.Entity):
                          layer=e.Layer.OBJECT_LAYER,
                          size=e.Size.MEDIUM,
                          fg=color.COLOR.WHITE)
-        self.ItemType = component.ItemType.HAND
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.HAND,
+                                               melee_damage=1,
+                                               throw_damage=1)
 
 class PreciousStone(e.Entity):
     def __init__(self):
@@ -21,18 +23,21 @@ class PreciousStone(e.Entity):
                          layer=e.Layer.OBJECT_LAYER,
                          size=e.Size.VERY_SMALL,
                          fg=color.COLOR.GREY)
-        self.ItemType = component.ItemType.QUIVER
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.QUIVER,
+                                               melee_damage=1,
+                                               throw_damage=1)
 
-
-class TurtleShell(e.Entity):
+class SnailShell(e.Entity):
     def __init__(self):
-        super().__init__(typeid=typeid.TID.TURTLE_SHELL,
-                         name='Turtle Shell',
+        super().__init__(typeid=typeid.TID.SNAIL_SHELL,
+                         name='Snail Shell',
                          glyph='æ',
                          layer=e.Layer.OBJECT_LAYER,
                          size=e.Size.SMALL,
                          fg=color.COLOR.GREY)
-        self.ItemType = component.ItemType.HAND
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.HAND,
+                                               melee_damage=1,
+                                               throw_damage=1)
 
 class Arrow(e.Entity):
     spawn = True
@@ -43,7 +48,8 @@ class Arrow(e.Entity):
                          layer=e.Layer.OBJECT_LAYER,
                          size=e.Size.VERY_SMALL,
                          fg=color.COLOR.CYAN)
-        self.ItemType = component.ItemType.QUIVER
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.QUIVER,
+                                               throw_damage=1)
         self.Group = component.Group(
                 parent = self,
                 unstack_name = 'Arrow',
@@ -62,6 +68,9 @@ class Fruit(e.Entity):
                          size=e.Size.VERY_SMALL,
                          fg=color.COLOR.GREEN)
         self.Edible = component.Edible(self, nutrition=5)
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.HAND,
+                                               melee_damage=1,
+                                               throw_damage=1)
 
 class Wood(e.Entity):
     def __init__(self):
@@ -71,27 +80,29 @@ class Wood(e.Entity):
                          layer=e.Layer.OBJECT_LAYER,
                          size=e.Size.SMALL,
                          fg=color.COLOR.YELLOW)
-        self.Attack = component.Attack(name='Wood', damage=1)
-        self.ItemType = component.ItemType.HAND
-        self.Group = component.Group(
-                parent = self,
-                unstack_name = 'Wood',
-                unstack_glyph = '#',
-                stack_name = 'Wood Stack',
-                stack_glyph = '#',
-            )
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.HAND,
+                                               melee_damage=1,
+                                               throw_damage=1)
+        self.Group = component.Group(parent = self,
+                                     unstack_name = 'Wood',
+                                     unstack_glyph = '#',
+                                     stack_name = 'Wood Stack',
+                                     stack_glyph = '#')
 
-class Sword(e.Entity):
-    spawn = True
+class ShortSword(e.Entity):
+    #spawn = True
     def __init__(self):
-        super().__init__(typeid=typeid.TID.SWORD,
-                         name='Sword',
+        super().__init__(typeid=typeid.TID.SHORT_SWORD,
+                         name='Short Sword',
                          glyph='/',
                          layer=e.Layer.OBJECT_LAYER,
                          size=e.Size.SMALL,
                          fg=color.COLOR.GREY)
-        self.Attack = component.Attack(name='Sword', damage=2)
-        self.ItemType = component.ItemType.HAND
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.HAND,
+                                               melee_damage=2,
+                                               throw_damage=1,
+                                               melee_you_action='slash',
+                                               melee_it_action='slashes')
 
 class Dart(e.Entity):
     spawn = True
@@ -102,17 +113,16 @@ class Dart(e.Entity):
                          layer=e.Layer.OBJECT_LAYER,
                          size=e.Size.VERY_SMALL,
                          fg=color.COLOR.RED)
-        self.ItemType = component.ItemType.QUIVER
-        self.Group = component.Group(
-                parent = self,
-                unstack_name = self.name,
-                unstack_glyph = self.glyph,
-                stack_name = self.name + ' Stack',
-                stack_glyph = '≡',
-            )
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.QUIVER,
+                                               throw_damage=1)
+        self.Group = component.Group(parent = self,
+                                     unstack_name = self.name,
+                                     unstack_glyph = self.glyph,
+                                     stack_name = self.name + ' Stack',
+                                     stack_glyph = '≡')
 
 class Gambeson(e.Entity):
-    spawn = True
+    #spawn = True
     def __init__(self):
         super().__init__(typeid=typeid.TID.GAMBESON,
                          name='Gambeson',
@@ -120,6 +130,21 @@ class Gambeson(e.Entity):
                          layer=e.Layer.OBJECT_LAYER,
                          size=e.Size.SMALL,
                          fg=color.COLOR.WHITE)
-        self.ItemType = component.ItemType.BODY
-        self.armor = 1
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.BODY,
+                                               armor=1)
+
+class BlowPipe(e.Entity):
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.BLOWPIPE,
+                         name='BlowPipe',
+                         glyph='|',
+                         layer=e.Layer.OBJECT_LAYER,
+                         size=e.Size.SMALL,
+                         fg=color.COLOR.RED)
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.HAND,
+                                               fire_accuracy=40,
+                                               fire_bonus_items=[typeid.TID.DART],
+                                               fire_you_action='blow',
+                                               fire_it_action='blows')
+
 
