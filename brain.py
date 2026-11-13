@@ -116,6 +116,7 @@ class SimpleBrain(Brain):
         return None
 
     def check_for_player(self, currlevel, mypos, inventory, status, fovpoints):
+        '''Try to find player in fov'''
         playerpos = utility.find_entity(currlevel, fovpoints, typeid.TID.PLAYER)
 
         # if the player is near, try to attack
@@ -130,8 +131,9 @@ class SimpleBrain(Brain):
         return None
 
     def check_for_energy(self, energy, speed):
+        '''Do nothing if not enough energy'''
         if energy < speed:
-            return '5'
+            return '`'
         return None
 
     def throw_attack_possible(self, mypos, playerpos, inventory):

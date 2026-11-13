@@ -265,6 +265,7 @@ class LevelManager:
         level.upkeep(self, messager, self.Player.pos(), generator, self.Player.Brain.fovpoints)
 
     def level_update_loop(self, level, display, animator, messager, menumanager, statemachine, currentturn, generator):
+        '''Run the update loop'''
         done_turn = False
         while not done_turn:
             done_turn = True
@@ -423,6 +424,7 @@ class LevelManager:
         return level.EntityLayer[r][c].pop(idx)
 
     def permanently_remove_entity(self, entity):
+        '''Remove an entity and record the removal in the level'''
         self.remove_entity(entity)
         level = self.Levels[entity.z]
         level.remove_entity_record(entity)

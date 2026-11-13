@@ -28,9 +28,9 @@ class Combat:
     def __init__(self):
         self.critical = 1
         '''Critical hit'''
-        self.melee_accuracy = 60
+        self.base_melee_accuracy = 60
         '''Roll under this number to hit on a melee attack'''
-        self.throw_accuracy = 40
+        self.base_throw_accuracy = 40
         '''Roll under this number to hit on a ranged attack'''
         self.resistances = {}
         '''Resistance library'''
@@ -67,10 +67,10 @@ class Combat:
                     objr, objc = r, c
                     # stop only if it passes the accuracy check
                     rng_throw = rng.randint(1,100)
-                    throw_accuracy = self.throw_accuracy
+                    throw_accuracy = self.base_throw_accuracy
                     if hasattr(parent, 'Inventory'):
                         throw_accuracy = parent.Inventory.calculate_throw_accuracy(
-                                self.throw_accuracy, projectile)
+                                self.base_throw_accuracy, projectile)
                     Logger.info(f'THROW: {parent}  RNG:{rng_throw} <= ACC:{throw_accuracy}')
                     if rng_throw <= throw_accuracy:
                         success = AttackResult.SUCCESS
@@ -153,31 +153,36 @@ class Combat:
         elif hasattr(parent, 'Inventory'):
 
             # MAINHAND
-            attacktraits = parent.Inventory.roll_mainHand_attack(rng, self.melee_accuracy)
+            attacktraits = parent.Inventory.roll_mainHand_attack(rng, self.base_melee_accuracy)
             if attacktraits.result != AttackResult.INVALID:
                 self.handle_melee_attack(parent, levelmanager, animator, messager,
                                          victim, attacktraits)
                 # OFFHAND
-                attacktraits = parent.Inventory.roll_offHand_attack(rng, self.melee_accuracy)
+                attacktraits = parent.Inventory.roll_offHand_attack(rng, self.base_melee_accuracy)
                 self.handle_melee_attack(parent, levelmanager, animator, messager,
                                          victim, attacktraits)
             else:
                 # ABILITY
-                attacktraits = parent.Inventory.roll_ability_attack(rng, self.melee_accuracy)
+                attacktraits = parent.Inventory.roll_ability_attack(rng, self.base_melee_accuracy)
                 self.handle_melee_attack(parent, levelmanager, animator, messager,
                                          victim, attacktraits)
 
     def handle_melee_attack(self, parent, levelmanager, animator, messager, victim, atraits):
+        '''Deal with a melee attack based on the attack traits'''
+        # SUCCESS
         if atraits.result == AttackResult.SUCCESS:
+            # damage
             messager.add_attack_message(parent.z, parent, victim,
                                 atraits.you_action, atraits.it_action)
             Logger.info(f'Attack Melee: {parent} {victim} MainHand dmg:{atraits.damage}')
             self.deal_damage(parent, levelmanager, animator, messager, victim,
                          atraits.damage, atraits.dmgtype)
             Logger.info(f'APPLY: {atraits.item}')
+            # effect
             if atraits.item:
                 atraits.item.on_apply('', parent, levelmanager, messager, animator, victim.row,
                                       victim.col, victim.z)
+        # MISS
         else:
             messager.add_miss_message(parent.z, parent, victim)
 
@@ -342,6 +347,7 @@ class Inventory:
         '''Items that should be picked up automatically'''
 
     def get_all_items(self, ability=False):
+        '''Returns all items, by default does not return the ability'''
         items = [self.quiver, self.mainHand, self.offHand, self.head, self.body,
                 self.feet] + self.contents
         if ability:
@@ -637,6 +643,7 @@ class Inventory:
         return None
 
     def get_firing_actions(self, projectile):
+        '''Returns the firing action string, defaults to throw'''
         if self.mainHand and hasattr(self.mainHand, 'ItemTraits'):
             mtraits = self.mainHand.ItemTraits
             if projectile.typeid in mtraits.fire_bonus_items:
@@ -648,6 +655,7 @@ class Inventory:
         return 'throw', 'throws'
 
     def get_item_melee_dmg(self, item):
+        '''Returns the damage and damage type'''
         if item and hasattr(item, 'ItemTraits'):
             return item.ItemTraits.melee_damage, item.ItemTraits.melee_damage_type
         return 0, None
@@ -667,6 +675,7 @@ class Inventory:
         return dmg
 
     def calculate_range_damage(self, projectile):
+        '''Get the damage based off projectile and support items'''
         dmg = 0
         dmgtype = None
         if projectile and hasattr(projectile, 'ItemTraits'):
@@ -678,6 +687,7 @@ class Inventory:
         return dmg,dmgtype
 
     def calculate_melee_accuracy(self, base_accuracy):
+        '''Get the total melee accuracy'''
         accuracy = base_accuracy
         if self.mainHand and hasattr(self.mainHand, 'ItemTraits'):
             accuracy += self.mainHand.ItemTraits.accuracy
@@ -688,6 +698,7 @@ class Inventory:
         return accuracy
 
     def calculate_throw_accuracy(self, base_accuracy, projectile):
+        '''Get the total range accuracy'''
         fire_accuracy_bonus = 0
         accuracy = base_accuracy
         if projectile:
@@ -710,6 +721,7 @@ class Inventory:
         return accuracy
 
     def calculate_armor(self):
+        '''Get the total armor reduction'''
         reduction = 0
         if self.head and hasattr(self.head, 'ItemTraits'):
             reduction += self.head.ItemTraits.armor
@@ -720,6 +732,7 @@ class Inventory:
         return reduction
 
     def roll_melee_attack(self, item, rng, base_accuracy):
+        '''Create the attack traits structure based on the roll'''
         attacktraits = AttackTraits()
         if item:
             attacktraits.item = item
@@ -737,12 +750,15 @@ class Inventory:
         return attacktraits
 
     def roll_mainHand_attack(self, rng, base_accuracy):
+        '''Wrapper for main hand item'''
         return self.roll_melee_attack(self.mainHand, rng, base_accuracy)
 
     def roll_offHand_attack(self, rng, base_accuracy):
+        '''Wrapper for off hand item'''
         return self.roll_melee_attack(self.offHand, rng, base_accuracy)
 
     def roll_ability_attack(self, rng, base_accuracy):
+        '''Wrapper for ability'''
         return self.roll_melee_attack(self.ability, rng, base_accuracy)
 
     def add_to_quiver(self, entity):
@@ -951,14 +967,23 @@ class Charge:
         return dmg, DamageType.BLUDGEON
 
 class Body:
+    '''
+    Component for monsters that have physical bodies
+    '''
     def __init__(self, corpse, fg, name, item=None, chance=100):
         self.corpse = corpse
+        '''Corpse entity'''
         self.corpse.fg = fg
+        '''Parent color'''
         self.corpse.name = name + ' ' + self.corpse.name
+        '''Corpse name'''
         self.item = item
+        '''Possible item drop'''
         self.chance = chance
+        '''Chance of item drop'''
 
     def drop_corpse(self, levelmanager, pos):
+        '''Drop the corpse or an item'''
         if levelmanager.RNG.randint(0, 100) <= self.chance:
             levelmanager.place_entity(pos[2], self.corpse, (pos[0],pos[1]))
         elif self.item:

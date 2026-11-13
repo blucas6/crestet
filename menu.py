@@ -156,9 +156,9 @@ class CombatMenu(Menu):
     def update(self, combat, inventory):
         super().update()
         dmg = inventory.calculate_melee_damage()
-        accuracy = inventory.calculate_melee_accuracy(combat.melee_accuracy)
+        accuracy = inventory.calculate_melee_accuracy(combat.base_melee_accuracy)
         self.text[0] = f'Melee: {dmg} ({accuracy}%)'
-        accuracy = inventory.calculate_throw_accuracy(combat.throw_accuracy, inventory.quiver)
+        accuracy = inventory.calculate_throw_accuracy(combat.base_throw_accuracy, inventory.quiver)
         dmg,_ = inventory.calculate_range_damage(inventory.quiver)
         self.text[1] = f'Range: {dmg} ({accuracy}%)'
         self.text[2] = f'Armor: {-1*inventory.calculate_armor()}'

@@ -11,6 +11,7 @@ ONE_LAYER_CROSS = [(0,0), (-1,0), (1,0), (0,-1), (0,1)]
 TWO_LAYER_CIRCLE = [(-2,-2),(-2,-1),(-2,0),(-2,1),(-2,2),(-1,-2),(-1,2),(0,-2),(0,2),(1,-2),(1,2),(2,-2),(2,-1),(2,0),(2,1),(2,2)]
 
 def get_surrounding_pt():
+    '''Yield points starting from one layer and then two layers around'''
     pts = copy.copy(ONE_LAYER_CIRCLE)
     random.shuffle(pts)
     for pt in pts:
@@ -21,6 +22,7 @@ def get_surrounding_pt():
         yield pt
 
 def is_pt_near(src, dest):
+    '''Returns true for points that are touching'''
     for pt in ONE_LAYER_CIRCLE:
         nearpt = (pt[0] + src[0], pt[1] + src[1])
         if nearpt == dest:

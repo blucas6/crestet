@@ -446,14 +446,20 @@ class Entity:
     def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event, rng, generator):
         '''Pass an event for the entity to preform a certain action'''
 
+        # invalid event
+        if not isinstance(event, str):
+            return
+
+        # do nothing event
+        if event[0] == '`':
+            return
+
+        # don't even bother if dead
         if hasattr(self, 'Health') and not self.Health.alive:
             return
 
         if self.z == levelmanager.currentz:
             Logger.info(f'Do action {self} t:{self.turn}: "{event}" energy:{self.energy}')
-
-        if not isinstance(event, str):
-            return
 
         # check for status effects
         if StatusEffect.FROZEN in self.status:
