@@ -71,7 +71,8 @@ class Layer(enum.IntEnum):
     '''Not stackable, can be pushed'''
     MONSTER_LAYER = 5
     '''Not stackable, will auto attack'''
-    WALL_LAYER = 6
+    DOOR_LAYER = 6
+    WALL_LAYER = 7
     '''Not stackable, will be remembered by FOV'''
 
 class Size(enum.IntEnum):
@@ -317,6 +318,13 @@ class Entity:
             else:
                 return MoveAction.INVALID
 
+        elif entity.layer == Layer.DOOR_LAYER:
+            if hasattr(self, 'Charge') and self.Charge.charging:
+                self.Charge.end()
+            if entity.typeid == typeid.TID.DOOR:
+                entity.toggle(levelmanager.Levels[self.z])
+            return MoveAction.PUSHED
+
         # otherwise just move normally
         return self.move(levelmanager, (row,col))
 
@@ -442,6 +450,24 @@ class Entity:
             self.Combat.attack_melee(self, levelmanager, animator, messager, entity, rng)
             return MoveAction.ATTACKED
         return MoveAction.INVALID
+
+    def close(self, levelmanager, messager, key):
+        row,col = utility.get_new_pos((self.row,self.col), key)
+        maxlayer = 0
+        currlevel = levelmanager.Levels[self.z]
+        door_idx = -1
+        for ent in currlevel.EntityLayer[row][col]:
+            if ent.layer > maxlayer:
+                maxlayer = ent.layer
+            if ent.typeid == typeid.TID.DOOR:
+                door_idx = ent.idx
+        if door_idx == -1:
+            messager.add_no_door_message(self)
+            return
+        if maxlayer > Layer.FLOOR_LAYER:
+            messager.add_blocked_door_message(self)
+            return
+        currlevel.EntityLayer[row][col][door_idx].toggle(currlevel)
     
     def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event, rng, generator):
         '''Pass an event for the entity to preform a certain action'''
@@ -511,6 +537,9 @@ class Entity:
         # Fight
         elif event[0] == 'F' and len(event) > 1 and event[1].isdigit():
             self.fight(levelmanager, animator, messager, int(event[1]), rng)
+        # Close
+        elif event[0] == 'c' and len(event) > 1 and event[1].isdigit():
+            self.close(levelmanager, messager, int(event[1]))
         # Rest
         elif event == '.':
             self.energy = 0

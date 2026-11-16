@@ -18,6 +18,8 @@ class TID(IntEnum):
     STAIRUP         = 23
     STAIRDOWN       = 24
     LIGHT           = 25
+    WOODFLOOR       = 26
+    DOOR            = 27
 
     BITE            = 31
     FIST            = 32

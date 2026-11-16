@@ -30,7 +30,7 @@ MAX_RETRIES = 1000
 '''Amount of retries during generation for randomness'''
 LEVELMAX_ENTITIES = 10
 '''Maximum entities on a square'''
-PRE_LOOPS = 2
+PRE_LOOPS = 100
 '''Amount of game loops to run before starting the game'''
 LEVEL_REGEN_TURNS = 10
 

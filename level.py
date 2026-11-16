@@ -157,7 +157,7 @@ class LevelManager:
 
     def add_to_level(self, entity, pos, z, generator, overwrite=False):
         '''Adds an entity to the level and calls the init hook'''
-        entity.on_init(self.RNG)
+        entity.on_init(self.RNG, self)
         success = self.place_entity(z, entity, pos, overwrite)
         if success:
             self.Levels[z].add_entity_record(entity, self, generator)
@@ -232,6 +232,9 @@ class LevelManager:
         if (maxlayer >= e.Layer.BARREL_LAYER and
             (entity.layer == e.Layer.BARREL_LAYER or
              entity.layer == e.Layer.MONSTER_LAYER)):
+            return False
+        if (maxlayer >= e.Layer.DOOR_LAYER and
+            entity.layer > e.Layer.FLOOR_LAYER):
             return False
         return True
 

@@ -54,7 +54,7 @@ class GoblinLeader(e.Entity):
             generator
         )
 
-    def on_init(self, rng):
+    def on_init(self, rng, levelmanager):
         if rng.randint(0,1):
             self.Inventory.equip(item.ShortSword())
 
@@ -212,7 +212,7 @@ class Goblin(e.Entity):
         self.xp = config.GOBLIN_XP
         self.Body = component.Body(item.Corpse(), self.fg, self.name)
 
-    def on_init(self, rng):
+    def on_init(self, rng, levelmanager):
         darts = rng.randint(3, 7)
         for _ in range(darts):
             self.Inventory.collect(item.Dart())

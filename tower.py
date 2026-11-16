@@ -25,6 +25,29 @@ class UnknownStructure(entity.Entity):
                          size=entity.Size.SMALL,
                          fg=color.COLOR.WHITE)
 
+class Door(entity.Entity):
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.DOOR,
+                         name='Door',
+                         glyph='+',
+                         layer=entity.Layer.DOOR_LAYER,
+                         size=entity.Size.MEDIUM,
+                         fg=color.COLOR.YELLOW)
+        self.open = False
+
+    def toggle(self, currlevel):
+        if self.open:
+            elist = currlevel.EntityLayer[self.row][self.col]
+            maxlayer = utility.get_max_layer(elist)
+            if maxlayer == entity.Layer.FLOOR_LAYER:
+                self.open = False
+                self.glyph = '+'
+                self.layer = entity.Layer.DOOR_LAYER
+        else:
+            self.open = True
+            self.glyph = '■'
+            self.layer = entity.Layer.FLOOR_LAYER
+
 class Barrel(entity.Entity):
     '''Barrel entity'''
     def __init__(self):
@@ -49,6 +72,15 @@ class Floor(entity.Entity):
                          glyph='.',
                          layer=entity.Layer.FLOOR_LAYER,
                          size=entity.Size.LARGE,
+                         fg=color.COLOR.GREY)
+
+class WoodFloor(entity.Entity):
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.WOODFLOOR,
+                         name='Wood Floor',
+                         glyph='.',
+                         layer=entity.Layer.FLOOR_LAYER,
+                         size=entity.Size.SMALL,
                          fg=color.COLOR.WHITE)
 
 class StairUp(entity.Entity):
@@ -83,6 +115,9 @@ class Light(entity.Entity):
         self.light = True
         '''Controls whether the light is on'''
 
+    def on_init(self, rng, levelmanager):
+        self.update_state(levelmanager)
+
     def update_state(self, levelmanager):
         '''Update the map based on the light state'''
         if self.light and levelmanager.Levels:
@@ -95,4 +130,5 @@ class Light(entity.Entity):
         '''Trigger the light on or off'''
         self.light = not self.light
         self.update_state(levelmanager)
+
     

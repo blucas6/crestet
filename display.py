@@ -122,23 +122,15 @@ class Display:
                         objects = [e for e in entitylayer[r][c] if e.layer > entity.Layer.FLOOR_LAYER and e.layer < entity.Layer.BARREL_LAYER]
                         if len(objects) > 1:
                             bg = color.COLOR.BLUE
-                if not self.bounds_check(self.screenbuffer, rw, cl):
+                if not utility.inbounds(self.screenbuffer, rw, cl):
                     continue
                 # add glyph
                 self.screenbuffer[rw][cl] = glyph
                 # add color
                 if self.displayon:
-                    if not self.bounds_check(self.colorbuffer, rw, cl):
+                    if not utility.inbounds(self.colorbuffer, rw, cl):
                         continue
                     self.colorbuffer[rw][cl] = self.Engine.gc(fg, bg, rw, cl)
-
-    def bounds_check(self, buffer, r, c):
-        '''
-        Checks if a position is valid within the screen buffer
-        '''
-        if (r > len(buffer)-1 or c > len(buffer[r])-1):
-            return False
-        return True
 
     def level_to_screen_pos(self, r, c):
         '''Helper function to convert an entity position to a screen position'''

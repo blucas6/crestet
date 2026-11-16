@@ -380,9 +380,11 @@ class Game:
     
     def motion_event(self, event):
         '''Handles events that are part of a motion'''
-        # Throwing/Charge Action
         Logger.info(f'Motion: {self.previousevent} {event}')
-        if self.previousevent == 't' or self.previousevent == '5' or self.previousevent == 'F':
+
+        # Throwing/Charge Action
+        directions = ['t', '5', 'F', 'c'] 
+        if self.previousevent in directions:
             self.StateMachine.new_state('done')
             # expects a direction
             if not event.isdigit() or event == '5':
@@ -393,6 +395,7 @@ class Game:
             if self.previousevent == '5':
                 self.StateMachine.new_state('startrun')
             return state.Event.EVENT,self.previousevent+event
+
         # Inventory Action
         elif self.previousevent == 'e' or self.previousevent == 'u' or self.previousevent == 'd':
             self.StateMachine.new_state('done')
@@ -425,7 +428,7 @@ class Game:
     def player_event(self, event):
         '''Process all events that are player actions'''
         # Multi key action
-        multikey_list = ['t', '5', 'e', 'u', 'F', 'a', 'd']
+        multikey_list = ['t', '5', 'e', 'u', 'F', 'a', 'd', 'c']
         if event in multikey_list:
             # throw
             if event == 't':
