@@ -48,6 +48,16 @@ class Door(entity.Entity):
             self.glyph = '■'
             self.layer = entity.Layer.FLOOR_LAYER
 
+class Bed(entity.Entity):
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.DOOR,
+                         name='Bed',
+                         glyph='¬',
+                         layer=entity.Layer.OBJECT_LAYER,
+                         size=entity.Size.MEDIUM,
+                         fg=color.COLOR.CYAN)
+
+
 class Barrel(entity.Entity):
     '''Barrel entity'''
     def __init__(self):
