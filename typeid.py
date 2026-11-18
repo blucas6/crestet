@@ -20,6 +20,8 @@ class TID(IntEnum):
     LIGHT           = 25
     WOODFLOOR       = 26
     DOOR            = 27
+    BED             = 28
+    DRESSER         = 29
 
     BITE            = 31
     FIST            = 32

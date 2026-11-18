@@ -36,27 +36,18 @@ class Door(entity.Entity):
         self.open = False
 
     def toggle(self, currlevel):
+        Logger.info(f'Door toggle {self}')
         if self.open:
             elist = currlevel.EntityLayer[self.row][self.col]
             maxlayer = utility.get_max_layer(elist)
-            if maxlayer == entity.Layer.FLOOR_LAYER:
+            if maxlayer == entity.Layer.OPENDOOR_LAYER:
                 self.open = False
                 self.glyph = '+'
                 self.layer = entity.Layer.DOOR_LAYER
         else:
             self.open = True
             self.glyph = '■'
-            self.layer = entity.Layer.FLOOR_LAYER
-
-class Bed(entity.Entity):
-    def __init__(self):
-        super().__init__(typeid=typeid.TID.DOOR,
-                         name='Bed',
-                         glyph='¬',
-                         layer=entity.Layer.OBJECT_LAYER,
-                         size=entity.Size.MEDIUM,
-                         fg=color.COLOR.CYAN)
-
+            self.layer = entity.Layer.OPENDOOR_LAYER
 
 class Barrel(entity.Entity):
     '''Barrel entity'''
@@ -67,12 +58,11 @@ class Barrel(entity.Entity):
                          layer=entity.Layer.BARREL_LAYER,
                          size=entity.Size.LARGE,
                          fg=color.COLOR.YELLOW)
-        self.Breakable = component.Breakable(max_dmg=1)
+        self.Breakable = component.Breakable(max_dmg=1, smashed_item=item.Wood())
     
     def death(self, levelmanager, animator, messager):
         '''Break the barrel'''
         super().death(levelmanager)
-        levelmanager.place_entity(self.z, item.Wood(), (self.row,self.col))
 
 class Floor(entity.Entity):
     '''Floor entity'''

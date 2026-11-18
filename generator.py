@@ -234,7 +234,7 @@ class Generator:
                     for row in currlevel.EntityLayer]
         for theroom in all_rooms:
             for pt in theroom.pts:
-                grid[pt[0]][pt[1]] = entity.Layer.WALL_LAYER + 1
+                grid[pt[0]][pt[1]] = entity.Layer.WALL_LAYER + 10
         pts = algo.dijkstra(grid, tuple(a), tuple(b), diagonals=False)
         Logger.info(f'Clear Path ({currlevel.z}): {a} -> {b}\n{pts}')
         if pts:
@@ -265,16 +265,22 @@ class Generator:
                 for sc,scols in enumerate(srows):
                     if not scols:
                         continue
+
                     place_at = [pt[0]+sr,pt[1]+sc]
 
                     if self.in_any_rooms(place_at, all_rooms):
                         continue
 
                     wall_piece = self.get_wall_piece()
+
+                    if not levelmanager.is_entity_pos_valid(currlevel, wall_piece, place_at):
+                        continue
+
                     if levelmanager.add_to_level(wall_piece, place_at, currlevel.z, self):
                         wallsplaced += 1
                         if wallsplaced >= minwalls:
                             return
+
         Logger.warning(f'WALL GEN MAX RETRIES')
 
     def generate_barrels(self, levelmanager, currlevel, min_barrels, all_rooms):
@@ -297,7 +303,10 @@ class Generator:
                     place_at = [pt[0]+sr, pt[1]+sc]
                     if self.in_any_rooms(place_at, all_rooms):
                         continue
-                    if levelmanager.add_to_level(tower.Barrel(), place_at, currlevel.z, self):
+                    barrel = tower.Barrel()
+                    if not levelmanager.is_entity_pos_valid(currlevel, barrel, place_at):
+                        continue
+                    if levelmanager.add_to_level(barrel, place_at, currlevel.z, self):
                         barrels_placed += 1
             if barrels_placed >= min_barrels:
                 return
@@ -310,7 +319,7 @@ class Generator:
             for pt in theroom.pts:
                 pts.remove(pt)
         for _ in range(self.light_amount):
-            r,c = utility.get_random_pt(self.RNG, self.all_pts)
+            r,c = utility.get_random_pt(self.RNG, pts)
             _,myentity  = utility.get_max_entity(currlevel.EntityLayer[r][c])
             valid = all([False if type(ent) == tower.Light else True for ent in currlevel.EntityLayer[r][c]])
             if myentity.layer < entity.Layer.WALL_LAYER and valid:
@@ -334,6 +343,8 @@ class Generator:
             r,c = utility.get_random_pt(self.RNG, self.all_pts)
             n = self.RNG.randint(0, len(all_mons)-1)
             new_mon = all_mons[n]()
+            if not levelmanager.is_entity_pos_valid(currlevel, new_mon, (r,c)):
+                continue
             if levelmanager.add_to_level(new_mon, (r,c), currlevel.z, self):
                 starting_difficulty += new_mon.difficulty
                 Logger.info(f'Adding new mon to level: {new_mon}')
@@ -360,7 +371,11 @@ class Generator:
                     n = self.RNG.randint(0, len(packmons)-1)
                 new_mon = packmons[n]()
                 dx,dy = next(genpts)
-                if levelmanager.add_to_level(new_mon, (pos[0]+dx,pos[1]+dy), currlevel.z, self):
+                r = pos[0]+dx
+                c = pos[1]+dy
+                if not levelmanager.is_entity_pos_valid(currlevel, new_mon, (r,c)):
+                    continue
+                if levelmanager.add_to_level(new_mon, (r,c), currlevel.z, self):
                     Logger.info(f'Adding pack mon to level: {new_mon}')
                     break
             if attempt >= config.MAX_RETRIES:
@@ -381,6 +396,8 @@ class Generator:
             c = pt[1]
             n = self.RNG.randint(0, len(all_mons)-1)
             new_mon = all_mons[n]()
+            if not levelmanager.is_entity_pos_valid(currlevel, new_mon, (r,c)):
+                continue
             if levelmanager.add_to_level(new_mon, (r,c), currlevel.z, self):
                 starting_difficulty += new_mon.difficulty
                 generated_amount += 1
@@ -397,6 +414,8 @@ class Generator:
             new_item = None
             n = self.RNG.randint(0, len(self.item_classes)-1)
             new_item = self.item_classes[n]()
+            if not levelmanager.is_entity_pos_valid(currlevel, new_item, (r,c)):
+                continue
             if levelmanager.add_to_level(new_item, (r,c), currlevel.z, self):
                 item_amount -= 1
 
@@ -406,6 +425,8 @@ class Generator:
             r,c = utility.get_random_pt(self.RNG, self.all_pts)
             n = self.RNG.randint(0, len(self.rune_classes)-1)
             new_rune = self.rune_classes[n]()
+            if not levelmanager.is_entity_pos_valid(currlevel, new_rune, (r,c)):
+                continue
             if levelmanager.add_to_level(new_rune, (r,c), currlevel.z, self):
                 rune_amount -= 1
 
@@ -429,6 +450,8 @@ class Generator:
                         continue
                     if self.RNG.randint(1,3) == 1:
                         plant = biosphere.Plant()
+                        if not levelmanager.is_entity_pos_valid(currlevel, plant, pos2):
+                            continue
                         if levelmanager.add_to_level(plant, pos2, currlevel.z, self):
                             plants += 1
                         if plants >= plant_amount:

@@ -58,21 +58,23 @@ class Speed(enum.IntEnum):
     VERY_FAST = 2
     HYPER = 1
 
+@enum.unique
 class Layer(enum.IntEnum):
     FLOOR_LAYER = 0
     '''Stackable'''
-    PLANT_LAYER = 1
+    OPENDOOR_LAYER = 1
+    PLANT_LAYER = 2
     '''Stackable'''
-    STAIR_LAYER = 2
+    STAIR_LAYER = 3
     '''Stackable, will be remembered by FOV'''
-    OBJECT_LAYER = 3
+    OBJECT_LAYER = 4
     '''Stackable, will be remembered by FOV, can be picked up'''
-    BARREL_LAYER = 4
+    BARREL_LAYER = 5
     '''Not stackable, can be pushed'''
-    MONSTER_LAYER = 5
+    MONSTER_LAYER = 6
     '''Not stackable, will auto attack'''
-    DOOR_LAYER = 6
-    WALL_LAYER = 7
+    DOOR_LAYER = 7
+    WALL_LAYER = 8
     '''Not stackable, will be remembered by FOV'''
 
 class Size(enum.IntEnum):
@@ -370,6 +372,9 @@ class Entity:
         if hasattr(self, 'Body'):
             self.Body.drop_corpse(levelmanager, self.pos())
 
+        elif hasattr(self, 'Breakable'):
+            self.Breakable.smash(levelmanager, self.pos())
+
 
     def moveZ(self, levelmanager, animator, messager, incrementz, rng, generator):
         '''Move an to another z level'''
@@ -464,7 +469,7 @@ class Entity:
         if door_idx == -1:
             messager.add_no_door_message(self)
             return
-        if maxlayer > Layer.FLOOR_LAYER:
+        if maxlayer > Layer.OPENDOOR_LAYER:
             messager.add_blocked_door_message(self)
             return
         currlevel.EntityLayer[row][col][door_idx].toggle(currlevel)

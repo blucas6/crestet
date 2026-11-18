@@ -217,13 +217,14 @@ class Combat:
 
 class Breakable:
     '''Objects that can break (instead of dying)'''
-    def __init__(self, max_dmg):
+    def __init__(self, max_dmg, smashed_item):
         self.max_dmg = max_dmg
         '''Max amount of damage before breaking'''
         self.current_dmg = 0
         '''Current damage taken'''
         self.broken = False
         '''Is it broken'''
+        self.smashed_item = smashed_item
     
     def change_dmg(self, dmg):
         '''
@@ -237,6 +238,10 @@ class Breakable:
             self.broken = True
             return True
         return False
+
+    def smash(self, levelmanager, pos):
+        levelmanager.place_entity(pos[2], self.smashed_item, (pos[0],pos[1]))
+
 
 class Leveling:
     '''Leveling component, if an entity can level up'''
@@ -501,34 +506,31 @@ class Inventory:
     def collect(self, entity):
         '''Entrance for items being added into the inventory'''
 
-        if not hasattr(entity, 'ItemTraits'):
-            return
-
-        itemtype = entity.ItemTraits.itemtype
-
-        # try to add it to the correct slot
-        if itemtype == ItemType.QUIVER:
-            if self.add_to_quiver(entity):
-                return
-        if itemtype == ItemType.HAND:
-            if self.mainHand is None:
-                self.mainHand = entity
-                return
-            if self.offHand is None:
-                self.offHand = entity
-                return
-        if itemtype == ItemType.BODY:
-            if self.body is None:
-                self.body = entity
-                return
-        if itemtype == ItemType.HEAD:
-            if self.head is None:
-                self.head = entity
-                return
-        if itemtype == ItemType.FEET:
-            if self.feet is None:
-                self.feet = entity
-                return
+        if hasattr(entity, 'ItemTraits'):
+            itemtype = entity.ItemTraits.itemtype
+            # try to add it to the correct slot
+            if itemtype == ItemType.QUIVER:
+                if self.add_to_quiver(entity):
+                    return
+            if itemtype == ItemType.HAND:
+                if self.mainHand is None:
+                    self.mainHand = entity
+                    return
+                if self.offHand is None:
+                    self.offHand = entity
+                    return
+            if itemtype == ItemType.BODY:
+                if self.body is None:
+                    self.body = entity
+                    return
+            if itemtype == ItemType.HEAD:
+                if self.head is None:
+                    self.head = entity
+                    return
+            if itemtype == ItemType.FEET:
+                if self.feet is None:
+                    self.feet = entity
+                    return
 
         # default to bag
         self.add_to_bag(entity)
