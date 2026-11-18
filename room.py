@@ -14,7 +14,7 @@ class Bed(entity.Entity):
         super().__init__(typeid=typeid.TID.BED,
                          name='Bed',
                          glyph='¬',
-                         layer=entity.Layer.OBJECT_LAYER,
+                         layer=entity.Layer.BARREL_LAYER,
                          size=entity.Size.MEDIUM,
                          fg=color.COLOR.CYAN)
         self.Breakable = component.Breakable(max_dmg=1, smashed_item=item.Wood())
@@ -24,7 +24,7 @@ class Dresser(entity.Entity):
         super().__init__(typeid=typeid.TID.DRESSER,
                          name='Dresser',
                          glyph='ʭ',
-                         layer=entity.Layer.OBJECT_LAYER,
+                         layer=entity.Layer.BARREL_LAYER,
                          size=entity.Size.MEDIUM,
                          fg=color.COLOR.YELLOW)
         self.Breakable = component.Breakable(max_dmg=1, smashed_item=item.Wood())
