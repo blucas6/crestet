@@ -318,11 +318,11 @@ class Jelly(e.Entity):
         self.xp = 2
         self.Combat = component.Combat()
 
-    def death(self, levelmanager, animator, messager):
+    def death(self, levelmanager, animator, messager, rng):
         '''
         Generate the explosion on death
         '''
-        super().death(levelmanager)
+        super().death(levelmanager, animator, messager, rng)
         messager.add_burst_message(levelmanager.currentz, self)
         # queue animation
         frames = []
@@ -357,5 +357,5 @@ class Jelly(e.Entity):
             for victim in levelmanager.Levels[self.z].EntityLayer[ptrow][ptcol]:
                 self.Combat.deal_damage(
                     self, levelmanager, animator, messager, victim,
-                    self.splashdamage, component.DamageType.BLAST)
+                    self.splashdamage, component.DamageType.BLAST, rng)
 

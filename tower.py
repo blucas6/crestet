@@ -60,9 +60,9 @@ class Barrel(entity.Entity):
                          fg=color.COLOR.YELLOW)
         self.Breakable = component.Breakable(max_dmg=1, smashed_item=item.Wood())
     
-    def death(self, levelmanager, animator, messager):
+    def death(self, levelmanager, animator, messager, rng):
         '''Break the barrel'''
-        super().death(levelmanager)
+        super().death(levelmanager, animator, messager, rng)
 
 class Floor(entity.Entity):
     '''Floor entity'''
@@ -116,9 +116,9 @@ class Light(entity.Entity):
         '''Controls whether the light is on'''
 
     def on_init(self, rng, levelmanager):
-        self.update_state(levelmanager)
+        self.update_state(levelmanager, rng)
 
-    def update_state(self, levelmanager):
+    def update_state(self, levelmanager, rng):
         '''Update the map based on the light state'''
         if self.light and levelmanager.Levels:
             points = utility.get_one_layer_pts((self.row,self.col),
@@ -129,6 +129,6 @@ class Light(entity.Entity):
     def on_top(self, entity, levelmanager):
         '''Trigger the light on or off'''
         self.light = not self.light
-        self.update_state(levelmanager)
+        self.update_state(levelmanager, None)
 
     

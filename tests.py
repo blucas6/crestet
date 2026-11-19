@@ -337,6 +337,7 @@ class TestSuite(unittest.TestCase):
         levelmanager = TestSuite.environment.Game.LevelManager
         messager = TestSuite.environment.Game.Messager
         animator = TestSuite.environment.Game.Animator
+        rng = TestSuite.environment.Game.RNG
 
         row = 1
         col = 1
@@ -344,7 +345,7 @@ class TestSuite(unittest.TestCase):
         levelmanager.place_entity(1, mon, (row,col))
         self.loop('6')
         self.assertEqual(len(messager.MsgQueue), 0)
-        mon.death(levelmanager, animator, messager)
+        mon.death(levelmanager, animator, messager, rng)
         self.assertEqual(len(messager.MsgQueue), 0)
         self.loop('6')
         self.assertEqual(len(messager.MsgQueue), 0)
@@ -356,12 +357,13 @@ class TestSuite(unittest.TestCase):
         animator = TestSuite.environment.Game.Animator
         messager = TestSuite.environment.Game.Messager
         messagemenu = TestSuite.environment.Game.MenuManager.MessageMenu
+        rng = TestSuite.environment.Game.RNG
 
         seen = 'The Jelly explodes!'
         mon = monster.Jelly()
         levelmanager.place_entity(0, mon, (4,7))
         self.loop('6')
-        mon.death(levelmanager, animator, messager)
+        mon.death(levelmanager, animator, messager, rng)
         self.assertEqual(len(messager.MsgQueue), 1)
         self.loop('6')
         self.assertEqual(messagemenu.msg, seen)
@@ -374,6 +376,7 @@ class TestSuite(unittest.TestCase):
         animator = TestSuite.environment.Game.Animator
         messager = TestSuite.environment.Game.Messager
         messagemenu = TestSuite.environment.Game.MenuManager.MessageMenu
+        rng = TestSuite.environment.Game.RNG
 
         unseen = 'You hear a burst!'
         mon = monster.Jelly()
@@ -385,7 +388,7 @@ class TestSuite(unittest.TestCase):
         levelmanager.place_entity(0, wall.Sandstone(), (4,2))
         levelmanager.place_entity(0, wall.Sandstone(), (4,1))
         self.loop('6')
-        mon.death(levelmanager, animator, messager)
+        mon.death(levelmanager, animator, messager, rng)
         self.assertEqual(len(messager.MsgQueue), 1)
         self.loop('6')
         self.assertEqual(messagemenu.msg, unseen)
@@ -398,13 +401,14 @@ class TestSuite(unittest.TestCase):
         animator = TestSuite.environment.Game.Animator
         messager = TestSuite.environment.Game.Messager
         messagemenu = TestSuite.environment.Game.MenuManager.MessageMenu
+        rng = TestSuite.environment.Game.RNG
 
         unseen = 'You hear a burst!'
         mon = monster.Jelly()
         levelmanager.place_entity(0, mon, (4,7))
         player.apply_status(messager, entity.StatusEffect.BLIND, levelmanager)
         self.loop('6')
-        mon.death(levelmanager, animator, messager)
+        mon.death(levelmanager, animator, messager, rng)
         self.assertEqual(len(messager.MsgQueue), 1)
         self.loop('6')
         self.assertEqual(messagemenu.msg, unseen)
@@ -417,12 +421,13 @@ class TestSuite(unittest.TestCase):
         animator = TestSuite.environment.Game.Animator
         display = TestSuite.environment.Game.Display
         messager = TestSuite.environment.Game.Messager
+        rng = TestSuite.environment.Game.RNG
 
         origin = [4,7]
         mon = monster.Jelly()
         levelmanager.place_entity(0, mon, origin)
         self.loop('6')
-        mon.death(levelmanager, animator, messager)
+        mon.death(levelmanager, animator, messager, rng)
         lframes, lcolors, tdelays = display.get_animation_frames(animator,
                                                 levelmanager.currentz,
                                                 player.Brain.fovpoints)
@@ -446,12 +451,13 @@ class TestSuite(unittest.TestCase):
         animator = TestSuite.environment.Game.Animator
         display = TestSuite.environment.Game.Display
         messager = TestSuite.environment.Game.Messager
+        rng = TestSuite.environment.Game.RNG
 
         origin = [4,7]
         mon = monster.Jelly()
         levelmanager.place_entity(1, mon, origin)
         self.loop('6')
-        mon.death(levelmanager, animator, messager)
+        mon.death(levelmanager, animator, messager, rng)
         lframes, lcolors, tdelays = display.get_animation_frames(animator,
                                                 levelmanager.currentz,
                                                 player.Brain.fovpoints)
@@ -466,13 +472,14 @@ class TestSuite(unittest.TestCase):
         display = TestSuite.environment.Game.Display
         messager = TestSuite.environment.Game.Messager
         player = TestSuite.environment.Game.LevelManager.Player
+        rng = TestSuite.environment.Game.RNG
         player.Brain.sightrange = 3
 
         origin = [3,4]
         mon = monster.Jelly()
         levelmanager.place_entity(0, mon, origin)
         self.loop('4')
-        mon.death(levelmanager, animator, messager)
+        mon.death(levelmanager, animator, messager, rng)
         lframes, lcolors, tdelays = display.get_animation_frames(animator,
                                                 levelmanager.currentz,
                                                 player.Brain.fovpoints)

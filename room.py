@@ -63,7 +63,7 @@ class Room:
                     pos = [self.origin[0] + rw, self.origin[1] + cl]
                     if not levelmanager.is_entity_pos_valid(currlevel, wall.Limestone(), pos):
                         continue
-                    if levelmanager.add_to_level(wall.Limestone(), pos, currlevel.z, self):
+                    if levelmanager.add_to_level(wall.Limestone(), pos, currlevel.z, self, rng):
                         if cl > 0 and cl < self.col_size:
                             outer_walls.append(pos)
             else:
@@ -72,23 +72,23 @@ class Room:
                     if cl == 0 or cl == self.col_size:
                         if not levelmanager.is_entity_pos_valid(currlevel, wall.Limestone(), pos):
                             continue
-                        if levelmanager.add_to_level(wall.Limestone(), pos, currlevel.z, self):
+                        if levelmanager.add_to_level(wall.Limestone(), pos, currlevel.z, self, rng):
                             outer_walls.append(pos)
                     else:
-                        levelmanager.add_to_level(tower.WoodFloor(), pos, currlevel.z, self, overwrite=True)
+                        levelmanager.add_to_level(tower.WoodFloor(), pos, currlevel.z, self, rng, overwrite=True)
 
         self.door_pos = outer_walls[rng.randint(0, len(outer_walls)-1)]
-        levelmanager.add_to_level(tower.WoodFloor(), self.door_pos, currlevel.z, self, overwrite=True)
-        levelmanager.add_to_level(tower.Door(), self.door_pos, currlevel.z, self)
+        levelmanager.add_to_level(tower.WoodFloor(), self.door_pos, currlevel.z, self, rng, overwrite=True)
+        levelmanager.add_to_level(tower.Door(), self.door_pos, currlevel.z, self, rng)
 
         idx = rng.randint(0, len(self.furniture_pts)-1)
         self.bed_pos = self.furniture_pts[idx]
-        levelmanager.add_to_level(Bed(), self.bed_pos, currlevel.z, self)
+        levelmanager.add_to_level(Bed(), self.bed_pos, currlevel.z, self, rng)
         self.furniture_pts.pop(idx)
 
         idx = rng.randint(0, len(self.furniture_pts)-1)
         self.dresser_pos = self.furniture_pts[idx]
-        levelmanager.add_to_level(Dresser(), self.dresser_pos, currlevel.z, self)
+        levelmanager.add_to_level(Dresser(), self.dresser_pos, currlevel.z, self, rng)
         self.furniture_pts.pop(idx)
 
 

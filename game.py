@@ -107,16 +107,14 @@ class Game:
 
             # level manager
             self.LevelManager.init(self.Messager,
-                                   rng=self.RNG,
                                    levelrows=config.LEVELROWS,
                                    levelcols=config.LEVELCOLS)
             # load generator with object classes
             self.Generator.load_classes()
             # load generator and run the generation
             self.Generator.load_config(config.LEVELROWS,
-                                       config.LEVELCOLS,
-                                       self.RNG)
-            self.Generator.generate_levels(self.LevelManager)
+                                       config.LEVELCOLS)
+            self.Generator.generate_levels(self.LevelManager, self.RNG)
 
             # menus
             leveling = self.LevelManager.Player.Leveling
@@ -241,7 +239,7 @@ class Game:
             self.StateMachine.callback(self.StateMachine, self.MenuManager, event)
         else:
             # update all entities
-            self.LevelManager.update_all(self.Display, self.Animator, self.Messager, self.MenuManager, self.StateMachine, energy, self.turn, self.Generator)
+            self.LevelManager.update_all(self.Display, self.Animator, self.Messager, self.MenuManager, self.StateMachine, energy, self.turn, self.Generator, self.RNG)
 
             # end the player charge, get back into playing mode
             if (self.StateMachine.GameState == state.GameState.RUNNING and

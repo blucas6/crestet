@@ -195,7 +195,7 @@ class Entity:
         if hasattr(self, 'Brain'):
             self.Brain.level_change(curr_level)
 
-    def on_apply(self, cmd, parent, levelmanager, messager, *_):
+    def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z, rng):
         '''Default attempt to apply an entity'''
         pass
 
@@ -218,13 +218,13 @@ class Entity:
         if newbg is not None:
             self.bg = newbg
 
-    def update_status(self, levelmanager, messager, animator):
+    def update_status(self, levelmanager, messager, animator, rng):
         '''Triggers every turn, updates each status effect'''
         for status_effect in self.status.keys():
             self.status_effect_upkeep(status_effect)
             if status_effect == StatusEffect.POISON and hasattr(self, 'Health'):
                 if self.Health.change_health(-1):
-                    self.death(levelmanager, animator, messager)
+                    self.death(levelmanager, animator, messager, rng)
                 frames = []
                 frames.append([
                     [self.glyph],
@@ -356,7 +356,7 @@ class Entity:
                             rng,
                             self.row, self.col, self.z)
     
-    def death(self, levelmanager, *_):
+    def death(self, levelmanager, animator, message, rng):
         '''Entities can add to this method to trigger on death actions'''
 
         # record that entity is removed from level
@@ -370,7 +370,7 @@ class Entity:
 
         # drop corpse
         if hasattr(self, 'Body'):
-            self.Body.drop_corpse(levelmanager, self.pos())
+            self.Body.drop_corpse(levelmanager, self.pos(), rng)
 
         elif hasattr(self, 'Breakable'):
             self.Breakable.smash(levelmanager, self.pos())
@@ -411,7 +411,7 @@ class Entity:
                     else:
                         if levelmanager.move_entity_z(self, newz,
                                                       [self.row,self.col],
-                                                      generator):
+                                                      generator, rng):
                             messager.add_stair_message(levelmanager.currentz,
                                                        self, incrementz)
                             self.energy -= self.speed
@@ -419,12 +419,12 @@ class Entity:
         # stairwell not on this space
         messager.add_stair_fail_message(levelmanager.currentz, self, incrementz)
 
-    def handle_inventory(self, levelmanager, messager, animator, event):
+    def handle_inventory(self, levelmanager, messager, animator, event, rng):
         '''Talks to the inventory component'''
         self.Inventory.show()
         if self.energy >= self.Inventory.cost:
             self.energy -= self.Inventory.cost
-            self.Inventory.action(self, levelmanager, messager, event, animator, self.row, self.col, self.z)
+            self.Inventory.action(self, levelmanager, messager, event, animator, self.row, self.col, self.z, rng)
             self.Inventory.show()
 
     def handle_charging(self, levelmanager, animator, messager, menumanager, statemachine, event, rng):
@@ -535,7 +535,7 @@ class Entity:
                 (event[0] == 'e' or event[0] == 'u' or event[0] == 'a' or event[0] == 'd')
               ) or
               event[0] == ',')):
-            self.handle_inventory(levelmanager, messager, animator, event)
+            self.handle_inventory(levelmanager, messager, animator, event, rng)
         # Throw
         elif event[0] == 't' and len(event) > 1:
             self.fire(levelmanager, animator, messager, event, rng)

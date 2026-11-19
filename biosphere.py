@@ -60,9 +60,9 @@ class Plant(entity.Entity):
             self.nutrients = self.sprout
             self.change_to(PlantStage.SPROUT)
 
-    def update_state(self, levelmanager):
+    def update_state(self, levelmanager, rng):
         '''Update hook'''
-        self.advance(levelmanager.RNG)
+        self.advance(rng)
 
     def change_to(self, plantstage):
         '''Change to a different stage'''
