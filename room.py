@@ -1,6 +1,7 @@
 import entity
 import typeid
 import color
+import utility
 import wall
 import logging
 import tower
@@ -8,6 +9,41 @@ import component
 import item
 
 Logger = logging.getLogger(__name__)
+
+class Chest(entity.Entity):
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.BED,
+                         name='Chest',
+                         glyph='±',
+                         layer=entity.Layer.OBJECT_LAYER,
+                         size=entity.Size.MEDIUM,
+                         fg=color.COLOR.YELLOW)
+        self.bag = []
+
+    def on_init(self, rng, levelmanager):
+        darts = rng.randint(1,3)
+        for _ in range(darts):
+            self.bag.append(item.Dart())
+
+    def on_top(self, entity, levelmanager, rng, generator):
+        if entity.typeid == typeid.TID.PLAYER:
+            Logger.info(f'Chest on top trigger')
+            if not self.bag:
+                Logger.info(f'chest empty')
+                return
+            currlevel = levelmanager.Levels[self.z]
+            for pt in utility.generate_surrounding_pts(rng):
+                if not self.bag:
+                    Logger.info(f'chest empty')
+                    break
+                chest_item = self.bag[-1]
+                r = pt[0] + self.row
+                c = pt[1] + self.col
+                if not levelmanager.is_entity_pos_valid(currlevel, chest_item, (r,c)):
+                    continue
+                if levelmanager.add_to_level(chest_item, (r,c), currlevel.z, generator, rng):
+                    Logger.info(f'placed {chest_item}')
+                    self.bag.pop()
 
 class Bed(entity.Entity):
     def __init__(self):
@@ -39,6 +75,7 @@ class Room:
         self.door_pos = None
         self.bed_pos = None
         self.dresser_pos = None
+        self.chest_pos = None
         self.get_room_pts()
 
     def get_room_pts(self):
@@ -90,6 +127,13 @@ class Room:
         self.dresser_pos = self.furniture_pts[idx]
         levelmanager.add_to_level(Dresser(), self.dresser_pos, currlevel.z, self, rng)
         self.furniture_pts.pop(idx)
+
+        idx = rng.randint(0, len(self.furniture_pts)-1)
+        self.chest_pos = self.furniture_pts[idx]
+        levelmanager.add_to_level(Chest(), self.chest_pos, currlevel.z, self, rng)
+        self.furniture_pts.pop(idx)
+
+
 
 
 

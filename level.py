@@ -85,7 +85,7 @@ class Level:
                     generator.generate_mons(levelmanager, self, self.LevelDifficulty.max, new_difficulty, rng)
                     self.LevelDifficulty.max = new_difficulty
             # update level difficulty based on monsters
-            else:
+            elif entity.typeid != typeid.TID.PLAYER:
                 self.MonsTracker.add_mon()
                 self.LevelDifficulty.current += entity.difficulty
                 Logger.info(f'adding: {entity} mon:{self.MonsTracker.total_mons} cd:{self.LevelDifficulty.current}')
@@ -97,7 +97,7 @@ class Level:
             self.LevelDifficulty.current -= entity.difficulty
             Logger.info(f'removing: {entity} mon:{self.MonsTracker.total_mons} cd:{self.LevelDifficulty.current}')
 
-    def upkeep(self, levelmanager, messager, playerpos, generator, fovpoints):
+    def upkeep(self, levelmanager, messager, playerpos, generator, fovpoints, rng):
         '''Do level upkeep'''
 
         # check if level has been cleared
@@ -110,7 +110,8 @@ class Level:
             if self.regen_timer[0] <= 0:
                 self.regen_timer[0] = self.regen_timer[1]
                 generator.generate_mon_amount(levelmanager, self,
-                                  self.LevelDifficulty.current, self.LevelDifficulty.max, 1, fovpoints)
+                              self.LevelDifficulty.current, self.LevelDifficulty.max,
+                              1, fovpoints, rng)
 
 
 class LevelManager:
@@ -141,24 +142,24 @@ class LevelManager:
         self.Player = player.Player()
         self.Player.init()
 
-    def place_player(self, playerpos, playerz):
+    def place_player(self, playerpos, playerz, rng, generator):
         '''
         Place the player on the level
 
         Setting the currentz tells the displayer what level to view
         '''
-        self.place_entity(playerz, self.Player, playerpos)
+        self.place_entity(playerz, self.Player, playerpos, rng, generator)
         self.currentz = playerz
 
     def add_to_level(self, entity, pos, z, generator, rng, overwrite=False):
         '''Adds an entity to the level and calls the init hook'''
         entity.on_init(rng, self)
-        success = self.place_entity(z, entity, pos, overwrite)
+        success = self.place_entity(z, entity, pos, rng, generator, overwrite)
         if success:
             self.Levels[z].add_entity_record(entity, self, generator, rng)
         return success
 
-    def place_entity(self, z, entity, pos, overwrite=False):
+    def place_entity(self, z, entity, pos, rng, generator, overwrite=False):
         '''Place an entity into the level'''
 
         if not entity:
@@ -202,7 +203,7 @@ class LevelManager:
             # trigger the on top hook because entity was placed on top of other entities
             for ent in level.EntityLayer[r][c]:
                 if ent.id != entity.id:
-                    ent.on_top(entity, self)
+                    ent.on_top(entity, self, rng, generator)
         Logger.debug(f'Entity {entity} placed at {level.EntityLayer[r][c]}')
         return True
 
@@ -264,7 +265,8 @@ class LevelManager:
                                statemachine, currentturn, generator, rng)
 
         # level upkeep
-        level.upkeep(self, messager, self.Player.pos(), generator, self.Player.Brain.fovpoints)
+        level.upkeep(self, messager, self.Player.pos(), generator,
+                     self.Player.Brain.fovpoints, rng)
 
     def level_update_loop(self, level, display, animator, messager, menumanager, statemachine, currentturn, generator, rng):
         '''Run the update loop'''
@@ -306,7 +308,7 @@ class LevelManager:
         '''Updates the player and returns the energy used'''
         Logger.info(f'-------- TURN UPDATE ({self.Player.turn + 1}) ---------')
         self.Player.energy = 100
-        self.Player.update_status(self, messager, animator, rng)
+        self.Player.update_status(self, messager, animator, rng, generator)
         self.Player.update_state(self, rng)
         Logger.info(f'Player status: {self.Player.status}')
         self.Player.do_action(self, animator, messager, menumanager, statemachine, event, rng, generator)
@@ -343,7 +345,7 @@ class LevelManager:
             return True
         energystart = entity.energy
         entity.update_state(self, rng)
-        entity.update_status(self, messager, animator, rng)
+        entity.update_status(self, messager, animator, rng, generator)
         entity.take_turn(self, animator, messager, menumanager, statemachine, rng, generator) 
         # play animations from the turn
         display.play_animations(animator, self.currentz, self.Player.Brain.fovpoints)
@@ -364,7 +366,7 @@ class LevelManager:
             return True
         return False
 
-    def move_entity(self, entity, pos):
+    def move_entity(self, entity, pos, rng, generator):
         '''Moves an entity from one place to a new position if valid'''
 
         level = self.Levels[entity.z]
@@ -377,7 +379,7 @@ class LevelManager:
         entity = self.remove_entity(entity)
 
         # add entity to new position
-        self.place_entity(level.z, entity, pos)
+        self.place_entity(level.z, entity, pos, rng, generator)
 
         return True
     
@@ -402,7 +404,7 @@ class LevelManager:
         if entity.typeid == typeid.TID.PLAYER:
             self.currentz = newlevel.z 
 
-        self.place_entity(newlevel.z, entity, newpos)
+        self.place_entity(newlevel.z, entity, newpos, rng, generator)
 
         newlevel.add_entity_record(entity, self, generator, rng)
 

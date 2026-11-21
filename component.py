@@ -45,7 +45,7 @@ class Combat:
                 return 1
         return damage
 
-    def throw(self, levelmanager, parent, animator, projectile, direction_key, rng, start_row, start_col, z):
+    def throw(self, levelmanager, parent, animator, projectile, direction_key, rng, start_row, start_col, z, generator):
         '''
         Send an object flying through the air, if the accuracy check succeeds, stop the
         object at a target otherwise keep going until something blocks the trajectory
@@ -80,7 +80,7 @@ class Combat:
             objr, objc = r, c
 
         # place the object in it's final spot
-        levelmanager.place_entity(z, projectile, (objr,objc))
+        levelmanager.place_entity(z, projectile, (objr,objc), rng, generator)
 
         # create the animation
         grid,pts = utility.get_path_pts(entitylayer, start_row, start_col, objr, objc)
@@ -100,12 +100,13 @@ class Combat:
         Logger.info(f'throwing object')
         return success, objr,objc
 
-    def attack_range(self, parent, levelmanager, animator, messager, projectile, direction_key, rng, start_row, start_col, z):
+    def attack_range(self, parent, levelmanager, animator, messager, projectile, direction_key, rng, start_row, start_col, z, generator):
         '''Start a ranged attack by throwing a projectile'''
 
         # throw the projectile
         success, objr, objc = self.throw(levelmanager, parent, animator, projectile,
-                                         direction_key, rng, start_row, start_col, z)
+                                         direction_key, rng, start_row, start_col, z,
+                                         generator)
 
         # load the traits
         attacktraits = AttackTraits(result=success,
@@ -138,16 +139,16 @@ class Combat:
                 if hasattr(victim, 'Health') or hasattr(victim, 'Breakable'):
                     messager.add_projectile_message(victim.z, projectile, victim)
                 self.deal_damage(parent, levelmanager, animator, messager, victim,
-                                 attacktraits.damage, attacktraits.dmgtype, rng)
+                                 attacktraits.damage, attacktraits.dmgtype, rng, generator)
 
-    def attack_melee(self, parent, levelmanager, animator, messager, victim, rng):
+    def attack_melee(self, parent, levelmanager, animator, messager, victim, rng, generator):
         '''Attack the entity passed in'''
 
         # CHARGE
         if hasattr(parent, 'Charge') and parent.Charge.charging:
             damage, dmgtype = parent.Charge.end()
             messager.add_attack_message(parent.z, parent, victim, 'charge', 'charges')
-            self.deal_damage(parent, levelmanager, animator, messager, victim, damage, dmgtype, rng)
+            self.deal_damage(parent, levelmanager, animator, messager, victim, damage, dmgtype, rng, generator)
 
         # INVENTORY
         elif hasattr(parent, 'Inventory'):
@@ -156,18 +157,18 @@ class Combat:
             attacktraits = parent.Inventory.roll_mainHand_attack(rng, self.base_melee_accuracy)
             if attacktraits.result != AttackResult.INVALID:
                 self.handle_melee_attack(parent, levelmanager, animator, messager,
-                                         victim, attacktraits, rng)
+                                         victim, attacktraits, rng, generator)
                 # OFFHAND
                 attacktraits = parent.Inventory.roll_offHand_attack(rng, self.base_melee_accuracy)
                 self.handle_melee_attack(parent, levelmanager, animator, messager,
-                                         victim, attacktraits, rng)
+                                         victim, attacktraits, rng, generator)
             else:
                 # ABILITY
                 attacktraits = parent.Inventory.roll_ability_attack(rng, self.base_melee_accuracy)
                 self.handle_melee_attack(parent, levelmanager, animator, messager,
-                                         victim, attacktraits, rng)
+                                         victim, attacktraits, rng, generator)
 
-    def handle_melee_attack(self, parent, levelmanager, animator, messager, victim, atraits, rng):
+    def handle_melee_attack(self, parent, levelmanager, animator, messager, victim, atraits, rng, generator):
         '''Deal with a melee attack based on the attack traits'''
         # SUCCESS
         if atraits.result == AttackResult.SUCCESS:
@@ -176,17 +177,17 @@ class Combat:
                                 atraits.you_action, atraits.it_action)
             Logger.info(f'Attack Melee: {parent} {victim} MainHand dmg:{atraits.damage}')
             self.deal_damage(parent, levelmanager, animator, messager, victim,
-                         atraits.damage, atraits.dmgtype, rng)
+                         atraits.damage, atraits.dmgtype, rng, generator)
             Logger.info(f'APPLY: {atraits.item}')
             # effect
             if atraits.item:
                 atraits.item.on_apply('', parent, levelmanager, messager, animator, victim.row,
-                                      victim.col, victim.z, rng)
+                                      victim.col, victim.z, rng, generator)
         # MISS
         else:
             messager.add_miss_message(parent.z, parent, victim)
 
-    def deal_damage(self, parent, levelmanager, animator, messager, victim, damage, damage_type, rng): 
+    def deal_damage(self, parent, levelmanager, animator, messager, victim, damage, damage_type, rng, generator): 
         '''Send damage to an entity and specify the damage type'''
 
         # victim must have a health bar to take damage and for a 'miss'
@@ -200,7 +201,7 @@ class Combat:
 
             # check for kill
             if victim.Health.change_health(-damage):
-                victim.death(levelmanager, animator, messager, rng)
+                victim.death(levelmanager, animator, messager, rng, generator)
                 messager.add_kill_message(levelmanager.currentz, parent, victim)
                 # gain xp
                 if hasattr(parent, 'Leveling') and hasattr(victim, 'xp'):
@@ -212,7 +213,7 @@ class Combat:
 
             # check for break
             if victim.Breakable.change_dmg(damage):
-                victim.death(levelmanager, animator, messager, rng)
+                victim.death(levelmanager, animator, messager, rng, generator)
                 messager.add_break_message(levelmanager.currentz, parent, victim)
 
 class Breakable:
@@ -239,8 +240,8 @@ class Breakable:
             return True
         return False
 
-    def smash(self, levelmanager, pos):
-        levelmanager.place_entity(pos[2], self.smashed_item, (pos[0],pos[1]))
+    def smash(self, levelmanager, pos, rng, generator):
+        levelmanager.place_entity(pos[2], self.smashed_item, (pos[0],pos[1]), rng, generator)
 
 
 class Leveling:
@@ -549,7 +550,7 @@ class Inventory:
         # default is add to bag
         self.contents.append(entity)
 
-    def drop(self, parent, levelmanager, entity):
+    def drop(self, parent, levelmanager, entity, rng, generator):
         '''Place an entity to the ground'''
         self.remove_from_bag(entity)
         if self.quiver and self.quiver.id == entity.id:
@@ -565,7 +566,7 @@ class Inventory:
         elif self.offHand and self.offHand.id == entity.id:
             self.offHand = None
 
-        levelmanager.place_entity(parent.z, entity, (parent.row,parent.col))
+        levelmanager.place_entity(parent.z, entity, (parent.row,parent.col), rng, generator)
 
     
     def pickup(self, parent, levelmanager):
@@ -577,7 +578,7 @@ class Inventory:
                 levelmanager.remove_entity(ent)
                 break
 
-    def action(self, parent, levelmanager, messager, event, animator, row, col, z, rng):
+    def action(self, parent, levelmanager, messager, event, animator, row, col, z, rng, generator):
         '''Handle an inventory action'''
         action = event[0]
         if len(event) > 1:
@@ -598,20 +599,22 @@ class Inventory:
             # Apply
             elif action == 'a':
                 Logger.info(f'Applying: {entity}')
-                self.apply(entity, cmd, parent, levelmanager, messager, animator, row, col, z, rng)
+                self.apply(entity, cmd, parent, levelmanager, messager,
+                           animator, row, col, z, rng, generator)
             # Drop
             elif action == 'd':
                 Logger.info(f'Drop: {entity}')
-                self.drop(parent, levelmanager, entity)
+                self.drop(parent, levelmanager, entity, rng, generator)
         else:
             # Pick up
             if action == ',':
                 Logger.info(f'Pick up')
                 self.pickup(parent, levelmanager)
 
-    def apply(self, entity, cmd, parent, levelmanager, messager, animator, row, col, z, rng):
+    def apply(self, entity, cmd, parent, levelmanager, messager, animator, row, col, z, rng, generator):
         '''Trigger the apply on an entity'''
-        remove = entity.on_apply(cmd, parent, levelmanager, messager, animator, row, col, z, rng)
+        remove = entity.on_apply(cmd, parent, levelmanager, messager, animator,
+                                 row, col, z, rng, generator)
         if remove is None:
             messager.add_text('Nothing happens')
         elif remove:
@@ -979,11 +982,11 @@ class Body:
         self.chance = chance
         '''Chance of item drop'''
 
-    def drop_corpse(self, levelmanager, pos, rng):
+    def drop_corpse(self, levelmanager, pos, rng, generator):
         '''Drop the corpse or an item'''
         if rng.randint(0, 100) <= self.chance:
-            levelmanager.place_entity(pos[2], self.corpse, (pos[0],pos[1]))
+            levelmanager.place_entity(pos[2], self.corpse, (pos[0],pos[1]), rng, generator)
         elif self.item:
-            levelmanager.place_entity(pos[2], self.item, (pos[0],pos[1]))
+            levelmanager.place_entity(pos[2], self.item, (pos[0],pos[1]), rng, generator)
 
 

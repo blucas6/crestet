@@ -1,7 +1,6 @@
 import algo
 import entity
 import logging
-import random
 import copy
 
 Logger = logging.getLogger(__name__)
@@ -10,14 +9,14 @@ ONE_LAYER_CIRCLE = [(1,-1),(1,0),(1,1),(0,-1),(0,0),(0,1),(-1,-1),(-1,0),(-1,1)]
 ONE_LAYER_CROSS = [(0,0), (-1,0), (1,0), (0,-1), (0,1)]
 TWO_LAYER_CIRCLE = [(-2,-2),(-2,-1),(-2,0),(-2,1),(-2,2),(-1,-2),(-1,2),(0,-2),(0,2),(1,-2),(1,2),(2,-2),(2,-1),(2,0),(2,1),(2,2)]
 
-def get_surrounding_pt():
+def generate_surrounding_pts(rng):
     '''Yield points starting from one layer and then two layers around'''
     pts = copy.copy(ONE_LAYER_CIRCLE)
-    random.shuffle(pts)
+    rng.shuffle(pts)
     for pt in pts:
         yield pt
     pts = copy.copy(TWO_LAYER_CIRCLE)
-    random.shuffle(pts)
+    rng.shuffle(pts)
     for pt in pts:
         yield pt
 

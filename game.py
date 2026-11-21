@@ -135,7 +135,7 @@ class Game:
             self.update_menus()
 
             # add player to the map
-            self.LevelManager.place_player(config.PLAYERPOS, config.PLAYERZ)
+            self.LevelManager.place_player(config.PLAYERPOS, config.PLAYERZ, self.RNG, self.Generator)
             # update player FOV
             self.LevelManager.Player.update_mental_map(
                     self.LevelManager.get_curr_level()

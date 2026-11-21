@@ -354,15 +354,18 @@ class Generator:
 
     def generate_pack_mons(self, levelmanager, currlevel, mon, pos, rng):
         '''Generate pack monsters based on pack leader'''
+
         if not hasattr(mon, 'pack') or not hasattr(mon, 'packtype'):
             return
+
         packmons = [m for m in self.monster_classes if m.__name__ in mon.packtype]
         if not packmons:
             Logger.warning(f'Monster pack list empty!')
             return
+
         for ix in range(mon.pack):
             attempt = 0
-            genpts = utility.get_surrounding_pt()
+            genpts = utility.generate_surrounding_pts(rng)
             while attempt < config.MAX_RETRIES:
                 attempt += 1
                 if len(packmons) == 1:
@@ -370,7 +373,9 @@ class Generator:
                 else:
                     n = rng.randint(0, len(packmons)-1)
                 new_mon = packmons[n]()
-                dx,dy = next(genpts)
+                dx,dy = next(genpts, (None,None))
+                if not dx or not dy:
+                    break
                 r = pos[0]+dx
                 c = pos[1]+dy
                 if not levelmanager.is_entity_pos_valid(currlevel, new_mon, (r,c)):
@@ -469,7 +474,7 @@ class Generator:
             attempt += 1
             idx = rng.randint(0,len(pts)-1)
             origin = pts.pop(idx)
-            min_size = 3
+            min_size = 4
             max_size = 7
 
             row_size = rng.randint(min_size, max_size)

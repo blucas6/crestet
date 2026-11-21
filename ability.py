@@ -18,7 +18,7 @@ class Lick(entity.Entity):
                                                melee_you_action='lick',
                                                melee_it_action='licks')
 
-    def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z, rng):
+    def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z, rng, generator):
         entitylayer = levelmanager.Levels[z].EntityLayer
         for ent in entitylayer[row][col]:
             ent.apply_status(messager, entity.StatusEffect.POISON, levelmanager)
