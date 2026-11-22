@@ -66,6 +66,7 @@ class TestSuite(unittest.TestCase):
         data['0']['runes'] = 0
         data['0']['mons'] = False
         data['0']['plants'] = 0
+        data['0']['rooms'] = 0
         data['1']['floor'] = True
         data['1']['outer_walls'] = True
         data['1']['upstair'] = False
@@ -77,6 +78,7 @@ class TestSuite(unittest.TestCase):
         data['1']['runes'] = 0
         data['1']['mons'] = False
         data['1']['plants'] = 0
+        data['1']['rooms'] = 0
 
         with open(config.SIM_LEVEL_CONFIG, 'w+') as jfile:
             json.dump(data, jfile, indent=4)
@@ -130,8 +132,10 @@ class TestSuite(unittest.TestCase):
         '''Checks that entities cannot be placed in walls'''
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         levelmanager = TestSuite.environment.Game.LevelManager
+        rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
         wll = wall.Sandstone()
-        levelmanager.place_entity(0, wll, (0,0))
+        levelmanager.place_entity(0, wll, (0,0), rng, generator)
         self.assertTrue(TestSuite.environment.Game.running)
         self.assertNotIn(wll, entitylayer[0][0])
         self.assertEqual(1, len(levelmanager.Levels[0].EntityLayer[0][0]))
@@ -140,9 +144,11 @@ class TestSuite(unittest.TestCase):
         '''Checks that entities cannot be placed in levels that don't exist'''
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         levelmanager = TestSuite.environment.Game.LevelManager
+        rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
         wll = wall.Sandstone()
         self.assertEqual(2, len(levelmanager.Levels))
-        levelmanager.place_entity(5, wll, (0,0))
+        levelmanager.place_entity(5, wll, (0,0), rng, generator)
         self.assertEqual(2, len(levelmanager.Levels))
         self.assertTrue(TestSuite.environment.Game.running)
         self.assertNotIn(wll, entitylayer[0][0])
@@ -170,8 +176,11 @@ class TestSuite(unittest.TestCase):
         player = TestSuite.environment.Game.LevelManager.Player
         levelmanager = TestSuite.environment.Game.LevelManager
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
+        rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
+
         barrel = tower.Barrel()
-        levelmanager.place_entity(0, barrel, (1,2))
+        levelmanager.place_entity(0, barrel, (1,2), rng, generator)
         for _ in range(4):
             self.loop('6')
         self.assertEqual(player.pos(), [1, 5, 0, 1])
@@ -186,9 +195,12 @@ class TestSuite(unittest.TestCase):
         player = TestSuite.environment.Game.LevelManager.Player
         levelmanager = TestSuite.environment.Game.LevelManager
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
+        rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
+
         self.loop('6')
         barrel = tower.Barrel()
-        levelmanager.place_entity(0, barrel, (1,1))
+        levelmanager.place_entity(0, barrel, (1,1), rng, generator)
         self.loop('4')
         self.assertTrue(TestSuite.environment.Game.running)
         self.assertEqual(player.pos(), [1, 2, 0, 1])
@@ -224,8 +236,11 @@ class TestSuite(unittest.TestCase):
         '''Checks that the lights add to the light layer'''
         levelmanager = TestSuite.environment.Game.LevelManager
         lightlayer = TestSuite.environment.Game.LevelManager.Levels[0].LightLayer
+        rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
+
         light = tower.Light()
-        levelmanager.place_entity(0, light, (3,3))
+        levelmanager.place_entity(0, light, (3,3), rng, generator)
         self.loop('.')
         pts = utility.get_one_layer_pts((3,3), len(lightlayer), len(lightlayer[0]))
         for pt in pts:
@@ -235,8 +250,11 @@ class TestSuite(unittest.TestCase):
         '''Checks that the lights can be turned off'''
         levelmanager = TestSuite.environment.Game.LevelManager
         lightlayer = TestSuite.environment.Game.LevelManager.Levels[0].LightLayer
+        rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
+
         light = tower.Light()
-        levelmanager.place_entity(0, light, (3,3))
+        levelmanager.place_entity(0, light, (3,3), rng, generator)
         self.loop('3')
         self.loop('3')
         pts = utility.get_one_layer_pts((3,3), len(lightlayer), len(lightlayer[0]))
@@ -248,9 +266,12 @@ class TestSuite(unittest.TestCase):
         player = TestSuite.environment.Game.LevelManager.Player
         entitylayer = TestSuite.environment.Game.LevelManager.Levels[0].EntityLayer
         levelmanager = TestSuite.environment.Game.LevelManager
+        rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
+
         player.Combat.base_melee_accuracy = 100
         barrel = tower.Barrel()
-        levelmanager.place_entity(0, barrel, (1,2))
+        levelmanager.place_entity(0, barrel, (1,2), rng, generator)
         self.loop('F6')
         self.assertEqual(item.Wood().name, entitylayer[1][2][1].name)
 
@@ -263,10 +284,13 @@ class TestSuite(unittest.TestCase):
         levelmanager = TestSuite.environment.Game.LevelManager
         player.Brain.sightrange = 2
         player.Brain.fovmemory = brain.FOVMemory.OBJECTS_BARRELS
+        rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
+
         row = 1
         col = 4
         r,c = display.level_to_screen_pos(row, col)
-        levelmanager.place_entity(0, tower.Barrel(), (row,col))
+        levelmanager.place_entity(0, tower.Barrel(), (row,col), rng, generator)
         self.loop('.')
         self.assertEqual(display.unknownglyph, display.screenbuffer[r][c])
         for _ in range(2):
@@ -283,10 +307,13 @@ class TestSuite(unittest.TestCase):
         display = TestSuite.environment.Game.Display
         levelmanager = TestSuite.environment.Game.LevelManager
         player.Brain.sightrange = 2
+        rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
+
         row = 1
         col = 4
-        levelmanager.place_entity(0, item.Dart(), (row,col))
-        levelmanager.place_entity(0, tower.Barrel(), (row,col))
+        levelmanager.place_entity(0, item.Dart(), (row,col), rng, generator)
+        levelmanager.place_entity(0, tower.Barrel(), (row,col), rng, generator)
         self.loop('.')
         for _ in range(2):
             self.loop('6')
@@ -303,10 +330,13 @@ class TestSuite(unittest.TestCase):
         display = TestSuite.environment.Game.Display
         levelmanager = TestSuite.environment.Game.LevelManager
         messager = TestSuite.environment.Game.Messager
+        rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
+
         row = 1
         col = 4
         r,c = display.level_to_screen_pos(row, col)
-        levelmanager.place_entity(0, tower.Barrel(), (row,col))
+        levelmanager.place_entity(0, tower.Barrel(), (row,col), rng, generator)
         self.loop('.')
         self.assertEqual('0', display.screenbuffer[r][c])
         player.apply_status(messager, entity.StatusEffect.BLIND, levelmanager)
@@ -321,10 +351,13 @@ class TestSuite(unittest.TestCase):
         display = TestSuite.environment.Game.Display
         levelmanager = TestSuite.environment.Game.LevelManager
         messager = TestSuite.environment.Game.Messager
+        rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
+
         row = 1
         col = 4
         r,c = display.level_to_screen_pos(row, col)
-        levelmanager.place_entity(0, item.Dart(), (row,col))
+        levelmanager.place_entity(0, item.Dart(), (row,col), rng, generator)
         self.loop('.')
         self.assertEqual(')', display.screenbuffer[r][c])
         player.apply_status(messager, entity.StatusEffect.BLIND, levelmanager)
@@ -338,14 +371,15 @@ class TestSuite(unittest.TestCase):
         messager = TestSuite.environment.Game.Messager
         animator = TestSuite.environment.Game.Animator
         rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
 
         row = 1
         col = 1
         mon = monster.Jelly()
-        levelmanager.place_entity(1, mon, (row,col))
+        levelmanager.place_entity(1, mon, (row,col), rng, generator)
         self.loop('6')
         self.assertEqual(len(messager.MsgQueue), 0)
-        mon.death(levelmanager, animator, messager, rng)
+        mon.death(levelmanager, animator, messager, rng, generator)
         self.assertEqual(len(messager.MsgQueue), 0)
         self.loop('6')
         self.assertEqual(len(messager.MsgQueue), 0)
@@ -358,12 +392,13 @@ class TestSuite(unittest.TestCase):
         messager = TestSuite.environment.Game.Messager
         messagemenu = TestSuite.environment.Game.MenuManager.MessageMenu
         rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
 
         seen = 'The Jelly explodes!'
         mon = monster.Jelly()
-        levelmanager.place_entity(0, mon, (4,7))
+        levelmanager.place_entity(0, mon, (4,7), rng, generator)
         self.loop('6')
-        mon.death(levelmanager, animator, messager, rng)
+        mon.death(levelmanager, animator, messager, rng, generator)
         self.assertEqual(len(messager.MsgQueue), 1)
         self.loop('6')
         self.assertEqual(messagemenu.msg, seen)
@@ -377,18 +412,19 @@ class TestSuite(unittest.TestCase):
         messager = TestSuite.environment.Game.Messager
         messagemenu = TestSuite.environment.Game.MenuManager.MessageMenu
         rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
 
         unseen = 'You hear a burst!'
         mon = monster.Jelly()
-        levelmanager.place_entity(0, mon, (4,7))
-        levelmanager.place_entity(0, wall.Sandstone(), (1,3))
-        levelmanager.place_entity(0, wall.Sandstone(), (2,3))
-        levelmanager.place_entity(0, wall.Sandstone(), (3,3))
-        levelmanager.place_entity(0, wall.Sandstone(), (4,3))
-        levelmanager.place_entity(0, wall.Sandstone(), (4,2))
-        levelmanager.place_entity(0, wall.Sandstone(), (4,1))
+        levelmanager.place_entity(0, mon, (4,7), rng, generator)
+        levelmanager.place_entity(0, wall.Sandstone(), (1,3), rng, generator)
+        levelmanager.place_entity(0, wall.Sandstone(), (2,3), rng, generator)
+        levelmanager.place_entity(0, wall.Sandstone(), (3,3), rng, generator)
+        levelmanager.place_entity(0, wall.Sandstone(), (4,3), rng, generator)
+        levelmanager.place_entity(0, wall.Sandstone(), (4,2), rng, generator)
+        levelmanager.place_entity(0, wall.Sandstone(), (4,1), rng, generator)
         self.loop('6')
-        mon.death(levelmanager, animator, messager, rng)
+        mon.death(levelmanager, animator, messager, rng, generator)
         self.assertEqual(len(messager.MsgQueue), 1)
         self.loop('6')
         self.assertEqual(messagemenu.msg, unseen)
@@ -402,13 +438,14 @@ class TestSuite(unittest.TestCase):
         messager = TestSuite.environment.Game.Messager
         messagemenu = TestSuite.environment.Game.MenuManager.MessageMenu
         rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
 
         unseen = 'You hear a burst!'
         mon = monster.Jelly()
-        levelmanager.place_entity(0, mon, (4,7))
+        levelmanager.place_entity(0, mon, (4,7), rng, generator)
         player.apply_status(messager, entity.StatusEffect.BLIND, levelmanager)
         self.loop('6')
-        mon.death(levelmanager, animator, messager, rng)
+        mon.death(levelmanager, animator, messager, rng, generator)
         self.assertEqual(len(messager.MsgQueue), 1)
         self.loop('6')
         self.assertEqual(messagemenu.msg, unseen)
@@ -422,12 +459,13 @@ class TestSuite(unittest.TestCase):
         display = TestSuite.environment.Game.Display
         messager = TestSuite.environment.Game.Messager
         rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
 
         origin = [4,7]
         mon = monster.Jelly()
-        levelmanager.place_entity(0, mon, origin)
+        levelmanager.place_entity(0, mon, origin, rng, generator)
         self.loop('6')
-        mon.death(levelmanager, animator, messager, rng)
+        mon.death(levelmanager, animator, messager, rng, generator)
         lframes, lcolors, tdelays = display.get_animation_frames(animator,
                                                 levelmanager.currentz,
                                                 player.Brain.fovpoints)
@@ -452,12 +490,13 @@ class TestSuite(unittest.TestCase):
         display = TestSuite.environment.Game.Display
         messager = TestSuite.environment.Game.Messager
         rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
 
         origin = [4,7]
         mon = monster.Jelly()
-        levelmanager.place_entity(1, mon, origin)
+        levelmanager.place_entity(1, mon, origin, rng, generator)
         self.loop('6')
-        mon.death(levelmanager, animator, messager, rng)
+        mon.death(levelmanager, animator, messager, rng, generator)
         lframes, lcolors, tdelays = display.get_animation_frames(animator,
                                                 levelmanager.currentz,
                                                 player.Brain.fovpoints)
@@ -474,12 +513,14 @@ class TestSuite(unittest.TestCase):
         player = TestSuite.environment.Game.LevelManager.Player
         rng = TestSuite.environment.Game.RNG
         player.Brain.sightrange = 3
+        rng = TestSuite.environment.Game.RNG
+        generator = TestSuite.environment.Game.Generator
 
         origin = [3,4]
         mon = monster.Jelly()
-        levelmanager.place_entity(0, mon, origin)
+        levelmanager.place_entity(0, mon, origin, rng, generator)
         self.loop('4')
-        mon.death(levelmanager, animator, messager, rng)
+        mon.death(levelmanager, animator, messager, rng, generator)
         lframes, lcolors, tdelays = display.get_animation_frames(animator,
                                                 levelmanager.currentz,
                                                 player.Brain.fovpoints)
