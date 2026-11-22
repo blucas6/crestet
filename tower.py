@@ -115,7 +115,7 @@ class Light(entity.Entity):
         self.light = True
         '''Controls whether the light is on'''
 
-    def on_init(self, rng, levelmanager):
+    def on_init(self, rng, levelmanager, generator):
         self.update_state(levelmanager, rng)
 
     def update_state(self, levelmanager, rng):

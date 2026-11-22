@@ -46,7 +46,7 @@ class Plant(entity.Entity):
         self.sprout_glyph = '.'
         '''Sprout glyph'''
 
-    def on_init(self, rng, levelmanager):
+    def on_init(self, rng, levelmanager, generator):
         '''When a plant is placed on the level'''
         self.nutrients = rng.randint(0, self.fruit)
         self.growth_glyph = self.growth_glyphs[rng.randint(0,len(self.growth_glyphs))-1]

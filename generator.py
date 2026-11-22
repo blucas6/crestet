@@ -72,8 +72,9 @@ class Generator:
         '''Collection of monster classes'''
         self.wall_classes = []
         '''Collection of wall classes'''
-        self.item_classes = []
+        self.spawn_items = []
         '''Collection of item classes'''
+        self.chest_items = []
         self.rune_classes = []
         '''Collection of rune classes'''
         self.all_pts = []
@@ -89,14 +90,23 @@ class Generator:
             obj for name,obj in inspect.getmembers(wall, inspect.isclass)
             if obj.__module__ == wall.__name__
         ]
-        self.item_classes = [
+        self.spawn_items = [
             obj for name,obj in inspect.getmembers(item, inspect.isclass)
             if obj.__module__ == item.__name__ and hasattr(obj, 'spawn')
+        ]
+        self.chest_items = [
+            obj for name,obj in inspect.getmembers(item, inspect.isclass)
+            if obj.__module__ == item.__name__ and hasattr(obj, 'chest_value')
         ]
         self.rune_classes = [
             obj for name,obj in inspect.getmembers(rune, inspect.isclass)
             if obj.__module__ == rune.__name__
         ]
+        Logger.info(f'Classes Loaded: {self.monster_classes}')
+        Logger.info(f'Classes Loaded: {self.wall_classes}')
+        Logger.info(f'Classes Loaded: {self.spawn_items}')
+        Logger.info(f'Classes Loaded: {self.chest_items}')
+        Logger.info(f'Classes Loaded: {self.rune_classes}')
 
     def load_config(self, levelrows, levelcols):
         '''Read the config file and load the level layout objects'''
@@ -419,8 +429,8 @@ class Generator:
         while item_amount > 0 and attempt < config.MAX_RETRIES:
             r,c = utility.get_random_pt(rng, self.all_pts)
             new_item = None
-            n = rng.randint(0, len(self.item_classes)-1)
-            new_item = self.item_classes[n]()
+            n = rng.randint(0, len(self.spawn_items)-1)
+            new_item = self.spawn_items[n]()
             if not levelmanager.is_entity_pos_valid(currlevel, new_item, (r,c)):
                 continue
             if levelmanager.add_to_level(new_item, (r,c), currlevel.z, self, rng):
@@ -530,7 +540,7 @@ class Generator:
                 origin[1] = origin[1] - col_size
             
             theroom = room.Room(origin, row_size, col_size)
-            theroom.place_room(levelmanager, currlevel, rng)
+            theroom.place_room(levelmanager, currlevel, rng, self)
             gen_rooms.append(theroom)
             rooms += 1
         return gen_rooms
@@ -544,4 +554,20 @@ class Generator:
             if theroom.inroom(pt):
                 return True
         return False
+    
+    def get_chest_items(self, rng, max_value=1):
+        all_items = [i for i in self.chest_items if i.chest_value <= max_value]
+        for i in self.chest_items:
+            Logger.info(f'{i}')
+            Logger.info(f'{i.chest_value} <= {max_value}')
+        attempt = 0
+        value = 0
+        chest_bag = []
+        while value < max_value and attempt < config.MAX_RETRIES:
+            n = rng.randint(0, len(all_items)-1)
+            bag_item = all_items[n]()
+            value += bag_item.chest_value
+            chest_bag.append(bag_item)
+            Logger.info(f'Chest generation adding: {bag_item}')
+        return chest_bag
 

@@ -41,6 +41,7 @@ class SnailShell(e.Entity):
 
 class Arrow(e.Entity):
     spawn = True
+    chest_value = 1
     def __init__(self):
         super().__init__(typeid=typeid.TID.ARROW,
                          name='Arrow',
@@ -90,7 +91,7 @@ class Wood(e.Entity):
                                      stack_glyph = '#')
 
 class ShortSword(e.Entity):
-    #spawn = True
+    chest_value = 2
     def __init__(self):
         super().__init__(typeid=typeid.TID.SHORT_SWORD,
                          name='Short Sword',
@@ -106,6 +107,7 @@ class ShortSword(e.Entity):
 
 class Dart(e.Entity):
     spawn = True
+    chest_value = 1
     def __init__(self):
         super().__init__(typeid=typeid.TID.DART,
                          name='Dart',
@@ -122,7 +124,7 @@ class Dart(e.Entity):
                                      stack_glyph = '≡')
 
 class Gambeson(e.Entity):
-    #spawn = True
+    chest_value = 2
     def __init__(self):
         super().__init__(typeid=typeid.TID.GAMBESON,
                          name='Gambeson',
@@ -134,6 +136,7 @@ class Gambeson(e.Entity):
                                                armor=1)
 
 class BlowPipe(e.Entity):
+    chest_value = 2
     def __init__(self):
         super().__init__(typeid=typeid.TID.BLOWPIPE,
                          name='BlowPipe',

@@ -200,7 +200,7 @@ class Entity:
         '''Default attempt to apply an entity'''
         pass
 
-    def on_init(self, *_):
+    def on_init(self, rng, levelmanager, generator):
         pass
 
     def apply_status(self, messager, status_effect, levelmanager):

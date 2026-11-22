@@ -158,8 +158,8 @@ class LevelManager:
 
     def add_to_level(self, entity, pos, z, generator, rng, overwrite=False):
         '''Adds an entity to the level and calls the init hook'''
-        entity.on_init(rng, self)
         success = self.place_entity(z, entity, pos, rng, generator, overwrite)
+        entity.on_init(rng, self, generator)
         if success:
             self.Levels[z].add_entity_record(entity, self, generator, rng)
         return success

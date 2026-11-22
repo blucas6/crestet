@@ -37,10 +37,8 @@ class Chest(entity.Entity):
         else:
             self.fg = color.COLOR.GREY
 
-    def on_init(self, rng, levelmanager):
-        darts = rng.randint(2,4)
-        for _ in range(darts):
-            self.bag.append(item.Dart())
+    def on_init(self, rng, levelmanager, generator):
+        self.bag = generator.get_chest_items(rng, self.z+1)
         self.update_state(levelmanager, rng)
 
     def on_top(self, entity, levelmanager, rng, generator):
@@ -113,7 +111,7 @@ class Room:
             return True
         return False
 
-    def place_room(self, levelmanager, currlevel, rng):
+    def place_room(self, levelmanager, currlevel, rng, generator):
         Logger.info(f'Placing room: {self.origin} r:{self.row_size} c:{self.col_size}')
         outer_walls = []
         for rw in range(self.row_size+1):
@@ -122,7 +120,7 @@ class Room:
                     pos = [self.origin[0] + rw, self.origin[1] + cl]
                     if not levelmanager.is_entity_pos_valid(currlevel, wall.Limestone(), pos):
                         continue
-                    if levelmanager.add_to_level(wall.Limestone(), pos, currlevel.z, self, rng):
+                    if levelmanager.add_to_level(wall.Limestone(), pos, currlevel.z, generator, rng):
                         if cl > 0 and cl < self.col_size:
                             outer_walls.append(pos)
             else:
@@ -131,28 +129,28 @@ class Room:
                     if cl == 0 or cl == self.col_size:
                         if not levelmanager.is_entity_pos_valid(currlevel, wall.Limestone(), pos):
                             continue
-                        if levelmanager.add_to_level(wall.Limestone(), pos, currlevel.z, self, rng):
+                        if levelmanager.add_to_level(wall.Limestone(), pos, currlevel.z, generator, rng):
                             outer_walls.append(pos)
                     else:
-                        levelmanager.add_to_level(tower.WoodFloor(), pos, currlevel.z, self, rng, overwrite=True)
+                        levelmanager.add_to_level(tower.WoodFloor(), pos, currlevel.z, generator, rng, overwrite=True)
 
         self.door_pos = outer_walls[rng.randint(0, len(outer_walls)-1)]
-        levelmanager.add_to_level(tower.WoodFloor(), self.door_pos, currlevel.z, self, rng, overwrite=True)
-        levelmanager.add_to_level(tower.Door(), self.door_pos, currlevel.z, self, rng)
+        levelmanager.add_to_level(tower.WoodFloor(), self.door_pos, currlevel.z, generator, rng, overwrite=True)
+        levelmanager.add_to_level(tower.Door(), self.door_pos, currlevel.z, generator, rng)
 
         idx = rng.randint(0, len(self.furniture_pts)-1)
         self.bed_pos = self.furniture_pts[idx]
-        levelmanager.add_to_level(Bed(), self.bed_pos, currlevel.z, self, rng)
+        levelmanager.add_to_level(Bed(), self.bed_pos, currlevel.z, generator, rng)
         self.furniture_pts.pop(idx)
 
         idx = rng.randint(0, len(self.furniture_pts)-1)
         self.dresser_pos = self.furniture_pts[idx]
-        levelmanager.add_to_level(Dresser(), self.dresser_pos, currlevel.z, self, rng)
+        levelmanager.add_to_level(Dresser(), self.dresser_pos, currlevel.z, generator, rng)
         self.furniture_pts.pop(idx)
 
         idx = rng.randint(0, len(self.furniture_pts)-1)
         self.chest_pos = self.furniture_pts[idx]
-        levelmanager.add_to_level(Chest(), self.chest_pos, currlevel.z, self, rng)
+        levelmanager.add_to_level(Chest(), self.chest_pos, currlevel.z, generator, rng)
         self.furniture_pts.pop(idx)
 
 
