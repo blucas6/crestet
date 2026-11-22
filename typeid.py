@@ -22,12 +22,7 @@ class TID(IntEnum):
     DOOR            = 27
     BED             = 28
     DRESSER         = 29
-
-    BITE            = 31
-    FIST            = 32
-    PECK            = 33
-    CLAW            = 34
-    LICK            = 35
+    KEY             = 30
 
     PLANT           = 41
 
@@ -51,5 +46,11 @@ class TID(IntEnum):
     SNAIL           = 107
     GOBLINLEADER    = 108
 
-    EMBER           = 1001
-    SNOW            = 1002
+    EMBER           = 501
+    SNOW            = 502
+
+    BITE            = 801
+    FIST            = 802
+    PECK            = 803
+    CLAW            = 804
+    LICK            = 805

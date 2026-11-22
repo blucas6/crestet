@@ -176,14 +176,15 @@ class Display:
         # update cursor
         self.cursor_upkeep()
 
-    def add_animation_frame(self, screenbuffer, colorbuffer, frame, pos, fg, bg, fovpoints):
+    def add_animation_frame(self, screenbuffer, colorbuffer, frame, pos,
+                            fg, bg, fovpoints, always_visible):
         '''Add the glyphs for the animation to the screen'''
         for r,row in enumerate(frame):
             for c,col in enumerate(row):
                 if not col:
                     continue
                 # add frame to the buffer
-                elif (pos[0]+r,pos[1]+c) in fovpoints:
+                elif always_visible or (pos[0]+r,pos[1]+c) in fovpoints:
                     rw, cl = self.level_to_screen_pos(pos[0]+r, pos[1]+c)
                     screenbuffer[rw][cl] = col
                     if self.displayon:
@@ -215,7 +216,8 @@ class Display:
                                          anim.pos,
                                          anim.fg,
                                          anim.bg,
-                                         fovpoints)
+                                         fovpoints,
+                                         anim.always_visible)
                 loaded_frames.append(tmp_screenbuffer)
                 if self.displayon:
                     loaded_colors.append(tmp_colorbuffer)

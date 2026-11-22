@@ -1,4 +1,6 @@
 import config
+import animation
+import color
 import dataclasses
 import room
 import biosphere
@@ -434,6 +436,48 @@ class Generator:
                 continue
             if levelmanager.add_to_level(new_rune, (r,c), currlevel.z, self, rng):
                 rune_amount -= 1
+
+    def generate_key(self, levelmanager, currlevel, rng, animator, key_amount=1):
+        pts = copy.copy(self.all_pts)
+        attempt = 0
+        while attempt < config.MAX_RETRIES and pts and key_amount > 0:
+            attempt += 1
+            idx = rng.randint(0,len(pts)-1)
+            point = pts.pop(idx)
+            r = point[0]
+            c = point[1]
+            key = room.Key()
+            if not levelmanager.is_entity_pos_valid(currlevel, key, (r,c)):
+                continue
+            if levelmanager.add_to_level(key, (r,c), currlevel.z, self, rng):
+                key_amount -= 1
+                frames = []
+                delays = []
+                for row in range(r):
+                    frame = [['' for _ in grow] for grow in currlevel.EntityLayer]
+                    for rx in range(row):
+                        frame[rx][c] = '▓'
+                    frames.append(frame)
+                    delays.append(config.DROP_ANIM_DELAY)
+                frame = [['' for _ in grow] for grow in currlevel.EntityLayer]
+                frame[r][c] = '*'
+                if utility.inbounds(frame, r-1, c-1):
+                    frame[r-1][c-1] = '\\'
+                if utility.inbounds(frame, r-1, c+1):
+                    frame[r-1][c+1] = '/'
+                if utility.inbounds(frame, r+1, c-1):
+                    frame[r+1][c-1] = '/'
+                if utility.inbounds(frame, r+1, c+1):
+                    frame[r+1][c+1] = '\\'
+                frames.append(frame)
+                delays.append(config.DROP_ANIM_DELAY)
+                origin = [0, 0, currlevel.z, 0]
+                anim = animation.Animation(pos=origin,
+                                           frames=frames,
+                                           delays=delays,
+                                           fg=color.COLOR.BRIGHT_YELLOW,
+                                           always_visible=True)
+                animator.queueUp(levelmanager, anim)
 
     def generate_plants(self, levelmanager: level.LevelManager, currlevel: level.Level, plant_amount, rng):
         plants = 0

@@ -22,7 +22,8 @@ class SnowRune(entity.Entity):
                                                apply_damage=1)
         self.ApplyInfo = component.ApplyInfo.DIRECTION
 
-    def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z, rng, generator):
+    def on_apply(self, cmd, parent, levelmanager, messager, animator,
+                 row, col, z, rng, generator):
         messager.add_notif(levelmanager.currentz, 'Ice freezes the air!', parent.pos())
 
         entitylayer = levelmanager.Levels[z].EntityLayer
@@ -68,7 +69,8 @@ class EmberRune(entity.Entity):
                                                apply_damage=2)
         self.ApplyInfo = component.ApplyInfo.DIRECTION
 
-    def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z, rng, generator):
+    def on_apply(self, cmd, parent, levelmanager, messager, animator,
+                 row, col, z, rng, generator):
         messager.add_notif(levelmanager.currentz, 'Flames shoot out!', parent.pos())
 
         entitylayer = levelmanager.Levels[z].EntityLayer

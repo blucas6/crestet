@@ -181,8 +181,9 @@ class Combat:
             Logger.info(f'APPLY: {atraits.item}')
             # effect
             if atraits.item:
-                atraits.item.on_apply('', parent, levelmanager, messager, animator, victim.row,
-                                      victim.col, victim.z, rng, generator)
+                atraits.item.on_apply('', parent, levelmanager, messager,
+                                      animator, victim.row, victim.col,
+                                      victim.z, rng, generator)
         # MISS
         else:
             messager.add_miss_message(parent.z, parent, victim)
@@ -611,7 +612,8 @@ class Inventory:
                 Logger.info(f'Pick up')
                 self.pickup(parent, levelmanager)
 
-    def apply(self, entity, cmd, parent, levelmanager, messager, animator, row, col, z, rng, generator):
+    def apply(self, entity, cmd, parent, levelmanager, messager,
+              animator, row, col, z, rng, generator):
         '''Trigger the apply on an entity'''
         remove = entity.on_apply(cmd, parent, levelmanager, messager, animator,
                                  row, col, z, rng, generator)
@@ -800,6 +802,21 @@ class Inventory:
             entity = self.quiver
             self.quiver = None
             return entity 
+
+    def has_key(self):
+        for it in self.contents:
+            if it.typeid == typeid.TID.KEY:
+                return True
+        return False
+    
+    def get_key(self):
+        key = None
+        for idx,it in enumerate(self.contents):
+            if it.typeid == typeid.TID.KEY:
+                key = self.contents.pop(idx)
+                break
+        return key
+
 
 class Group:
     '''Group component, if an entity can group up with others of the same type'''

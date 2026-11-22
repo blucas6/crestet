@@ -5,18 +5,15 @@ LEVEL_CONFIG_FILE = 'levels.json'
 ### ANIMATIONS
 THROW_ANIM_DELAY = 0.01
 '''Delay travel time in throwing animation'''
-
 CHARGE_FRAME_DELAY = 0.01
 '''Delay between frames when running'''
-
 EXPLOSION_ANIM_DELAY = 0.05
 '''Jelly explosion animation'''
-
 DEFAULT_ANIM_DELAY = 1
 '''Default animation delay'''
-
 POISON_ANIM_DELAY = 0.1
 '''Poison tick animation'''
+DROP_ANIM_DELAY = 0.2
 
 
 ### LEVEL

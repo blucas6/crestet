@@ -70,6 +70,7 @@ class Level:
         '''How quickly monsters regenerate'''
         self.player_has_visited = False
         '''Track if player has entered the level'''
+        self.key_spawned = False
 
     def add_entity_record(self, entity, levelmanager, generator, rng):
         '''Record an entity entering the level'''
@@ -97,11 +98,15 @@ class Level:
             self.LevelDifficulty.current -= entity.difficulty
             Logger.info(f'removing: {entity} mon:{self.MonsTracker.total_mons} cd:{self.LevelDifficulty.current}')
 
-    def upkeep(self, levelmanager, messager, playerpos, generator, fovpoints, rng):
+    def upkeep(self, levelmanager, messager, playerpos, generator, fovpoints, rng, animator):
         '''Do level upkeep'''
 
         # check if level has been cleared
         self.MonsTracker.upkeep(messager, playerpos)
+
+        if self.MonsTracker.level_cleared and not self.key_spawned:
+            self.key_spawned = True
+            generator.generate_key(levelmanager, self, rng, animator)
 
         # spawn new monsters if level is cleared
         if (self.MonsTracker.level_cleared and
@@ -266,7 +271,7 @@ class LevelManager:
 
         # level upkeep
         level.upkeep(self, messager, self.Player.pos(), generator,
-                     self.Player.Brain.fovpoints, rng)
+                     self.Player.Brain.fovpoints, rng, animator)
 
     def level_update_loop(self, level, display, animator, messager, menumanager, statemachine, currentturn, generator, rng):
         '''Run the update loop'''

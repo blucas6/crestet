@@ -195,7 +195,8 @@ class Entity:
         if hasattr(self, 'Brain'):
             self.Brain.level_change(curr_level)
 
-    def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z, rng, generator):
+    def on_apply(self, cmd, parent, levelmanager, messager, animator,
+                 row, col, z, rng, generator):
         '''Default attempt to apply an entity'''
         pass
 

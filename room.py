@@ -10,6 +10,17 @@ import item
 
 Logger = logging.getLogger(__name__)
 
+class Key(entity.Entity):
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.KEY,
+                         name='Key',
+                         glyph='{',
+                         layer=entity.Layer.OBJECT_LAYER,
+                         size=entity.Size.VERY_SMALL,
+                         fg=color.COLOR.YELLOW)
+        self.ItemTraits = component.ItemTraits(
+                itemtype=component.ItemType.NOEQUIP)
+
 class Chest(entity.Entity):
     def __init__(self):
         super().__init__(typeid=typeid.TID.BED,
@@ -20,30 +31,41 @@ class Chest(entity.Entity):
                          fg=color.COLOR.YELLOW)
         self.bag = []
 
+    def update_state(self, levelmanager, rng):
+        if self.bag:
+            self.fg = color.COLOR.YELLOW
+        else:
+            self.fg = color.COLOR.GREY
+
     def on_init(self, rng, levelmanager):
-        darts = rng.randint(1,3)
+        darts = rng.randint(2,4)
         for _ in range(darts):
             self.bag.append(item.Dart())
+        self.update_state(levelmanager, rng)
 
     def on_top(self, entity, levelmanager, rng, generator):
-        if entity.typeid == typeid.TID.PLAYER:
-            Logger.info(f'Chest on top trigger')
-            if not self.bag:
-                Logger.info(f'chest empty')
-                return
-            currlevel = levelmanager.Levels[self.z]
-            for pt in utility.generate_surrounding_pts(rng):
-                if not self.bag:
-                    Logger.info(f'chest empty')
-                    break
-                chest_item = self.bag[-1]
-                r = pt[0] + self.row
-                c = pt[1] + self.col
-                if not levelmanager.is_entity_pos_valid(currlevel, chest_item, (r,c)):
-                    continue
-                if levelmanager.add_to_level(chest_item, (r,c), currlevel.z, generator, rng):
-                    Logger.info(f'placed {chest_item}')
-                    self.bag.pop()
+        if not hasattr(entity, 'Inventory'):
+            return
+        Logger.info(f'Chest on top trigger')
+        if self.bag:
+            if entity.Inventory.has_key():
+                key = entity.Inventory.get_key()
+                currlevel = levelmanager.Levels[self.z]
+                for pt in utility.generate_surrounding_pts(rng):
+                    if not self.bag:
+                        Logger.info(f'chest empty')
+                        break
+                    chest_item = self.bag[-1]
+                    r = pt[0] + self.row
+                    c = pt[1] + self.col
+                    if not levelmanager.is_entity_pos_valid(currlevel, chest_item, (r,c)):
+                        continue
+                    maxlayer = utility.get_max_layer(currlevel.EntityLayer[r][c])
+                    if maxlayer < entity.layer.STAIR_LAYER:
+                        if levelmanager.add_to_level(chest_item, (r,c), currlevel.z, generator, rng):
+                            Logger.info(f'chest placed {chest_item}')
+                            self.bag.pop()
+            self.update_state(levelmanager, rng)
 
 class Bed(entity.Entity):
     def __init__(self):

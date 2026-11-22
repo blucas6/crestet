@@ -418,9 +418,15 @@ class Game:
             self.StateMachine.new_state('done')
             return state.Event.EVENT,self.previousevent+event
         elif self.previousevent[0] == 'a':
-            # additional info event from apply received
-            self.StateMachine.new_state('done')
-            return state.Event.EVENT,self.previousevent+event
+            applyinfo = self.LevelManager.Player.Inventory.get_apply_info(self.previousevent[1])
+            if (applyinfo == component.ApplyInfo.DIRECTION and 
+                (not event.isdigit() or event == '5')):
+                self.Messager.add_text('Invalid direction!')
+                return state.Event.CLEAR,event
+            else:
+                # additional info event from apply received
+                self.StateMachine.new_state('done')
+                return state.Event.EVENT,self.previousevent+event
         return state.Event.CLEAR,event
 
     def player_event(self, event):
