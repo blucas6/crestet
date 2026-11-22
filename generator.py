@@ -517,14 +517,16 @@ class Generator:
                             return
         Logger.warning(f'PLANT GEN MAX RETRIES')
 
-    def generate_rooms(self, levelmanager, currlevel, room_amount, rng):
+    def generate_rooms(self, levelmanager, currlevel, room_chance, rng):
+        if rng.randint(1,100) > room_chance:
+            return []
         gen_rooms = []
         rooms = 0
         attempt = 0
         pts = [[self.levelrows-1,0], [0,self.levelcols-1], [self.levelrows-1,self.levelcols-1]]
         if currlevel.z != 0:
             pts.append([0,0])
-        while rooms < room_amount and attempt < config.MAX_RETRIES and pts:
+        while rooms < 1 and attempt < config.MAX_RETRIES and pts:
             attempt += 1
             idx = rng.randint(0,len(pts)-1)
             origin = pts.pop(idx)

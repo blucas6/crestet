@@ -40,7 +40,7 @@
       "runes": 1,
       "mons": true,
       "plants": 7,
-      "rooms": 1
+      "rooms": 35
    },
    "1": {
       "floor": true,
@@ -54,6 +54,6 @@
       "runes": 1,
       "mons": true,
       "plants": 10,
-      "rooms": 1
+      "rooms": 35
    }
 }
