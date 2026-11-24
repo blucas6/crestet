@@ -77,7 +77,7 @@ class Floor(entity.Entity):
 
 class StoneFloor(entity.Entity):
     def __init__(self):
-        super().__init__(typeid=typeid.TID.WOODFLOOR,
+        super().__init__(typeid=typeid.TID.STONEFLOOR,
                          name='Stone Floor',
                          glyph='.',
                          layer=entity.Layer.FLOOR_LAYER,

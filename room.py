@@ -143,10 +143,10 @@ class Room:
                         if levelmanager.add_to_level(wall.Limestone(), pos, currlevel.z, generator, rng):
                             outer_walls.append(pos)
                     else:
-                        levelmanager.add_to_level(tower.WoodFloor(), pos, currlevel.z, generator, rng, overwrite=True)
+                        levelmanager.add_to_level(tower.StoneFloor(), pos, currlevel.z, generator, rng, overwrite=True)
 
         self.door_pos = outer_walls[rng.randint(0, len(outer_walls)-1)]
-        levelmanager.add_to_level(tower.WoodFloor(), self.door_pos, currlevel.z, generator, rng, overwrite=True)
+        levelmanager.add_to_level(tower.StoneFloor(), self.door_pos, currlevel.z, generator, rng, overwrite=True)
         levelmanager.add_to_level(tower.Door(), self.door_pos, currlevel.z, generator, rng)
 
         idx = rng.randint(0, len(self.furniture_pts)-1)

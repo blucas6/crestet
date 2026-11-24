@@ -18,7 +18,7 @@ class TID(IntEnum):
     STAIRUP         = 23
     STAIRDOWN       = 24
     LIGHT           = 25
-    WOODFLOOR       = 26
+    STONEFLOOR      = 26
     DOOR            = 27
     BED             = 28
     DRESSER         = 29
