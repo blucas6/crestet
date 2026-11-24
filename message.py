@@ -274,6 +274,15 @@ class Messager:
         unseen = msg
         self.add_notif(levelz, msg, pos, unseen)
 
+    def add_no_door_message(self, ent):
+        if ent.typeid == typeid.TID.PLAYER:
+            msg = "You don't see a door there."
+            self.add_text(msg)
+
+    def add_blocked_door_message(self, ent):
+        if ent.typeid == typeid.TID.PLAYER:
+            msg = "Doorway is blocked."
+            self.add_text(msg)
 
 
 

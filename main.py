@@ -6,6 +6,7 @@ import simulator
 import game
 import training
 import logging
+import ascii
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Crestet Game Options')
@@ -24,6 +25,8 @@ if __name__ == '__main__':
                         help='runs a combat analysis test')
     parser.add_argument('-z', '--color', action='store_true',
                         help='Show all colors available in your terminal')
+    parser.add_argument('-x', '--ascii', action='store_true',
+                help='Show all ascii characters available in your terminal')
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -33,20 +36,33 @@ if __name__ == '__main__':
         format = "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 
+    # AGENT
     if args.agent:
         training = training.Training(seed=args.seed, display=args.display, timing=args.timing) 
         training.start()
         training.run()
+
+    # PROFILING SIMULATOR
     elif args.profiling:
         profiling = simulator.Profiling(seed=args.seed, display=args.display, timing=True)
         profiling.start()
         profiling.run()
+
+    # COMBAT SIMULATOR
     elif args.combat:
         combat = simulator.CombatTest(seed=args.seed, display=args.display, timing=False)
         combat.start()
         combat.run()
+
+    # COLORS
     elif args.color:
         curses.wrapper(color.show_colors)
+
+    # ASCII
+    elif args.ascii:
+        ascii.show_ascii()
+
+    # MAIN
     else:
         g = game.Game(seed=args.seed, timing=args.timing)
         g.start()

@@ -25,6 +25,31 @@ class UnknownStructure(entity.Entity):
                          size=entity.Size.SMALL,
                          fg=color.COLOR.WHITE)
 
+class Door(entity.Entity):
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.DOOR,
+                         name='Door',
+                         glyph='+',
+                         layer=entity.Layer.DOOR_LAYER,
+                         size=entity.Size.MEDIUM,
+                         fg=color.COLOR.YELLOW)
+        self.open = False
+
+    def toggle(self, currlevel):
+        '''Open or close the door'''
+        Logger.info(f'Door toggle {self}')
+        if self.open:
+            elist = currlevel.EntityLayer[self.row][self.col]
+            maxlayer = utility.get_max_layer(elist)
+            if maxlayer == entity.Layer.OPENDOOR_LAYER:
+                self.open = False
+                self.glyph = '+'
+                self.layer = entity.Layer.DOOR_LAYER
+        else:
+            self.open = True
+            self.glyph = '■'
+            self.layer = entity.Layer.OPENDOOR_LAYER
+
 class Barrel(entity.Entity):
     '''Barrel entity'''
     def __init__(self):
@@ -34,12 +59,11 @@ class Barrel(entity.Entity):
                          layer=entity.Layer.BARREL_LAYER,
                          size=entity.Size.LARGE,
                          fg=color.COLOR.YELLOW)
-        self.Breakable = component.Breakable(max_dmg=1)
+        self.Breakable = component.Breakable(max_dmg=1, smashed_item=item.Wood())
     
-    def death(self, levelmanager, animator, messager):
+    def death(self, levelmanager, animator, messager, rng, generator):
         '''Break the barrel'''
-        super().death(levelmanager)
-        levelmanager.place_entity(self.z, item.Wood(), (self.row,self.col))
+        super().death(levelmanager, animator, messager, rng, generator)
 
 class Floor(entity.Entity):
     '''Floor entity'''
@@ -49,6 +73,15 @@ class Floor(entity.Entity):
                          glyph='.',
                          layer=entity.Layer.FLOOR_LAYER,
                          size=entity.Size.LARGE,
+                         fg=color.COLOR.GREY)
+
+class StoneFloor(entity.Entity):
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.STONEFLOOR,
+                         name='Stone Floor',
+                         glyph='.',
+                         layer=entity.Layer.FLOOR_LAYER,
+                         size=entity.Size.SMALL,
                          fg=color.COLOR.WHITE)
 
 class StairUp(entity.Entity):
@@ -83,7 +116,10 @@ class Light(entity.Entity):
         self.light = True
         '''Controls whether the light is on'''
 
-    def update_state(self, levelmanager):
+    def on_init(self, rng, levelmanager, generator):
+        self.update_state(levelmanager, rng)
+
+    def update_state(self, levelmanager, rng):
         '''Update the map based on the light state'''
         if self.light and levelmanager.Levels:
             points = utility.get_one_layer_pts((self.row,self.col),
@@ -91,8 +127,9 @@ class Light(entity.Entity):
             for pt in points:
                 levelmanager.Levels[self.z].LightLayer[pt[0]][pt[1]] = 1
     
-    def on_top(self, entity, levelmanager):
+    def on_top(self, entity, levelmanager, rng, generator):
         '''Trigger the light on or off'''
         self.light = not self.light
-        self.update_state(levelmanager)
+        self.update_state(levelmanager, None)
+
     

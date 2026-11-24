@@ -37,7 +37,7 @@ class Player(e.Entity):
         '''Player can run'''
         self.Leveling = component.Leveling()
         '''Player can level up'''
-        self.Inventory = component.Inventory(autopickuplist=['Dart', 'Arrow', 'Rune'])
+        self.Inventory = component.Inventory(autopickuplist=['Dart', 'Arrow', 'Rune', 'Key'])
         '''Inventory component'''
         self.Combat = component.Combat()
         self.Body = component.Body(item.Corpse(), self.fg, self.name)

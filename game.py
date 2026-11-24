@@ -107,16 +107,14 @@ class Game:
 
             # level manager
             self.LevelManager.init(self.Messager,
-                                   rng=self.RNG,
                                    levelrows=config.LEVELROWS,
                                    levelcols=config.LEVELCOLS)
             # load generator with object classes
             self.Generator.load_classes()
             # load generator and run the generation
             self.Generator.load_config(config.LEVELROWS,
-                                       config.LEVELCOLS,
-                                       self.RNG)
-            self.Generator.generate_levels(self.LevelManager)
+                                       config.LEVELCOLS)
+            self.Generator.generate_levels(self.LevelManager, self.RNG)
 
             # menus
             leveling = self.LevelManager.Player.Leveling
@@ -137,7 +135,7 @@ class Game:
             self.update_menus()
 
             # add player to the map
-            self.LevelManager.place_player(config.PLAYERPOS, config.PLAYERZ)
+            self.LevelManager.place_player(config.PLAYERPOS, config.PLAYERZ, self.RNG, self.Generator)
             # update player FOV
             self.LevelManager.Player.update_mental_map(
                     self.LevelManager.get_curr_level()
@@ -241,7 +239,7 @@ class Game:
             self.StateMachine.callback(self.StateMachine, self.MenuManager, event)
         else:
             # update all entities
-            self.LevelManager.update_all(self.Display, self.Animator, self.Messager, self.MenuManager, self.StateMachine, energy, self.turn, self.Generator)
+            self.LevelManager.update_all(self.Display, self.Animator, self.Messager, self.MenuManager, self.StateMachine, energy, self.turn, self.Generator, self.RNG)
 
             # end the player charge, get back into playing mode
             if (self.StateMachine.GameState == state.GameState.RUNNING and
@@ -380,9 +378,11 @@ class Game:
     
     def motion_event(self, event):
         '''Handles events that are part of a motion'''
-        # Throwing/Charge Action
         Logger.info(f'Motion: {self.previousevent} {event}')
-        if self.previousevent == 't' or self.previousevent == '5' or self.previousevent == 'F':
+
+        # Throwing/Charge Action
+        directions = ['t', '5', 'F', 'c'] 
+        if self.previousevent in directions:
             self.StateMachine.new_state('done')
             # expects a direction
             if not event.isdigit() or event == '5':
@@ -393,6 +393,7 @@ class Game:
             if self.previousevent == '5':
                 self.StateMachine.new_state('startrun')
             return state.Event.EVENT,self.previousevent+event
+
         # Inventory Action
         elif self.previousevent == 'e' or self.previousevent == 'u' or self.previousevent == 'd':
             self.StateMachine.new_state('done')
@@ -417,15 +418,21 @@ class Game:
             self.StateMachine.new_state('done')
             return state.Event.EVENT,self.previousevent+event
         elif self.previousevent[0] == 'a':
-            # additional info event from apply received
-            self.StateMachine.new_state('done')
-            return state.Event.EVENT,self.previousevent+event
+            applyinfo = self.LevelManager.Player.Inventory.get_apply_info(self.previousevent[1])
+            if (applyinfo == component.ApplyInfo.DIRECTION and 
+                (not event.isdigit() or event == '5')):
+                self.Messager.add_text('Invalid direction!')
+                return state.Event.CLEAR,event
+            else:
+                # additional info event from apply received
+                self.StateMachine.new_state('done')
+                return state.Event.EVENT,self.previousevent+event
         return state.Event.CLEAR,event
 
     def player_event(self, event):
         '''Process all events that are player actions'''
         # Multi key action
-        multikey_list = ['t', '5', 'e', 'u', 'F', 'a', 'd']
+        multikey_list = ['t', '5', 'e', 'u', 'F', 'a', 'd', 'c']
         if event in multikey_list:
             # throw
             if event == 't':

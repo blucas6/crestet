@@ -54,7 +54,7 @@ class GoblinLeader(e.Entity):
             generator
         )
 
-    def on_init(self, rng):
+    def on_init(self, rng, levelmanager, generator):
         if rng.randint(0,1):
             self.Inventory.equip(item.ShortSword())
 
@@ -212,7 +212,7 @@ class Goblin(e.Entity):
         self.xp = config.GOBLIN_XP
         self.Body = component.Body(item.Corpse(), self.fg, self.name)
 
-    def on_init(self, rng):
+    def on_init(self, rng, levelmanager, generator):
         darts = rng.randint(3, 7)
         for _ in range(darts):
             self.Inventory.collect(item.Dart())
@@ -318,11 +318,11 @@ class Jelly(e.Entity):
         self.xp = 2
         self.Combat = component.Combat()
 
-    def death(self, levelmanager, animator, messager):
+    def death(self, levelmanager, animator, messager, rng, generator):
         '''
         Generate the explosion on death
         '''
-        super().death(levelmanager)
+        super().death(levelmanager, animator, messager, rng, generator)
         messager.add_burst_message(levelmanager.currentz, self)
         # queue animation
         frames = []
@@ -357,5 +357,5 @@ class Jelly(e.Entity):
             for victim in levelmanager.Levels[self.z].EntityLayer[ptrow][ptcol]:
                 self.Combat.deal_damage(
                     self, levelmanager, animator, messager, victim,
-                    self.splashdamage, component.DamageType.BLAST)
+                    self.splashdamage, component.DamageType.BLAST, rng, generator)
 

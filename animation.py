@@ -14,7 +14,8 @@ class Animation:
     '''
     Holds all data for a single animation
     '''
-    def __init__(self, pos, frames: list, delays: list, fg, bg=-1):
+    def __init__(self, pos, frames: list, delays: list, fg, bg=-1,
+                 always_visible=False):
         self.pos = pos
         '''Position of the animation relative to the map'''
         self.animation_frames = []
@@ -24,6 +25,8 @@ class Animation:
         '''Foreground color of animation'''
         self.bg = bg
         '''Background color of animation'''
+        self.always_visible = always_visible
+        '''Animations will not be cut with player FOV'''
 
         # load animation frames
         if not delays:

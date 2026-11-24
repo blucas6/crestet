@@ -122,23 +122,15 @@ class Display:
                         objects = [e for e in entitylayer[r][c] if e.layer > entity.Layer.FLOOR_LAYER and e.layer < entity.Layer.BARREL_LAYER]
                         if len(objects) > 1:
                             bg = color.COLOR.BLUE
-                if not self.bounds_check(self.screenbuffer, rw, cl):
+                if not utility.inbounds(self.screenbuffer, rw, cl):
                     continue
                 # add glyph
                 self.screenbuffer[rw][cl] = glyph
                 # add color
                 if self.displayon:
-                    if not self.bounds_check(self.colorbuffer, rw, cl):
+                    if not utility.inbounds(self.colorbuffer, rw, cl):
                         continue
                     self.colorbuffer[rw][cl] = self.Engine.gc(fg, bg, rw, cl)
-
-    def bounds_check(self, buffer, r, c):
-        '''
-        Checks if a position is valid within the screen buffer
-        '''
-        if (r > len(buffer)-1 or c > len(buffer[r])-1):
-            return False
-        return True
 
     def level_to_screen_pos(self, r, c):
         '''Helper function to convert an entity position to a screen position'''
@@ -184,14 +176,15 @@ class Display:
         # update cursor
         self.cursor_upkeep()
 
-    def add_animation_frame(self, screenbuffer, colorbuffer, frame, pos, fg, bg, fovpoints):
+    def add_animation_frame(self, screenbuffer, colorbuffer, frame, pos,
+                            fg, bg, fovpoints, always_visible):
         '''Add the glyphs for the animation to the screen'''
         for r,row in enumerate(frame):
             for c,col in enumerate(row):
                 if not col:
                     continue
                 # add frame to the buffer
-                elif (pos[0]+r,pos[1]+c) in fovpoints:
+                elif always_visible or (pos[0]+r,pos[1]+c) in fovpoints:
                     rw, cl = self.level_to_screen_pos(pos[0]+r, pos[1]+c)
                     screenbuffer[rw][cl] = col
                     if self.displayon:
@@ -223,7 +216,8 @@ class Display:
                                          anim.pos,
                                          anim.fg,
                                          anim.bg,
-                                         fovpoints)
+                                         fovpoints,
+                                         anim.always_visible)
                 loaded_frames.append(tmp_screenbuffer)
                 if self.displayon:
                     loaded_colors.append(tmp_colorbuffer)

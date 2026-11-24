@@ -1,7 +1,6 @@
 import algo
 import entity
 import logging
-import random
 import copy
 
 Logger = logging.getLogger(__name__)
@@ -10,14 +9,14 @@ ONE_LAYER_CIRCLE = [(1,-1),(1,0),(1,1),(0,-1),(0,0),(0,1),(-1,-1),(-1,0),(-1,1)]
 ONE_LAYER_CROSS = [(0,0), (-1,0), (1,0), (0,-1), (0,1)]
 TWO_LAYER_CIRCLE = [(-2,-2),(-2,-1),(-2,0),(-2,1),(-2,2),(-1,-2),(-1,2),(0,-2),(0,2),(1,-2),(1,2),(2,-2),(2,-1),(2,0),(2,1),(2,2)]
 
-def get_surrounding_pt():
+def generate_surrounding_pts(rng):
     '''Yield points starting from one layer and then two layers around'''
     pts = copy.copy(ONE_LAYER_CIRCLE)
-    random.shuffle(pts)
+    rng.shuffle(pts)
     for pt in pts:
         yield pt
     pts = copy.copy(TWO_LAYER_CIRCLE)
-    random.shuffle(pts)
+    rng.shuffle(pts)
     for pt in pts:
         yield pt
 
@@ -85,13 +84,18 @@ def find_last_position(direction_key, start_row, start_col, entitylayer):
         objr, objc = r, c
     return objr,objc
 
-def get_path_pts(entitylayer, start_row, start_col, end_row, end_col):
-    '''Return a boolean grid and a pts list for the path from start to end'''
-    # construct a grid of [0-1] (makes sure path to end point is valid)
-    grid = [[1 if get_max_layer(elist) > entity.Layer.MONSTER_LAYER
+def entitylayer_to_grid(entitylayer, max_layer):
+    '''Get a 0,1 grid from an entity layer'''
+    grid = [[1 if get_max_layer(elist) > max_layer
              else 0
             for elist in row]
             for row in entitylayer]
+    return grid
+
+def get_path_pts(entitylayer, start_row, start_col, end_row, end_col):
+    '''Return a boolean grid and a pts list for the path from start to end'''
+    # construct a grid of [0-1] (makes sure path to end point is valid)
+    grid = entitylayer_to_grid(entitylayer, entity.Layer.MONSTER_LAYER)
     returncode, pts = algo.astar(grid, (start_row,start_col), (end_row,end_col))
     if returncode != 1:
         Logger.error(f'Error: failed to find path -> {returncode}')
@@ -120,3 +124,10 @@ def find_entity(currlevel, pts, typeid):
                 return pt
     return None
 
+def inbounds(grid, r, c):
+    '''
+    Checks if a position is valid within the screen buffer
+    '''
+    if (r > len(grid)-1 or r < 0 or c > len(grid[r])-1 or c < 0):
+        return False
+    return True

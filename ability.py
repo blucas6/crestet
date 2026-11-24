@@ -18,7 +18,8 @@ class Lick(entity.Entity):
                                                melee_you_action='lick',
                                                melee_it_action='licks')
 
-    def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
+    def on_apply(self, cmd, parent, levelmanager, messager, animator,
+                 row, col, z, rng, generator):
         entitylayer = levelmanager.Levels[z].EntityLayer
         for ent in entitylayer[row][col]:
             ent.apply_status(messager, entity.StatusEffect.POISON, levelmanager)
@@ -75,7 +76,8 @@ class Peck(entity.Entity):
                                                melee_you_action='peck',
                                                melee_it_action='pecks')
 
-    def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
+    def on_apply(self, cmd, parent, levelmanager, messager, animator,
+                 row, col, z, rng, generator):
         '''Abilities get applied on damage'''
         entitylayer = levelmanager.Levels[z].EntityLayer
         for ent in entitylayer[row][col]:

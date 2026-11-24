@@ -46,7 +46,7 @@ class Plant(entity.Entity):
         self.sprout_glyph = '.'
         '''Sprout glyph'''
 
-    def on_init(self, rng):
+    def on_init(self, rng, levelmanager, generator):
         '''When a plant is placed on the level'''
         self.nutrients = rng.randint(0, self.fruit)
         self.growth_glyph = self.growth_glyphs[rng.randint(0,len(self.growth_glyphs))-1]
@@ -60,9 +60,9 @@ class Plant(entity.Entity):
             self.nutrients = self.sprout
             self.change_to(PlantStage.SPROUT)
 
-    def update_state(self, levelmanager):
+    def update_state(self, levelmanager, rng):
         '''Update hook'''
-        self.advance(levelmanager.RNG)
+        self.advance(rng)
 
     def change_to(self, plantstage):
         '''Change to a different stage'''

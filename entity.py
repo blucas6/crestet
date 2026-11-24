@@ -58,20 +58,25 @@ class Speed(enum.IntEnum):
     VERY_FAST = 2
     HYPER = 1
 
+@enum.unique
 class Layer(enum.IntEnum):
     FLOOR_LAYER = 0
     '''Stackable'''
-    PLANT_LAYER = 1
+    OPENDOOR_LAYER = 1
     '''Stackable'''
-    STAIR_LAYER = 2
+    PLANT_LAYER = 2
+    '''Stackable'''
+    STAIR_LAYER = 3
     '''Stackable, will be remembered by FOV'''
-    OBJECT_LAYER = 3
+    OBJECT_LAYER = 4
     '''Stackable, will be remembered by FOV, can be picked up'''
-    BARREL_LAYER = 4
+    BARREL_LAYER = 5
     '''Not stackable, can be pushed'''
-    MONSTER_LAYER = 5
+    MONSTER_LAYER = 6
     '''Not stackable, will auto attack'''
-    WALL_LAYER = 6
+    DOOR_LAYER = 7
+    '''Not stackable, FOV can't go through'''
+    WALL_LAYER = 8
     '''Not stackable, will be remembered by FOV'''
 
 class Size(enum.IntEnum):
@@ -178,7 +183,7 @@ class Entity:
             self.Inventory.autopickup(levelmanager, entitylist)
 
 
-    def on_top(self, entity, levelmanager):
+    def on_top(self, entity, levelmanager, rng, generator):
         '''
         Hook gets called when another entity is placed in the same square
         
@@ -192,11 +197,12 @@ class Entity:
         if hasattr(self, 'Brain'):
             self.Brain.level_change(curr_level)
 
-    def on_apply(self, cmd, parent, levelmanager, messager, *_):
+    def on_apply(self, cmd, parent, levelmanager, messager, animator,
+                 row, col, z, rng, generator):
         '''Default attempt to apply an entity'''
         pass
 
-    def on_init(self, *_):
+    def on_init(self, rng, levelmanager, generator):
         pass
 
     def apply_status(self, messager, status_effect, levelmanager):
@@ -215,13 +221,13 @@ class Entity:
         if newbg is not None:
             self.bg = newbg
 
-    def update_status(self, levelmanager, messager, animator):
+    def update_status(self, levelmanager, messager, animator, rng, generator):
         '''Triggers every turn, updates each status effect'''
         for status_effect in self.status.keys():
             self.status_effect_upkeep(status_effect)
             if status_effect == StatusEffect.POISON and hasattr(self, 'Health'):
                 if self.Health.change_health(-1):
-                    self.death(levelmanager, animator, messager)
+                    self.death(levelmanager, animator, messager, rng, generator)
                 frames = []
                 frames.append([
                     [self.glyph],
@@ -249,15 +255,15 @@ class Entity:
         '''Gets called after initialization'''
         pass
 
-    def move(self, levelmanager, pos):
+    def move(self, levelmanager, pos, rng, generator):
         '''Entity moves to a new position'''
-        if levelmanager.move_entity(self, pos):
+        if levelmanager.move_entity(self, pos, rng, generator):
             self.energy -= self.speed
             return MoveAction.MOVED
         else:
             return MoveAction.INVALID
 
-    def movement(self, levelmanager, animator, messager, menumanager, statemachine, key, rng):
+    def movement(self, levelmanager, animator, messager, menumanager, statemachine, key, rng, generator):
         '''
         Handle the movement action
         Returns the result of the movement request
@@ -295,7 +301,7 @@ class Entity:
             # must attack
             elif hasattr(self, 'Combat'):
                 self.energy -= self.speed
-                self.Combat.attack_melee(self, levelmanager, animator, messager, entity, rng)
+                self.Combat.attack_melee(self, levelmanager, animator, messager, entity, rng, generator)
                 return MoveAction.ATTACKED
             else:
                 return MoveAction.INVALID
@@ -304,23 +310,31 @@ class Entity:
         elif entity.layer == Layer.BARREL_LAYER:
             # if charging, break the barrel
             if hasattr(self, 'Charge') and self.Charge.charging:
-                if not self.fight(levelmanager, animator, messager, key, rng):
+                if not self.fight(levelmanager, animator, messager, key, rng, generator):
                     Logger.error('Invalid charge?')
                 self.Charge.end()
                 return MoveAction.ATTACKED
             # check if entity can be pushed
             nrow,ncol = utility.get_new_pos((row,col), key)
-            if levelmanager.move_entity(entity, (nrow,ncol)):
+            if levelmanager.move_entity(entity, (nrow,ncol), rng, generator):
                 # if pushed, then move
-                self.move(levelmanager, (row,col))
+                self.move(levelmanager, (row,col), rng, generator)
                 return MoveAction.PUSHED
             else:
                 return MoveAction.INVALID
 
-        # otherwise just move normally
-        return self.move(levelmanager, (row,col))
+        # if there is a door, open it
+        elif entity.layer == Layer.DOOR_LAYER:
+            if hasattr(self, 'Charge') and self.Charge.charging:
+                self.Charge.end()
+            if entity.typeid == typeid.TID.DOOR:
+                entity.toggle(levelmanager.Levels[self.z])
+            return MoveAction.PUSHED
 
-    def fire(self, levelmanager, animator, messager, event, rng):
+        # otherwise just move normally
+        return self.move(levelmanager, (row,col), rng, generator)
+
+    def fire(self, levelmanager, animator, messager, event, rng, generator):
         '''Checks the inventory for the quiver item and starts the ranged attack'''
         # need inventory and combat component
         if not hasattr(self, 'Inventory') or not hasattr(self, 'Combat'):
@@ -344,9 +358,10 @@ class Entity:
                             fired_entity,
                             event[1],
                             rng,
-                            self.row, self.col, self.z)
+                            self.row, self.col, self.z,
+                            generator)
     
-    def death(self, levelmanager, *_):
+    def death(self, levelmanager, animator, message, rng, generator):
         '''Entities can add to this method to trigger on death actions'''
 
         # record that entity is removed from level
@@ -356,11 +371,14 @@ class Entity:
         if hasattr(self, 'Inventory'):
             for item in self.Inventory.get_all_items():
                 if item:
-                    levelmanager.place_entity(self.z, item, self.pos())
+                    levelmanager.place_entity(self.z, item, self.pos(), rng, generator)
 
         # drop corpse
         if hasattr(self, 'Body'):
-            self.Body.drop_corpse(levelmanager, self.pos())
+            self.Body.drop_corpse(levelmanager, self.pos(), rng, generator)
+
+        elif hasattr(self, 'Breakable'):
+            self.Breakable.smash(levelmanager, self.pos(), rng, generator)
 
 
     def moveZ(self, levelmanager, animator, messager, incrementz, rng, generator):
@@ -392,13 +410,13 @@ class Entity:
                         hasattr(self, 'Combat')):
                         # auto fight the entity
                         self.energy -= self.speed
-                        self.Combat.attack_melee(self, levelmanager, animator, messager, an_entity, rng)
+                        self.Combat.attack_melee(self, levelmanager, animator, messager, an_entity, rng, generator)
                         return
                     # success
                     else:
                         if levelmanager.move_entity_z(self, newz,
                                                       [self.row,self.col],
-                                                      generator):
+                                                      generator, rng):
                             messager.add_stair_message(levelmanager.currentz,
                                                        self, incrementz)
                             self.energy -= self.speed
@@ -406,21 +424,22 @@ class Entity:
         # stairwell not on this space
         messager.add_stair_fail_message(levelmanager.currentz, self, incrementz)
 
-    def handle_inventory(self, levelmanager, messager, animator, event):
+    def handle_inventory(self, levelmanager, messager, animator, event, rng, generator):
         '''Talks to the inventory component'''
         self.Inventory.show()
         if self.energy >= self.Inventory.cost:
             self.energy -= self.Inventory.cost
-            self.Inventory.action(self, levelmanager, messager, event, animator, self.row, self.col, self.z)
+            self.Inventory.action(self, levelmanager, messager, event, animator,
+                                  self.row, self.col, self.z, rng, generator)
             self.Inventory.show()
 
-    def handle_charging(self, levelmanager, animator, messager, menumanager, statemachine, event, rng):
+    def handle_charging(self, levelmanager, animator, messager, menumanager, statemachine, event, rng, generator):
         '''Talks to the charge component'''
         Logger.info('HANDLE CHARGING')
         # start the charge
         if event[0] == '5':
             self.Charge.start(int(event[1]))
-        result = self.movement(levelmanager, animator, messager, menumanager, statemachine, self.Charge.direction, rng)
+        result = self.movement(levelmanager, animator, messager, menumanager, statemachine, self.Charge.direction, rng, generator)
         if result == MoveAction.INVALID:
             self.Charge.end()
         elif result == MoveAction.INTERACT:
@@ -428,7 +447,7 @@ class Entity:
         elif result == MoveAction.MOVED:
             self.Charge.distance += 1
 
-    def fight(self, levelmanager, animator, messager, key, rng):
+    def fight(self, levelmanager, animator, messager, key, rng, generator):
         '''Purposely attack in a direction'''
         # find next position
         row,col = utility.get_new_pos((self.row,self.col), key)
@@ -439,9 +458,28 @@ class Entity:
              entity.layer == Layer.BARREL_LAYER) and
             hasattr(self, 'Combat')):
             self.energy -= self.speed
-            self.Combat.attack_melee(self, levelmanager, animator, messager, entity, rng)
+            self.Combat.attack_melee(self, levelmanager, animator, messager, entity, rng, generator)
             return MoveAction.ATTACKED
         return MoveAction.INVALID
+
+    def close(self, levelmanager, messager, key):
+        '''Try to close the door object nearby'''
+        row,col = utility.get_new_pos((self.row,self.col), key)
+        maxlayer = 0
+        currlevel = levelmanager.Levels[self.z]
+        door_idx = -1
+        for ent in currlevel.EntityLayer[row][col]:
+            if ent.layer > maxlayer:
+                maxlayer = ent.layer
+            if ent.typeid == typeid.TID.DOOR:
+                door_idx = ent.idx
+        if door_idx == -1:
+            messager.add_no_door_message(self)
+            return
+        if maxlayer > Layer.OPENDOOR_LAYER:
+            messager.add_blocked_door_message(self)
+            return
+        currlevel.EntityLayer[row][col][door_idx].toggle(currlevel)
     
     def do_action(self, levelmanager, animator, messager, menumanager, statemachine, event, rng, generator):
         '''Pass an event for the entity to preform a certain action'''
@@ -475,7 +513,7 @@ class Entity:
                                  messager,
                                  menumanager,
                                  statemachine,
-                                 event, rng)
+                                 event, rng, generator)
         # starting the charge
         elif hasattr(self, 'Charge') and len(event) > 1 and event[0] == '5':
             self.handle_charging(levelmanager,
@@ -483,7 +521,7 @@ class Entity:
                                  messager,
                                  menumanager,
                                  statemachine,
-                                 event, rng)
+                                 event, rng, generator)
         # Walk
         elif event.isdigit():
             self.movement(levelmanager,
@@ -492,7 +530,7 @@ class Entity:
                           menumanager,
                           statemachine,
                           int(event),
-                          rng)
+                          rng, generator)
         # Z
         elif event == '<': 
             self.moveZ(levelmanager, animator, messager, 1, rng, generator)
@@ -504,13 +542,16 @@ class Entity:
                 (event[0] == 'e' or event[0] == 'u' or event[0] == 'a' or event[0] == 'd')
               ) or
               event[0] == ',')):
-            self.handle_inventory(levelmanager, messager, animator, event)
+            self.handle_inventory(levelmanager, messager, animator, event, rng, generator)
         # Throw
         elif event[0] == 't' and len(event) > 1:
-            self.fire(levelmanager, animator, messager, event, rng)
+            self.fire(levelmanager, animator, messager, event, rng, generator)
         # Fight
         elif event[0] == 'F' and len(event) > 1 and event[1].isdigit():
-            self.fight(levelmanager, animator, messager, int(event[1]), rng)
+            self.fight(levelmanager, animator, messager, int(event[1]), rng, generator)
+        # Close
+        elif event[0] == 'c' and len(event) > 1 and event[1].isdigit():
+            self.close(levelmanager, messager, int(event[1]))
         # Rest
         elif event == '.':
             self.energy = 0

@@ -98,7 +98,9 @@ class SimpleBrain(Brain):
                 r,c = mypos[0] + direction[0], mypos[1] + direction[1]
                 if (r < len(currlevel.EntityLayer) and r >= 0 and
                     c < len(currlevel.EntityLayer[r]) and c >= 0):
-                    if utility.get_max_layer(currlevel.EntityLayer[r][c]) < entity.Layer.MONSTER_LAYER:
+                    maxlayer = utility.get_max_layer(currlevel.EntityLayer[r][c])
+                    if (maxlayer < entity.Layer.MONSTER_LAYER or
+                        maxlayer == entity.Layer.DOOR_LAYER):
                         possible_actions.append(key)
             # pick a random move
             if not possible_actions:
@@ -379,7 +381,7 @@ class FOVBrain(Brain):
             return
         for r,c in fovpts:
             maxlayer = utility.get_max_layer(level.EntityLayer[r][c])
-            if maxlayer == entity.Layer.WALL_LAYER:
+            if maxlayer >= entity.Layer.DOOR_LAYER:
                 self.wallmap[r][c] = []
                 for ent in level.EntityLayer[r][c]:
                     if ent.layer == entity.Layer.WALL_LAYER:

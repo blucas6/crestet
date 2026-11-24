@@ -5,18 +5,16 @@ LEVEL_CONFIG_FILE = 'levels.json'
 ### ANIMATIONS
 THROW_ANIM_DELAY = 0.01
 '''Delay travel time in throwing animation'''
-
 CHARGE_FRAME_DELAY = 0.01
 '''Delay between frames when running'''
-
 EXPLOSION_ANIM_DELAY = 0.05
 '''Jelly explosion animation'''
-
 DEFAULT_ANIM_DELAY = 1
 '''Default animation delay'''
-
 POISON_ANIM_DELAY = 0.1
 '''Poison tick animation'''
+DROP_ANIM_DELAY = 0.2
+'''Key drop animation'''
 
 
 ### LEVEL
@@ -30,7 +28,7 @@ MAX_RETRIES = 1000
 '''Amount of retries during generation for randomness'''
 LEVELMAX_ENTITIES = 10
 '''Maximum entities on a square'''
-PRE_LOOPS = 2
+PRE_LOOPS = 1
 '''Amount of game loops to run before starting the game'''
 LEVEL_REGEN_TURNS = 10
 

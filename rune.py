@@ -22,7 +22,8 @@ class SnowRune(entity.Entity):
                                                apply_damage=1)
         self.ApplyInfo = component.ApplyInfo.DIRECTION
 
-    def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
+    def on_apply(self, cmd, parent, levelmanager, messager, animator,
+                 row, col, z, rng, generator):
         messager.add_notif(levelmanager.currentz, 'Ice freezes the air!', parent.pos())
 
         entitylayer = levelmanager.Levels[z].EntityLayer
@@ -51,7 +52,8 @@ class SnowRune(entity.Entity):
         for victim in entitylayer[objr][objc]:
             if hasattr(parent, 'Combat'):
                 parent.Combat.deal_damage(parent, levelmanager, animator, messager,
-                              victim, self.ItemTraits.apply_damage, component.DamageType.SNOW)
+                              victim, self.ItemTraits.apply_damage,
+                              component.DamageType.SNOW, rng, generator)
             victim.apply_status(messager, entity.StatusEffect.FROZEN, levelmanager)
         return True
 
@@ -67,7 +69,8 @@ class EmberRune(entity.Entity):
                                                apply_damage=2)
         self.ApplyInfo = component.ApplyInfo.DIRECTION
 
-    def on_apply(self, cmd, parent, levelmanager, messager, animator, row, col, z):
+    def on_apply(self, cmd, parent, levelmanager, messager, animator,
+                 row, col, z, rng, generator):
         messager.add_notif(levelmanager.currentz, 'Flames shoot out!', parent.pos())
 
         entitylayer = levelmanager.Levels[z].EntityLayer
@@ -96,7 +99,8 @@ class EmberRune(entity.Entity):
         for victim in entitylayer[objr][objc]:
             if hasattr(parent, 'Combat'):
                 parent.Combat.deal_damage(parent, levelmanager, animator, messager,
-                            victim, self.ItemTraits.apply_damage, component.DamageType.FIRE)
+                            victim, self.ItemTraits.apply_damage,
+                            component.DamageType.FIRE, rng, generator)
         return True
 
 

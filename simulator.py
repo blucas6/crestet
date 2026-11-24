@@ -132,6 +132,8 @@ class CombatTest:
         # generate a new game
         self.environment.reset(new_seed=True)
         levelmanager = self.environment.Game.LevelManager
+        rng = self.environment.Game.RNG
+        generator = self.environment.Game.Generator
         # clear inventory
         player = self.environment.Game.LevelManager.Player
         player.Inventory = component.Inventory()
@@ -146,7 +148,7 @@ class CombatTest:
                 player.Inventory.equip(equip)
         # place monster
         new_mon = mon()
-        levelmanager.place_entity(0, new_mon, (row,col+self.mons_spawn_distance))
+        levelmanager.place_entity(0, new_mon, (row,col+self.mons_spawn_distance), rng, generator)
         return new_mon
 
     def run(self):
