@@ -85,6 +85,7 @@ def find_last_position(direction_key, start_row, start_col, entitylayer):
     return objr,objc
 
 def entitylayer_to_grid(entitylayer, max_layer):
+    '''Get a 0,1 grid from an entity layer'''
     grid = [[1 if get_max_layer(elist) > max_layer
              else 0
             for elist in row]

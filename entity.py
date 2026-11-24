@@ -63,6 +63,7 @@ class Layer(enum.IntEnum):
     FLOOR_LAYER = 0
     '''Stackable'''
     OPENDOOR_LAYER = 1
+    '''Stackable'''
     PLANT_LAYER = 2
     '''Stackable'''
     STAIR_LAYER = 3
@@ -74,6 +75,7 @@ class Layer(enum.IntEnum):
     MONSTER_LAYER = 6
     '''Not stackable, will auto attack'''
     DOOR_LAYER = 7
+    '''Not stackable, FOV can't go through'''
     WALL_LAYER = 8
     '''Not stackable, will be remembered by FOV'''
 
@@ -321,6 +323,7 @@ class Entity:
             else:
                 return MoveAction.INVALID
 
+        # if there is a door, open it
         elif entity.layer == Layer.DOOR_LAYER:
             if hasattr(self, 'Charge') and self.Charge.charging:
                 self.Charge.end()
@@ -460,6 +463,7 @@ class Entity:
         return MoveAction.INVALID
 
     def close(self, levelmanager, messager, key):
+        '''Try to close the door object nearby'''
         row,col = utility.get_new_pos((self.row,self.col), key)
         maxlayer = 0
         currlevel = levelmanager.Levels[self.z]

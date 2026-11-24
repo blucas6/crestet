@@ -242,6 +242,7 @@ class Breakable:
         return False
 
     def smash(self, levelmanager, pos, rng, generator):
+        '''Equivalent to body components dropping corpses'''
         levelmanager.place_entity(pos[2], self.smashed_item, (pos[0],pos[1]), rng, generator)
 
 
@@ -804,12 +805,14 @@ class Inventory:
             return entity 
 
     def has_key(self):
+        '''Check if inventory has a key'''
         for it in self.contents:
             if it.typeid == typeid.TID.KEY:
                 return True
         return False
     
     def get_key(self):
+        '''Get a key in the inventory'''
         key = None
         for idx,it in enumerate(self.contents):
             if it.typeid == typeid.TID.KEY:

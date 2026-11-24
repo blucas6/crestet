@@ -14,6 +14,7 @@ DEFAULT_ANIM_DELAY = 1
 POISON_ANIM_DELAY = 0.1
 '''Poison tick animation'''
 DROP_ANIM_DELAY = 0.2
+'''Key drop animation'''
 
 
 ### LEVEL

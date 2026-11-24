@@ -26,6 +26,7 @@ class Animation:
         self.bg = bg
         '''Background color of animation'''
         self.always_visible = always_visible
+        '''Animations will not be cut with player FOV'''
 
         # load animation frames
         if not delays:

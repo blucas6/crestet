@@ -36,6 +36,7 @@ class Door(entity.Entity):
         self.open = False
 
     def toggle(self, currlevel):
+        '''Open or close the door'''
         Logger.info(f'Door toggle {self}')
         if self.open:
             elist = currlevel.EntityLayer[self.row][self.col]
@@ -74,10 +75,10 @@ class Floor(entity.Entity):
                          size=entity.Size.LARGE,
                          fg=color.COLOR.GREY)
 
-class WoodFloor(entity.Entity):
+class StoneFloor(entity.Entity):
     def __init__(self):
         super().__init__(typeid=typeid.TID.WOODFLOOR,
-                         name='Wood Floor',
+                         name='Stone Floor',
                          glyph='.',
                          layer=entity.Layer.FLOOR_LAYER,
                          size=entity.Size.SMALL,

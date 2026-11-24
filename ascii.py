@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-"""Display the ASCII character set (0-127) as a table, with optional Latin-1 extension."""
 import argparse
 import shutil
 
@@ -23,9 +21,8 @@ def label(code: int) -> str:
         return "·"  # C1 control codes, not displayable
     return chr(code)  # codes 128-255 map to Latin-1
 
-
-if __name__ == '__main__':
-    start, end = (32, 1200)
+def show_ascii():
+    start, end = (32, 400)
     codes = list(range(start, end))
 
     cell_width = 14
@@ -44,3 +41,5 @@ if __name__ == '__main__':
                 line += f"{code:>3}  {code:02X}  {char}  "
         print(line.rstrip())
 
+if __name__ == '__main__':
+    show_ascii()

@@ -30,18 +30,22 @@ class Chest(entity.Entity):
                          size=entity.Size.MEDIUM,
                          fg=color.COLOR.YELLOW)
         self.bag = []
+        '''Bag is a list of items the chest contains'''
 
     def update_state(self, levelmanager, rng):
+        '''Update the chest color'''
         if self.bag:
             self.fg = color.COLOR.YELLOW
         else:
             self.fg = color.COLOR.GREY
 
     def on_init(self, rng, levelmanager, generator):
+        '''Fill chest with items'''
         self.bag = generator.get_chest_items(rng, self.z+1)
         self.update_state(levelmanager, rng)
 
     def on_top(self, entity, levelmanager, rng, generator):
+        '''Spill items if the entity carries a key'''
         if not hasattr(entity, 'Inventory'):
             return
         Logger.info(f'Chest on top trigger')
@@ -88,17 +92,22 @@ class Dresser(entity.Entity):
 class Room:
     def __init__(self, origin, row_size, col_size):
         self.origin = origin
+        '''Top left point of the room'''
         self.row_size = row_size
+        '''Room height'''
         self.col_size = col_size
+        '''Room width'''
         self.pts = set()
+        '''All the points in the room'''
         self.furniture_pts = []
+        '''Available points for furniture'''
         self.door_pos = None
-        self.bed_pos = None
-        self.dresser_pos = None
-        self.chest_pos = None
+        '''Record of where the door was placed'''
+
         self.get_room_pts()
 
     def get_room_pts(self):
+        '''Set up the room points'''
         self.pts = set()
         for rw in range(self.row_size+1):
             for cl in range(self.col_size+1):
@@ -107,11 +116,13 @@ class Room:
                     self.furniture_pts.append((self.origin[0]+rw, self.origin[1]+cl))
 
     def inroom(self, pt):
+        '''Check point list if a point is in a room'''
         if tuple(pt) in self.pts:
             return True
         return False
 
     def place_room(self, levelmanager, currlevel, rng, generator):
+        '''Put the room onto the level'''
         Logger.info(f'Placing room: {self.origin} r:{self.row_size} c:{self.col_size}')
         outer_walls = []
         for rw in range(self.row_size+1):
@@ -139,21 +150,18 @@ class Room:
         levelmanager.add_to_level(tower.Door(), self.door_pos, currlevel.z, generator, rng)
 
         idx = rng.randint(0, len(self.furniture_pts)-1)
-        self.bed_pos = self.furniture_pts[idx]
-        levelmanager.add_to_level(Bed(), self.bed_pos, currlevel.z, generator, rng)
+        bed_pos = self.furniture_pts[idx]
+        levelmanager.add_to_level(Bed(), bed_pos, currlevel.z, generator, rng)
         self.furniture_pts.pop(idx)
 
         idx = rng.randint(0, len(self.furniture_pts)-1)
-        self.dresser_pos = self.furniture_pts[idx]
-        levelmanager.add_to_level(Dresser(), self.dresser_pos, currlevel.z, generator, rng)
+        dresser_pos = self.furniture_pts[idx]
+        levelmanager.add_to_level(Dresser(), dresser_pos, currlevel.z, generator, rng)
         self.furniture_pts.pop(idx)
 
         idx = rng.randint(0, len(self.furniture_pts)-1)
-        self.chest_pos = self.furniture_pts[idx]
-        levelmanager.add_to_level(Chest(), self.chest_pos, currlevel.z, generator, rng)
+        chest_pos = self.furniture_pts[idx]
+        levelmanager.add_to_level(Chest(), chest_pos, currlevel.z, generator, rng)
         self.furniture_pts.pop(idx)
-
-
-
 
 
