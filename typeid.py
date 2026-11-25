@@ -36,6 +36,9 @@ class TID(IntEnum):
     PRECIOUS_STONE  = 58
     CORPSE          = 59
     BLOWPIPE        = 60
+    BRIGANDINE      = 61
+    CHAINMAIL       = 62
+    BOW             = 63
 
     RAVEN           = 101
     GOBLIN          = 102
@@ -45,6 +48,7 @@ class TID(IntEnum):
     LYNX            = 106
     SNAIL           = 107
     GOBLINLEADER    = 108
+    ELF             = 109
 
     EMBER           = 501
     SNOW            = 502

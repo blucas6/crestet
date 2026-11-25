@@ -59,7 +59,7 @@ class Fist(entity.Entity):
                          size=entity.Size.VERY_SMALL,
                          fg=color.COLOR.PINK)
         self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.ABILITY,
-                                               melee_damage=1,
+                                               melee_damage=2,
                                                melee_you_action='punch',
                                                melee_it_action='punches')
 

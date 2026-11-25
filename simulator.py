@@ -181,7 +181,7 @@ class CombatTest:
                     Logger.info(f'SET ARENA')
                     Logger.info(f'{player} {monster}')
                     Logger.info(f'{player.Health} {monster.Health}')
-                    Logger.info(f'{player.Inventory.show()}')
+                    Logger.info(f'{player.Inventory}')
 
                     # run until someone dies
                     while (player.Health.currenthealth > 0 and

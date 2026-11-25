@@ -32,11 +32,6 @@ class StatusEffect(enum.Enum):
             return 4, None
         return 0, None
 
-class AttackType(enum.Enum):
-    '''Possible attack options'''
-    THROW = 0
-    MELEE = 1
-
 class MoveAction(enum.Enum):
     '''Results of a move request'''
     INVALID = 0
@@ -157,12 +152,36 @@ class Entity:
         if index != -1:
             self.idx = index
 
-    def take_turn(self, *_):
+    def take_turn(self, levelmanager, animator, messager, menumanager,
+          statemachine, rng, generator):
         '''
         Starting point of an entity's turn
         Default behavior is to dump all energy and do nothing
         '''
-        self.energy = 0
+        if hasattr(self, 'Brain'):
+            inventory = None
+            if hasattr(self, 'Inventory'):
+                inventory = self.Inventory
+            self.do_action(
+                levelmanager,
+                animator,
+                messager,
+                menumanager,
+                statemachine,
+                self.Brain.get_action(
+                    levelmanager.Levels[self.z],
+                    [self.row,self.col],
+                    self.energy,
+                    rng,
+                    self.speed,
+                    self.status,
+                    self.Inventory
+                ),
+                rng,
+                generator
+            )
+        else:
+            self.energy = 0
 
     def on_placed(self, levelmanager, messager):
         '''
@@ -426,12 +445,12 @@ class Entity:
 
     def handle_inventory(self, levelmanager, messager, animator, event, rng, generator):
         '''Talks to the inventory component'''
-        self.Inventory.show()
+        self.Logger.info(f'{self.Inventory}')
         if self.energy >= self.Inventory.cost:
             self.energy -= self.Inventory.cost
             self.Inventory.action(self, levelmanager, messager, event, animator,
                                   self.row, self.col, self.z, rng, generator)
-            self.Inventory.show()
+            self.Logger.info(f'{self.Inventory}')
 
     def handle_charging(self, levelmanager, animator, messager, menumanager, statemachine, event, rng, generator):
         '''Talks to the charge component'''

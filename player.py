@@ -49,3 +49,8 @@ class Player(e.Entity):
     def update_mental_map(self, curr_level):
         '''Update the mental map of the player'''
         self.Brain.update_mental_map(curr_level, self.row, self.col, self.status)
+
+    def take_turn(self, levelmanager, animator, messager, menumanager,
+          statemachine, rng, generator):
+        pass
+

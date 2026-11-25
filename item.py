@@ -123,6 +123,29 @@ class Dart(e.Entity):
                                      stack_name = self.name + ' Stack',
                                      stack_glyph = '≡')
 
+class ChainMail(e.Entity):
+    chest_value = 3
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.CHAINMAIL,
+                         name='Chain Mail',
+                         glyph='[',
+                         layer=e.Layer.OBJECT_LAYER,
+                         size=e.Size.SMALL,
+                         fg=color.COLOR.CYAN)
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.BODY,
+                                               armor=2)
+class Brigandine(e.Entity):
+    chest_value = 2
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.BRIGANDINE,
+                         name='Brigandine',
+                         glyph='[',
+                         layer=e.Layer.OBJECT_LAYER,
+                         size=e.Size.SMALL,
+                         fg=color.COLOR.GREY)
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.BODY,
+                                               armor=1)
+
 class Gambeson(e.Entity):
     chest_value = 2
     def __init__(self):
@@ -133,7 +156,7 @@ class Gambeson(e.Entity):
                          size=e.Size.SMALL,
                          fg=color.COLOR.WHITE)
         self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.BODY,
-                                               armor=1)
+                                               accuracy=20)
 
 class BlowPipe(e.Entity):
     chest_value = 2
@@ -145,9 +168,24 @@ class BlowPipe(e.Entity):
                          size=e.Size.SMALL,
                          fg=color.COLOR.RED)
         self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.HAND,
+                                               melee_damage=1,
                                                fire_accuracy=40,
                                                fire_bonus_items=[typeid.TID.DART],
                                                fire_you_action='blow',
                                                fire_it_action='blows')
 
+class Bow(e.Entity):
+    chest_value = 2
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.BOW,
+                         name='Bow',
+                         glyph='(',
+                         layer=e.Layer.OBJECT_LAYER,
+                         size=e.Size.SMALL,
+                         fg=color.COLOR.YELLOW)
+        self.ItemTraits = component.ItemTraits(itemtype=component.ItemType.HAND,
+                                           fire_accuracy=40,
+                                           fire_bonus_items=[typeid.TID.ARROW],
+                                           fire_you_action='fire',
+                                           fire_it_action='fires')
 

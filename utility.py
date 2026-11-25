@@ -1,4 +1,5 @@
 import algo
+import math
 import entity
 import logging
 import copy
@@ -116,13 +117,14 @@ def get_random_pt(rng, allpts, invalidpts=[]):
     validpts = [pt for pt in allpts if pt not in invalidpts] 
     return validpts[rng.randint(0, len(validpts)-1)]
 
-def find_entity(currlevel, pts, typeid):
+def find_entities_by_typeid(currlevel, pts, typeid):
     '''In a set of FOV points, check if the entity exists'''
+    ents = []
     for pt in pts:
         for ent in currlevel.EntityLayer[pt[0]][pt[1]]:
             if ent.typeid == typeid:
-                return pt
-    return None
+                ents.append(pt)
+    return ents
 
 def inbounds(grid, r, c):
     '''
@@ -131,3 +133,9 @@ def inbounds(grid, r, c):
     if (r > len(grid)-1 or r < 0 or c > len(grid[r])-1 or c < 0):
         return False
     return True
+
+def dist(pta, ptb):
+    return math.sqrt(
+        (pta[0]-ptb[0])*(pta[0]-ptb[0]) + (pta[1]-ptb[1])*(pta[1]-ptb[1])
+    )
+

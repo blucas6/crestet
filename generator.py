@@ -156,46 +156,75 @@ class Generator:
             if level_layout.outer_walls:
                 self.generate_outer_walls(levelmanager, currlevel, rng)
             if level_layout.rooms > 0:
-                gen_rooms = self.generate_rooms(levelmanager, currlevel, level_layout.rooms, rng)
+                gen_rooms = self.generate_rooms(levelmanager,
+                                                currlevel,
+                                                level_layout.rooms,
+                                                rng)
                 level_layout.all_rooms = gen_rooms
             if level_layout.min_walls > 0:
-                self.generate_walls(levelmanager, currlevel, level_layout.min_walls, level_layout.all_rooms, rng)
-            if level_layout.min_barrels > 0:
-                self.generate_barrels(levelmanager, currlevel, level_layout.min_barrels, level_layout.all_rooms, rng)
-            if level_layout.mons:
-                self.generate_mons(levelmanager, currlevel, 0, currlevel.LevelDifficulty.max, rng)
-            if level_layout.items > 0:
-                self.generate_items(levelmanager, currlevel, level_layout.items, rng)
-            if level_layout.runes > 0:
-                self.generate_runes(levelmanager, currlevel, level_layout.runes, rng)
-            if level_layout.plants > 0:
-                self.generate_plants(levelmanager, currlevel, level_layout.plants, rng)
-            if level_layout.lights:
-                self.generate_lights(levelmanager, currlevel, level_layout.all_rooms, rng)
+                self.generate_walls(levelmanager, currlevel,
+                                    level_layout.min_walls,
+                                    level_layout.all_rooms, rng)
             if level_layout.upstair:
-                # save the upstairs position to the following level's downstairs position
-                upstair_pos = self.generate_upstair(levelmanager, currlevel, level_layout.all_rooms, rng)
+                # save the upstairs position to the following level's
+                # downstairs position
+                upstair_pos = self.generate_upstair(levelmanager, currlevel,
+                                                level_layout.all_rooms, rng)
                 if z+1 < len(self.level_layouts):
                     self.level_layouts[z+1].downstair_pos = upstair_pos
             if level_layout.downstair:
-                downstair_pos = self.generate_downstair(levelmanager, currlevel, level_layout, rng)
+                downstair_pos = self.generate_downstair(levelmanager,
+                                                        currlevel,
+                                                        level_layout, rng)
             # clear path before any items are placed
             if z == config.PLAYERZ:
                 if level_layout.upstair:
                     Logger.info(f'Clearing path for player')
                     # make path for player to upstair
-                    self.generate_clear_path(levelmanager, currlevel, config.PLAYERPOS, upstair_pos, level_layout.all_rooms, rng)
+                    self.generate_clear_path(levelmanager, currlevel,
+                                             config.PLAYERPOS, upstair_pos,
+                                             level_layout.all_rooms, rng)
             if upstair_pos and downstair_pos:
-                self.generate_clear_path(levelmanager, currlevel, upstair_pos, downstair_pos, level_layout.all_rooms, rng)
+                self.generate_clear_path(levelmanager, currlevel,
+                                         upstair_pos, downstair_pos,
+                                         level_layout.all_rooms, rng)
             for theroom in level_layout.all_rooms:
                 if theroom.door_pos:
                     if z == config.PLAYERZ:
-                        self.generate_clear_path(levelmanager, currlevel, config.PLAYERPOS, theroom.door_pos, level_layout.all_rooms, rng)
+                        self.generate_clear_path(levelmanager, currlevel,
+                                                 config.PLAYERPOS,
+                                                 theroom.door_pos,
+                                                 level_layout.all_rooms, rng)
                     else:
-                        self.generate_clear_path(levelmanager, currlevel, downstair_pos, theroom.door_pos, level_layout.all_rooms, rng)
+                        self.generate_clear_path(levelmanager, currlevel,
+                                                 downstair_pos,
+                                                 theroom.door_pos,
+                                                 level_layout.all_rooms, rng)
+            if level_layout.min_barrels > 0:
+                self.generate_barrels(levelmanager, currlevel,
+                                      level_layout.min_barrels,
+                                      level_layout.all_rooms, rng)
+            if level_layout.mons:
+                self.generate_mons(levelmanager,
+                                   currlevel, 0,
+                                   currlevel.LevelDifficulty.max, rng)
+            if level_layout.items > 0:
+                self.generate_items(levelmanager, currlevel,
+                                    level_layout.items, rng)
+            if level_layout.runes > 0:
+                self.generate_runes(levelmanager, currlevel,
+                                    level_layout.runes, rng)
+            if level_layout.plants > 0:
+                self.generate_plants(levelmanager, currlevel,
+                                     level_layout.plants, rng)
+            if level_layout.lights:
+                self.generate_lights(levelmanager, currlevel,
+                                     level_layout.all_rooms, rng)
             # make sure player can be placed, even after placing all items down
             if z == config.PLAYERZ:
-                levelmanager.add_to_level(tower.Floor(), config.PLAYERPOS, currlevel.z, self, rng, overwrite=True)
+                levelmanager.add_to_level(tower.Floor(), config.PLAYERPOS,
+                                          currlevel.z, self, rng,
+                                          overwrite=True)
         Logger.info(f'----- FINISHED LEVEL GENERATION -----')
 
     def generate_floor(self, levelmanager: level.LevelManager, currlevel: level.Level, rng):
@@ -386,10 +415,12 @@ class Generator:
                     n = rng.randint(0, len(packmons)-1)
                 new_mon = packmons[n]()
                 dx,dy = next(genpts, (None,None))
-                if not dx or not dy:
+                if dx == None or dy == None:
+                    Logger.warning('Generate pack mons max nearby points!')
                     break
                 r = pos[0]+dx
                 c = pos[1]+dy
+                Logger.info(f'Pack mons trying point: ({r},{c})')
                 if not levelmanager.is_entity_pos_valid(currlevel, new_mon, (r,c)):
                     continue
                 if levelmanager.add_to_level(new_mon, (r,c), currlevel.z, self, rng):

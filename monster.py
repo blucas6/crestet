@@ -12,6 +12,34 @@ import brain
 
 Logger = logging.getLogger(__name__)
 
+class Elf(e.Entity):
+    difficulty = 1
+    pack = 2
+    packtype = ['Elf']
+    def __init__(self):
+        super().__init__(typeid=typeid.TID.ELF,
+                         name='Elf',
+                         glyph='e',
+                         layer=e.Layer.MONSTER_LAYER,
+                         size=e.Size.MEDIUM,
+                         fg=color.COLOR.CYAN)
+        self.Health = component.Health(health=config.ELF_HEALTH)
+        self.eyes = config.ELF_SIGHTRANGE
+        self.xp = config.ELF_XP
+        self.Brain = brain.TroopBrain(sightrange=self.eyes,
+                                     blockinglayer=e.Layer.MONSTER_LAYER,
+                                     ally=typeid.TID.ELF)
+        self.speed = e.Speed.SLOW
+        self.Combat = component.Combat()
+        self.Inventory = component.Inventory()
+
+    def on_init(self, rng, levelmanager, generator):
+        for _ in range(rng.randint(5,8)):
+            self.Inventory.collect(item.Arrow())
+
+        if rng.randint(1,10) <= 9:
+            self.Inventory.equip(item.Bow())
+
 class GoblinLeader(e.Entity):
     difficulty = 4
     pack = 2
@@ -27,8 +55,7 @@ class GoblinLeader(e.Entity):
         self.eyes = config.GOBLINLEADER_SIGHTRANGE
         self.xp = config.GOBLINLEADER_XP
         self.Brain = brain.SimpleBrain(sightrange=self.eyes,
-                                     blockinglayer=e.Layer.MONSTER_LAYER,
-                                     attacks=[e.AttackType.MELEE])
+                                     blockinglayer=e.Layer.MONSTER_LAYER)
         self.speed = e.Speed.SLOW
         self.Combat = component.Combat()
         self.Inventory = component.Inventory()
@@ -71,8 +98,7 @@ class Snail(e.Entity):
         self.eyes = config.SNAIL_SIGHTRANGE
         self.xp = config.SNAIL_XP
         self.Brain = brain.SimpleBrain(sightrange=self.eyes,
-                                     blockinglayer=e.Layer.MONSTER_LAYER,
-                                     attacks=[e.AttackType.MELEE])
+                                     blockinglayer=e.Layer.MONSTER_LAYER)
         self.speed = e.Speed.CRAWLING
         self.Combat = component.Combat()
         self.Inventory = component.Inventory()
@@ -113,8 +139,7 @@ class Lynx(e.Entity):
         self.eyes = config.LYNX_SIGHTRANGE
         self.xp = config.LYNX_XP
         self.Brain = brain.SimpleBrain(sightrange=self.eyes,
-                                     blockinglayer=e.Layer.MONSTER_LAYER,
-                                     attacks=[e.AttackType.MELEE])
+                                     blockinglayer=e.Layer.MONSTER_LAYER)
         self.speed = e.Speed.AVERAGE
         self.Combat = component.Combat()
         self.Inventory = component.Inventory()
@@ -154,8 +179,7 @@ class Raven(e.Entity):
         self.eyes = config.RAVEN_SIGHTRANGE
         self.Health = component.Health(health=config.RAVEN_HEALTH)
         self.Brain = brain.SimpleBrain(sightrange=self.eyes,
-                                     blockinglayer=e.Layer.MONSTER_LAYER,
-                                     attacks=[e.AttackType.MELEE])
+                                     blockinglayer=e.Layer.MONSTER_LAYER)
         self.Combat = component.Combat()
         self.Inventory = component.Inventory(autopickuplist=['Seed'])
         self.speed = e.Speed.MEDIUM
@@ -201,8 +225,6 @@ class Goblin(e.Entity):
         self.Health = component.Health(health=config.GOBLIN_HEALTH)
         self.Brain = brain.PackBrain(sightrange=self.eyes,
                                      blockinglayer=e.Layer.MONSTER_LAYER,
-                                     attacks=[e.AttackType.THROW,
-                                              e.AttackType.MELEE],
                                      pack_leader=typeid.TID.GOBLINLEADER)
 
         self.Combat = component.Combat()
@@ -272,8 +294,7 @@ class Newt(e.Entity):
         self.eyes = config.NEWT_SIGHTRANGE
         self.Health = component.Health(health=config.NEWT_HEALTH)
         self.Brain = brain.SimpleBrain(sightrange=self.eyes,
-                                     blockinglayer=e.Layer.MONSTER_LAYER,
-                                     attacks=[e.AttackType.MELEE])
+                                     blockinglayer=e.Layer.MONSTER_LAYER)
         self.Inventory = component.Inventory()
         self.speed = e.Speed.VERY_SLOW
         self.xp = config.NEWT_XP

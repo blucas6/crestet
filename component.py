@@ -378,19 +378,20 @@ class Inventory:
                     idx -= 1
             idx += 1
 
-    def show(self):
+    def __repr__(self):
         '''Print the inventory to logger'''
-        Logger.info('Inventory')
-        Logger.info(f' Quiver: {self.quiver}')
-        Logger.info(f' Main Hand: {self.mainHand}')
-        Logger.info(f' Off Hand: {self.offHand}')
-        Logger.info(f' Head: {self.head}')
-        Logger.info(f' Body: {self.body}')
-        Logger.info(f' Feet: {self.feet}')
-        Logger.info(f' Bag:')
+        show = 'Inventory\n'
+        show += f' Quiver: {self.quiver}\n'
+        show += f' Main Hand: {self.mainHand}\n'
+        show += f' Off Hand: {self.offHand}\n'
+        show += f' Head: {self.head}\n'
+        show += f' Body: {self.body}\n'
+        show += f' Feet: {self.feet}\n'
+        show += f' Bag:\n'
         for ent in self.contents:
-            Logger.info(f'  {ent.name}')
-        Logger.info(f'Inventory end')
+            show += f'  {ent.name}\n'
+        show += f'Inventory end\n'
+        return show
     
     def get_entity_from_key(self, char):
         '''

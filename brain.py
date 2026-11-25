@@ -61,11 +61,9 @@ class SimpleBrain(Brain):
     '''
     For monsters that can move around and attack
     '''
-    def __init__(self, sightrange, blockinglayer, attacks=[]):
+    def __init__(self, sightrange, blockinglayer):
         super().__init__(sightrange, blockinglayer)
 
-        self.attacks = attacks
-        '''List of AttackType enums'''
         self.state = BrainState.IDLE
         '''Current brain state'''
 
@@ -78,7 +76,8 @@ class SimpleBrain(Brain):
 
         fovpts = self.getFOV(currlevel, mypos, status)
 
-        action = self.check_for_player(currlevel, mypos, inventory, status, fovpts)
+        action = self.check_for_player(currlevel, mypos, inventory,
+                                       status, fovpts, currlevel.EntityLayer)
         if action:
             return action
 
@@ -117,19 +116,22 @@ class SimpleBrain(Brain):
             self.state = BrainState.MOVE
         return None
 
-    def check_for_player(self, currlevel, mypos, inventory, status, fovpoints):
+    def check_for_player(self, currlevel, mypos, inventory, status,
+                         fovpoints, entitylayer):
         '''Try to find player in fov'''
-        playerpos = utility.find_entity(currlevel, fovpoints, typeid.TID.PLAYER)
+        players = utility.find_entities_by_typeid(currlevel, fovpoints,
+                                                  typeid.TID.PLAYER)
+        playerpos = None
+        if players:
+            playerpos = players[0]
 
         # if the player is near, try to attack
         if playerpos:
-            # go through possible attacks
-            for attack in self.attacks:
-                if (attack == entity.AttackType.THROW and
-                    self.throw_attack_possible(mypos, playerpos, inventory)):
-                    return self.throw_attack(mypos, playerpos)
-                elif attack == entity.AttackType.MELEE:
-                    return self.find_path(currlevel.EntityLayer, mypos, playerpos)
+            if self.throw_attack_possible(mypos, playerpos, inventory,
+                                          entitylayer):
+                return self.throw_attack(mypos, playerpos)
+            else:
+                return self.find_path(currlevel.EntityLayer, mypos, playerpos)
         return None
 
     def check_for_energy(self, energy, speed):
@@ -138,14 +140,18 @@ class SimpleBrain(Brain):
             return '`'
         return None
 
-    def throw_attack_possible(self, mypos, playerpos, inventory):
+    def throw_attack_possible(self, mypos, playerpos, inventory, entitylayer):
         '''Check if the player is reachable by a throw'''
+        if inventory == None:
+            return False
         if not inventory.has_ammo():
+            Logger.info(f'throw attack no ammo')
             return False
         drow = abs(mypos[0] - playerpos[0])
         dcol = abs(mypos[1] - playerpos[1])
         if drow == 0 or dcol == 0 or drow == dcol:
             return True
+        Logger.info(f'throw attack not in sight')
         return False
 
     def throw_attack(self, mypos, playerpos):
@@ -196,8 +202,8 @@ class PackBrain(SimpleBrain):
     '''
     Same as SimpleBrain, but will stay close to the pack leader
     '''
-    def __init__(self, sightrange, blockinglayer, attacks=[], pack_leader=None):
-        super().__init__(sightrange, blockinglayer, attacks)
+    def __init__(self, sightrange, blockinglayer, pack_leader=None):
+        super().__init__(sightrange, blockinglayer)
 
         self.pack_leader = pack_leader
         '''Pack leader type id entity to follow'''
@@ -211,11 +217,12 @@ class PackBrain(SimpleBrain):
 
         fovpts = self.getFOV(currlevel, mypos, status)
 
-        action = self.check_for_player(currlevel, mypos, inventory, status, fovpts)
+        action = self.check_for_player(currlevel, mypos, inventory,
+                                   status, fovpts, currlevel.EntityLayer)
         if action:
             return action
 
-        action = self.check_for_leader(currlevel, mypos, fovpts)
+        action = self.check_for_leader(currlevel, mypos, fovpts, rng)
         if action:
             return action
 
@@ -225,13 +232,93 @@ class PackBrain(SimpleBrain):
 
         return '.'
 
-    def check_for_leader(self, currlevel, mypos, fovpts):
+    def check_for_leader(self, currlevel, mypos, fovpts, rng):
         '''Try to find the pack leader on the level'''
-        leaderpos = utility.find_entity(currlevel, fovpts, self.pack_leader)
+        leaders = utility.find_entities_by_typeid(currlevel, fovpts,
+                                                  self.pack_leader)
+        leaderpos = None
+        if leaders:
+            leaderpos = leaders[rng.randint(0,len(leaders)-1)]
 
         if leaderpos and not utility.is_pt_near(mypos, leaderpos):
             return self.find_path(currlevel.EntityLayer, mypos, leaderpos)
         return None
+
+class TroopBrain(SimpleBrain):
+    '''
+    Same as SimpleBrain, but will fight as a unit
+    '''
+    def __init__(self, sightrange, blockinglayer, ally=None):
+        super().__init__(sightrange, blockinglayer)
+        
+        self.ally = ally
+
+    def check_for_allies(self, currlevel, mypos, fovpts, rng):
+        allies = utility.find_entities_by_typeid(currlevel, fovpts, self.ally)
+
+        allypos = None
+        if allies:
+            allypos = allies[rng.randint(0,len(allies)-1)]
+
+        if allypos and utility.dist(mypos, allypos) > 4:
+            return self.find_path(currlevel.EntityLayer, mypos, allypos)
+        return None
+
+    def get_action(self, currlevel, mypos, energy, rng, speed,
+                   status, inventory=None):
+        '''Returns an action'''
+
+        action = self.check_for_energy(energy, speed)
+        if action:
+            return action
+
+        fovpts = self.getFOV(currlevel, mypos, status)
+
+        action = self.check_for_player(currlevel, mypos, inventory,
+                                       status, fovpts, currlevel.EntityLayer)
+        if action:
+            return action
+
+        action = self.check_for_allies(currlevel, mypos, fovpts, rng)
+        if action:
+            return action
+
+        action = self.random_move(currlevel, mypos, rng)
+        if action:
+            return action
+
+        return '.'
+
+    def throw_attack_possible(self, mypos, playerpos, inventory, entitylayer):
+        if not inventory.has_ammo():
+            return False
+        drow = mypos[0] - playerpos[0]
+        dcol = mypos[1] - playerpos[1]
+        if not (abs(drow) == 0 or abs(dcol) == 0 or abs(drow) == abs(dcol)):
+            return False
+        
+        dr = 0
+        dc = 0
+        if drow > 0:
+            dr = 1
+        elif drow < 0:
+            dr = -1
+        if dcol > 0:
+            dc = 1
+        elif dcol < 0:
+            dc = -1
+
+        valid = True
+        posr = mypos[0]
+        posc = mypos[1]
+        while utility.inbounds(entitylayer, posr+dr, posc+dc):
+            posr += dr
+            posc += dc
+            for ent in entitylayer[posr][posc]:
+                if ent.typeid == self.ally:
+                    valid = False
+                    break
+        return valid
 
 class FOVBrain(Brain):
     '''
